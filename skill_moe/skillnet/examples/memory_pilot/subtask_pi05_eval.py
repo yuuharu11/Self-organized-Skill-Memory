@@ -136,10 +136,16 @@ def main() -> None:
     parser.add_argument("--cache-manifest", default="/work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache/manifest.json")
     parser.add_argument("--output", required=True)
     parser.add_argument("--limit", type=int, default=0, help="Debug/sample count; 0 evaluates every selected cache row")
+    parser.add_argument("--training-suite-all", action="store_true",
+                        help="Predict every cache row in this split's training suites, rather than only the held-out 20%%")
+    parser.add_argument("--training-suite-missing-only", action="store_true",
+                        help="Predict the training-suite episodes absent from the existing 20%% held-out cache")
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--max-tokens", type=int, default=32)
     parser.add_argument("--resume", action="store_true", help="Resume from predictions.partial.jsonl in an existing output directory")
     args = parser.parse_args()
+    if args.training_suite_all and args.training_suite_missing_only:
+        parser.error("choose at most one of --training-suite-all and --training-suite-missing-only")
 
     out = pathlib.Path(args.output)
     if args.resume:
@@ -155,18 +161,28 @@ def main() -> None:
     unseen_tasks = tuple(range(10, 20)) if args.split == "A" else tuple(range(30, 40))
     tasks, episodes_by_task, lengths = _task_groups(root)
     heldout = _heldout_episode_ids(train_tasks, episodes_by_task, 0.2)
-    eval_episodes = set(heldout)
-    for task_index in unseen_tasks:
-        eval_episodes.update(episodes_by_task.get(task_index, []))
+    if args.training_suite_all or args.training_suite_missing_only:
+        all_training_episodes = {episode for task_index in train_tasks
+                                 for episode in episodes_by_task.get(task_index, [])}
+        eval_episodes = (all_training_episodes if args.training_suite_all else
+                         all_training_episodes - heldout)
+        selected_tasks = train_tasks
+    else:
+        eval_episodes = set(heldout)
+        for task_index in unseen_tasks:
+            eval_episodes.update(episodes_by_task.get(task_index, []))
+        selected_tasks = (*train_tasks, *unseen_tasks)
 
     records = []
     for episode_info in cache_manifest["episodes"]:
         episode_id = episode_info["episode_id"]
         episode_num = int(episode_id.rsplit("-", 1)[-1])
         task_index = int(episode_info["task_index"])
-        if episode_num not in eval_episodes or task_index not in (*train_tasks, *unseen_tasks):
+        if episode_num not in eval_episodes or task_index not in selected_tasks:
             continue
-        group = "train_suite_heldout" if task_index in train_tasks else "unseen_suite"
+        group = ("train_suite_all" if args.training_suite_all else
+                 "train_suite_missing" if args.training_suite_missing_only else
+            "train_suite_heldout" if task_index in train_tasks else "unseen_suite")
         with np.load(episode_info["cache"]) as cache:
             for step in cache["step"].astype(int).tolist():
                 records.append({"episode_id": episode_id, "episode_num": episode_num, "task_index": task_index, "step": step, "group": group})
@@ -265,7 +281,10 @@ def main() -> None:
         partial_file.flush()
     partial_file.close()
 
-    by_group = {group: _metrics([r for r in predictions if r["group"] == group]) for group in ("train_suite_heldout", "unseen_suite")}
+    groups = (("train_suite_all",) if args.training_suite_all else
+              ("train_suite_missing",) if args.training_suite_missing_only else
+              ("train_suite_heldout", "unseen_suite"))
+    by_group = {group: _metrics([r for r in predictions if r["group"] == group]) for group in groups}
     report = {
         "split": args.split,
         "checkpoint": args.checkpoint,
@@ -281,6 +300,8 @@ def main() -> None:
             "unseen_task_ids": list(unseen_tasks),
             "heldout_episode_fraction": 0.2,
             "heldout_selection": "last sorted episode IDs per task; same selection used by training loader",
+            "training_suite_all": bool(args.training_suite_all),
+            "training_suite_missing_only": bool(args.training_suite_missing_only),
             "cache_join_key": ["episode_id", "step"],
             "evaluation_frames": "all selected rows in the existing feature cache; one row every cache stride",
             "feature_cache_suite_labels_ignored": True,
