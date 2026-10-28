@@ -30,9 +30,12 @@ FULL_NEW_TASK_CONDITIONS = S2_GATE_NEW_TASK_CONDITIONS + (
 
 
 def make_cases(trials: int, *, minimal: bool = False, checkpoint: str | None = None, seed: int = 7,
-               query_text_source: str = "instruction_only"):
+               query_text_source: str = "instruction_only", zero_shot: bool = False,
+               new_anchor_only: bool = False):
+    if new_anchor_only and not zero_shot:
+        raise ValueError("new_anchor_only requires zero_shot")
     cases = []
-    for task_id in range(10):
+    for task_id in (() if new_anchor_only else range(10)):
         for condition in RETENTION_CONDITIONS:
             cases.append({"suite": "libero_90", "task_id": task_id,
                           "task_key": f"libero90_retention_{task_id:02d}", "stage": -1,
@@ -41,17 +44,26 @@ def make_cases(trials: int, *, minimal: bool = False, checkpoint: str | None = N
                           "memory_snapshot": "initial_libero90", "checkpoint": checkpoint, "seed": seed,
                           "query_text_source": query_text_source})
     sequence = [{"suite": "libero_10", "task_id": i, "task_key": f"libero10_{i:02d}"} for i in range(10)]
-    sequence += [{"suite": "libero_skill_obj", "task_id": i, "task_key": f"skill_obj_{i:02d}"}
+    sequence += [{"suite": "libero_skill_obj", "task_id": i,
+                  "task_key": f"skill_obj_{i + 1 if zero_shot else i:02d}"}
                  for i in range(1, 9)]
-    conditions = S2_GATE_NEW_TASK_CONDITIONS if minimal else FULL_NEW_TASK_CONDITIONS
+    conditions = (("anchor_entropy_current_memory",) if new_anchor_only else
+                  S2_GATE_NEW_TASK_CONDITIONS[:3] if zero_shot else
+                  S2_GATE_NEW_TASK_CONDITIONS if minimal else FULL_NEW_TASK_CONDITIONS)
     for stage, task in enumerate(sequence):
         for condition in conditions:
             before_snapshot = "initial_libero90" if stage == 0 else f"after_{stage - 1:02d}_adds"
-            cases.append({**task, "stage": stage, "condition": condition,
+            case = {**task, "stage": stage, "condition": condition,
                           "trials": trials, "minimum_trials": 20 if trials >= 20 else trials,
                           "checkpoint": checkpoint, "seed": seed, "query_text_source": query_text_source,
-                          "memory_snapshot": f"after_{stage:02d}_adds" if condition != "anchor_before_task_add"
-                          else before_snapshot})
+                          "memory_snapshot": ("initial_libero90" if zero_shot else
+                            f"after_{stage:02d}_adds" if condition != "anchor_before_task_add"
+                            else before_snapshot)}
+            if zero_shot:
+                case["memory_additions"] = False
+                case["near_duplicate_group"] = ("skill_obj_03__libero10_03"
+                    if task["task_key"] in ("skill_obj_03", "libero10_03") else None)
+            cases.append(case)
     return cases
 
 
@@ -62,6 +74,10 @@ def main():
     parser.add_argument("--runner", help="S2-aware command; supports env vars listed in DESIGN.md")
     parser.add_argument("--minimal", action="store_true",
                         help="only emit the four S2-a/b controls (92 cases at the default task set)")
+    parser.add_argument("--zero-shot", action="store_true",
+                        help="74 cases using only initial LIBERO-90 memory; no demonstration additions")
+    parser.add_argument("--new-anchor-only", action="store_true",
+                        help="with --zero-shot, emit the 18 new-task anchor cases for an alternate checkpoint")
     parser.add_argument("--checkpoint", help="the one shared fine-tuned S2 checkpoint used by all cases")
     parser.add_argument("--seed", type=int, default=7, help="paired policy-noise and initial-state seed base")
     parser.add_argument("--query-text-source", choices=("instruction_only", "pi05_generated_subtask"),
@@ -69,6 +85,10 @@ def main():
     parser.add_argument("--resume", action="store_true", help="resume existing case JSONL outputs")
     parser.add_argument("--execute", action="store_true", help="actually run all task/condition cases")
     args = parser.parse_args()
+    if args.zero_shot and args.minimal:
+        raise ValueError("choose either --zero-shot or --minimal")
+    if args.new_anchor_only and not args.zero_shot:
+        raise ValueError("--new-anchor-only requires --zero-shot")
     if args.trials < 20:
         raise ValueError("series A requires at least 20 trials per task and condition")
     if args.execute and not args.runner:
@@ -80,7 +100,8 @@ def main():
     if args.execute and not args.checkpoint:
         raise ValueError("--execute requires --checkpoint so every control uses the same fine-tuned model")
     cases = make_cases(args.trials, minimal=args.minimal, checkpoint=args.checkpoint, seed=args.seed,
-                       query_text_source=args.query_text_source)
+                       query_text_source=args.query_text_source, zero_shot=args.zero_shot,
+                       new_anchor_only=args.new_anchor_only)
     cases_path = out / "series_a_cases.json"
     if cases_path.exists() and json.loads(cases_path.read_text()) != cases:
         raise ValueError("existing case plan differs; refusing to resume with changed settings")
@@ -88,8 +109,10 @@ def main():
         cases_path.write_text(json.dumps(cases, indent=2) + "\n")
     if not args.execute:
         print(json.dumps({"cases": len(cases), "episodes": len(cases) * args.trials,
-                          "series_a_tasks": 18, "retention_tasks": 10,
-                          "series_a_conditions": len(S2_GATE_NEW_TASK_CONDITIONS if args.minimal else FULL_NEW_TASK_CONDITIONS),
+                          "series_a_tasks": 18, "retention_tasks": 0 if args.new_anchor_only else 10,
+                          "series_a_conditions": (1 if args.new_anchor_only else 3 if args.zero_shot else
+                            len(S2_GATE_NEW_TASK_CONDITIONS if args.minimal else FULL_NEW_TASK_CONDITIONS)),
+                          "zero_shot_matrix": args.zero_shot,
                           "minimal_gate_matrix": args.minimal, "paired_seed": args.seed,
                           "checkpoint": args.checkpoint,
                           "trials_per_task_condition": args.trials,
