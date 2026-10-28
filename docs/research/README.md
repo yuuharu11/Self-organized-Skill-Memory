@@ -20,6 +20,8 @@
 ## 調査
 
 - [skill_representation_review.md](skill_representation_review.md) — 追加可能なスキルメモリの表現学習
+- [prior_work_and_baselines.md](prior_work_and_baselines.md) — 先行研究と直接の比較対象（入口。主張ごとの対応と、実行する baseline の一覧）
 - [related_work_retrieval_memory.md](related_work_retrieval_memory.md) — 関連研究とRSS投稿判断
+- [novelty_anchor_flow.md](novelty_anchor_flow.md) — 開始点デノイズの新規性と実現性
 
 開発環境は [../development_environment.md](../development_environment.md) を参照。
