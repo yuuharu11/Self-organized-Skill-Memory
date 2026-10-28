@@ -1,0 +1,60 @@
+# Frozen-VLM light go/no-go
+
+Run from `/work` after activating the project environment:
+
+```bash
+source env/activate.sh
+python -m skill_moe.skillnet.examples.emergent.light.run \
+  --dataset /work/.skillnet-state/data/lerobot/emergent/libero_40_unsegmented \
+  --checkpoint /work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params \
+  --vision-batch 2 --train-batch 256 --epochs 20
+```
+
+The run creates a unique `emergent-light-*` directory under
+`/work/.skillnet-state/outputs/memory-pilot/`. A persistent feature cache can be
+provided with `--cache-dir`; completed per-episode feature files are reused. Do not
+point it at an existing output run. For a quick plumbing check, `--max-episodes 12`
+extracts a small prefix (not a valid go/no-go data sample).
+
+The extractor selects only `image`, `wrist_image`, `state`, `actions`, `episode_index`,
+`task_index`, and `frame_index` from each Parquet file. It never reads skill ID or
+annotation columns. Only task indices 10–39 are included (spatial/object/goal; task
+indices 0–9 are excluded). At every fifth frame, the base and wrist images are each run
+through the frozen π0.5 base PaliGemma. Language-conditioned and empty-language passes
+are separate; image token outputs are mean pooled and cached as float16.
+
+For each H in 25 and 10, full executed action windows are used for training and posterior
+reference rows. H-tail windows are omitted from model fitting and counted. Episodes are
+split per task into training and held-out evaluation before fitting (whole episodes stay
+on one side). The existing evaluator then makes its store/query split by held-out
+initial-state ID. For each β in `{0.001, 0.01, 0.1}`, the learned objective is normalized
+action MSE plus β times analytic KL(q‖p). The model is a 2-layer MLP Enc/Prior/Dec with
+z_dim=32 and AdamW; no VLA or production z model is loaded. Cross-reconstruction calls
+the learned decoder. Existing evaluator criteria i–iii are used unchanged.
+
+The older crosstask evaluator requires `skills` and `skill_mask` arrays even for its
+different-task condition. Generated evaluation NPZs supply a synthetic `[pick, place]`
+proxy plan, with transitions inferred only from the executed gripper open/close trace.
+No source skill or annotation columns are read; this does not represent LIBERO's
+annotated subtasks. Treat only the different-task condition as meaningful evidence.
+
+If runtime is too long for the allotted window, preserve the feature cache and rerun with
+the same command after extraction. Feature extraction is the main cost: roughly 35k
+sampled frames × two image views × two prefix passes for the full 30-task data (the
+current cache contains 34,919 sampled frames across 1,314 episodes).
+
+## Held-out spatial task memory check
+
+Reuse the completed feature cache from the first run and run:
+
+```bash
+source env/activate.sh
+python -m skill_moe.skillnet.examples.emergent.light.heldout \
+  --cache-dir /work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache
+```
+
+This trains only on libero_object/libero_goal (20 tasks), fits action/state/feature
+normalizers and fixed memory PCA on those rows, then splits whole spatial episodes by
+task into memory store and query. The spatial store is streamed through the existing
+relative-distance threshold without changing model weights. Report output is placed in
+a new `emergent-light-heldout-*` directory.

@@ -4,6 +4,7 @@ import abc
 from collections.abc import Sequence
 import dataclasses
 import difflib
+import json
 import logging
 import os
 import pathlib
@@ -14,12 +15,14 @@ from typing_extensions import override
 import tyro
 
 import openpi.models.model as _model
+import openpi.models.pi0_config as plain_pi0_config
 import openpi.models.pi0_config_moe_skill as pi0_config
 import openpi.models.tokenizer as _tokenizer
 import openpi.policies.libero_policy as libero_policy
 import openpi.policies.robotwin_policy as robotwin_policy
 import openpi.shared.download as _download
 import openpi.shared.normalize as _normalize
+import openpi.shared.nnx_utils as nnx_utils
 import openpi.training.optimizer as _optimizer
 import openpi.training.weight_loaders as weight_loaders
 import openpi.transforms as _transforms
@@ -109,6 +112,10 @@ class DataConfig:
     rlds_data_dir: str | None = None
     action_space: Any | None = None
     filter_dict_path: str | None = None
+    # Optional episode-level filtering used by LIBERO subtask learning.
+    subtask_task_indices: Sequence[int] | None = None
+    subtask_holdout_fraction: float = 0.0
+    subtask_holdout_only: bool = False
 
 
 class GroupFactory(Protocol):
@@ -211,6 +218,20 @@ class DataConfigFactory(abc.ABC):
         except FileNotFoundError:
             logging.info(f"Norm stats not found in {data_assets_dir}, skipping.")
         return None
+
+
+@dataclasses.dataclass(frozen=True)
+class DataConfigFactorySubtask(DataConfigFactory):
+    """Small wrapper for a fully specified subtask data pipeline."""
+
+    data: DataConfig | None = None
+
+    @override
+    def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
+        del assets_dirs, model_config
+        if self.data is None:
+            raise ValueError("Subtask data config was not initialized")
+        return self.data
 
 
 @dataclasses.dataclass(frozen=True)
@@ -643,6 +664,210 @@ if tuple(config.name for config in _CONFIGS) != _PUBLIC_CONFIG_NAMES:
 if len({config.name for config in _CONFIGS}) != len(_CONFIGS):
     raise ValueError("Config names must be unique.")
 _CONFIGS_DICT = {config.name: config for config in _CONFIGS}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Research configs (not part of the public release surface): emergent skill latent z.
+# See examples/emergent/DESIGN.md. No config here reads the dataset's skill-annotation column unless use_skill_ids=True.
+# ---------------------------------------------------------------------------------------------------------------------
+import openpi.models.pi0_config_skill_latent as pi0_skill_latent_config  # noqa: E402
+
+EMERGENT_DATASET_ROOT = os.environ.get(
+    "SKILLNET_EMERGENT_DATASET_ROOT",
+    str(pathlib.Path(os.environ.get("SKILLNET_STATE_DIR", ".skillnet-state")) / "data/lerobot/emergent/libero_90_unsegmented"),
+)
+EMERGENT_REPO_ID = os.environ.get("SKILLNET_EMERGENT_REPO_ID", LIBERO90_REPO_ID)
+# LIBERO-90 normalization stats are produced alongside the local unsegmented dataset by the data-prep task.
+# Override either variable if the stats are stored elsewhere or use another dataset revision.
+EMERGENT_ASSETS_DIR = os.environ.get("SKILLNET_EMERGENT_ASSETS_DIR", str(pathlib.Path(EMERGENT_DATASET_ROOT) / "assets"))
+EMERGENT_ASSET_ID = os.environ.get("SKILLNET_EMERGENT_ASSET_ID", EMERGENT_REPO_ID)
+# Released SkillNet LIBERO-40 checkpoint, for the "skill IDs + z" comparison.
+EMERGENT_SKILLNET_PARAMS = os.environ.get(
+    "SKILLNET_EMERGENT_SKILLNET_PARAMS",
+    str(
+        pathlib.Path(os.environ.get("SKILLNET_STATE_DIR", ".skillnet-state"))
+        / "checkpoints/pi05_libero_moe_skill_4_40/moe_add_balance_4_128_30000/29999/params"
+    ),
+)
+
+
+def emergent_z_train_config(
+    name: str,
+    *,
+    use_skill_ids: bool = False,
+    z_inject: pi0_skill_latent_config.ZInject = "router_token",
+    z_dim: int = 32,
+    kl_beta: float = 0.01,
+    freeze_paligemma: bool = True,
+    action_horizon: int = 25,
+    balance_loss_weight: float = 1.0,
+    init: Literal["pi05_base", "skillnet"] = "pi05_base",
+) -> TrainConfig:
+    """Template for z training. Defaults = first run: pi0.5 base init (never saw skill IDs), PaliGemma frozen,
+    action expert + Enc + Prior + injection trained, LIBERO-90 unsegmented. Loss combines flow matching, weighted
+    MoE load balancing, and beta * KL."""
+    model = pi0_skill_latent_config.Pi0SkillLatentConfig(
+        pi05=True,
+        action_horizon=action_horizon,
+        discrete_state_input=False,
+        paligemma_variant="gemma_2b",
+        action_expert_variant="gemma_300m_moe_4",
+        z_dim=z_dim,
+        z_inject=z_inject,
+        use_skill_ids=use_skill_ids,
+        kl_beta=kl_beta,
+        balance_loss_weight=balance_loss_weight,
+        freeze_paligemma=freeze_paligemma,
+    )
+    data_cls = LeRobotLiberoSkillDataConfig if use_skill_ids else LeRobotLiberoDataConfig
+    if init == "pi05_base":
+        weight_loader = weight_loaders.CheckpointWeightLoader_MoE(PI05_BASE_PARAMS)
+    else:
+        weight_loader = weight_loaders.PartialCheckpointWeightLoader(
+            EMERGENT_SKILLNET_PARAMS, missing_regex=".*skill_latent.*"
+        )
+    return TrainConfig(
+        name=name,
+        model=model,
+        data=data_cls(
+            repo_id=EMERGENT_REPO_ID,
+            assets=AssetsConfig(assets_dir=EMERGENT_ASSETS_DIR, asset_id=EMERGENT_ASSET_ID),
+            base_config=DataConfig(prompt_from_task=True, root=EMERGENT_DATASET_ROOT),
+            extra_delta_transform=False,
+        ),
+        batch_size=128,
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=1000,
+            peak_lr=5.0e-5,
+            decay_steps=30_000,
+            decay_lr=5.0e-6,
+        ),
+        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0, b1=0.9, b2=0.95),
+        ema_decay=0.999,
+        weight_loader=weight_loader,
+        freeze_filter=model.get_freeze_filter(),
+        num_train_steps=30_000,
+    )
+
+
+_RESEARCH_CONFIGS = [
+    # Main: no skill IDs, z -> router + one suffix token.
+    emergent_z_train_config("pi05_libero90_emergent_z"),
+    # Comparison: z -> router only (the SkillNet skill-ID path).
+    emergent_z_train_config("pi05_libero90_emergent_z_router_only", z_inject="router"),
+    # Horizon comparison: same main architecture at H=10.
+    emergent_z_train_config("pi05_libero90_emergent_z_h10", action_horizon=10),
+    # Comparison: released SkillNet checkpoint (skill IDs) + z.
+    emergent_z_train_config("pi05_libero90_skillid_z", use_skill_ids=True, init="skillnet"),
+]
+
+
+def subtask_task_indices_for_split(split: Literal["A", "B"]) -> tuple[int, ...]:
+    """Return LIBERO-40 task IDs for the research split, excluding LIBERO-10 (0..9)."""
+    if split == "A":
+        return tuple(range(20, 30)) + tuple(range(30, 40))  # object + spatial
+    if split == "B":
+        return tuple(range(20, 30)) + tuple(range(10, 20))  # object + goal
+    raise ValueError(f"Unknown subtask split {split!r}")
+
+
+def subtask_pi05_train_config(name: str, *, split: Literal["A", "B"], num_train_steps: int = 6_000) -> TrainConfig:
+    """PaliGemma-only subtask CE fine-tuning from pi05_base."""
+    dataset_root = pathlib.Path(os.environ.get(
+        "SKILLNET_SUBTASK_LIBERO40_ROOT",
+        str(pathlib.Path(os.environ.get("SKILLNET_STATE_DIR", ".skillnet-state")) / "data/lerobot/emergent/libero_40_unsegmented"),
+    ))
+    annotation_path = pathlib.Path(os.environ.get(
+        "SKILLNET_SUBTASK_ANNOTATIONS",
+        str(pathlib.Path(__file__).resolve().parents[3] / "examples/libero/annotations/instruct2plan_40.json"),
+    ))
+    raw_annotations = json.loads(annotation_path.read_text())
+    annotations = {task: value["plan"] for task, value in raw_annotations.items()}
+    # LIBERO-40 unsegmented task indices: goal=10..19, object=20..29,
+    # spatial=30..39. 0..9 are the separate LIBERO-10 suite.
+    train_task_indices = subtask_task_indices_for_split(split)
+    model = plain_pi0_config.Pi0Config(
+        pi05=True,
+        action_horizon=10,
+        max_token_len=128,
+        discrete_state_input=False,
+        paligemma_variant="gemma_2b",
+        action_expert_variant="gemma_300m",
+    )
+    tokenizer = _tokenizer.PaligemmaTokenizer(model.max_token_len)
+    repack = _transforms.Group(inputs=[_transforms.RepackTransform({
+        "observation/image": "image",
+        "observation/wrist_image": "wrist_image",
+        "observation/state": "state",
+        "actions": "actions",
+        "prompt": "prompt",
+        "eval_skill_segment": "eval_skill_segment",
+    })])
+    data_transforms = _transforms.Group(inputs=[libero_policy.LiberoInputs(model_type=model.model_type)])
+    model_transforms = _transforms.Group(inputs=[
+        _transforms.InjectDefaultPrompt(None),
+        _transforms.ResizeImages(224, 224),
+        _transforms.AttachLiberoSubtask(annotations),
+        _transforms.TokenizeSubtaskTraining(tokenizer),
+        _transforms.PadStatesAndActions(model.action_dim),
+    ])
+    base = DataConfig(
+        prompt_from_task=True,
+        root=str(dataset_root),
+        subtask_task_indices=train_task_indices,
+        subtask_holdout_fraction=0.2,
+    subtask_holdout_only=False,
+    )
+    data = dataclasses.replace(
+        DataConfig(repo_id=LIBERO40_REPO_ID),
+        root=base.root,
+        prompt_from_task=True,
+        subtask_task_indices=base.subtask_task_indices,
+        subtask_holdout_fraction=base.subtask_holdout_fraction,
+        repack_transforms=repack,
+        data_transforms=data_transforms,
+        model_transforms=model_transforms,
+        # This objective never consumes action/state magnitudes; an empty stats
+        # mapping intentionally leaves source values untouched and avoids a
+        # generated, persistent copy of the dataset.
+        norm_stats={},
+    )
+    language_side = nnx_utils.PathRegex(r".*PaliGemma/llm.*")
+    action_side = nnx_utils.PathRegex(r".*(_1|moe_ffn|skill_embedder|position_embedder).*|.*(img|action_in_proj|action_out_proj|time_mlp).*")
+    trainable = nnx.All(
+        language_side,
+        nnx.Not(nnx_utils.PathRegex(r".*llm.*_1.*")),
+        nnx.Not(action_side),
+    )
+    freeze_filter = nnx.Not(trainable)
+    return TrainConfig(
+        name=name,
+        project_name="memory-pilot-subtask",
+        model=model,
+        data=DataConfigFactorySubtask(repo_id=LIBERO40_REPO_ID, data=data),
+        weight_loader=weight_loaders.CheckpointWeightLoader(PI05_BASE_PARAMS),
+        freeze_filter=freeze_filter,
+        batch_size=2,
+        # The selected-episode LeRobot adapter carries a local index mapping;
+        # keep the dataset in-process rather than pickling a bound closure.
+        num_workers=0,
+        lr_schedule=_optimizer.CosineDecaySchedule(warmup_steps=50, peak_lr=1e-5, decay_steps=num_train_steps, decay_lr=1e-6),
+        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0, b1=0.9, b2=0.95, weight_decay=0.0),
+        ema_decay=None,
+        num_train_steps=num_train_steps,
+        log_interval=10,
+        save_interval=500,
+        keep_period=None,
+        wandb_enabled=False,
+    )
+for _research_config in _RESEARCH_CONFIGS:
+    if _research_config.name in _CONFIGS_DICT:
+        raise ValueError(f"Duplicate config name: {_research_config.name}")
+    _CONFIGS_DICT[_research_config.name] = _research_config
+
+for _split in ("A", "B"):
+    _name = f"pi05_libero40_subtask_split_{_split.lower()}"
+    _CONFIGS_DICT[_name] = subtask_pi05_train_config(_name, split=_split)  # type: ignore[arg-type]
 
 
 def cli() -> TrainConfig:

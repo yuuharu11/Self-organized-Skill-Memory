@@ -198,7 +198,14 @@ class CheckpointWeightLoader_MoE:
 
         merged = {}
         for k, v in flat_target.items():
-            merged[k] = flat_loaded.get(k, v)  # use checkpoint if exists, else keep init
+            loaded_value = flat_loaded.get(k)
+            if loaded_value is None:
+                merged[k] = v
+            else:
+                # Checkpoint arrays are often restored as float32 while the
+                # model is initialized in bfloat16. Match the initialized tree
+                # dtype just as the standard checkpoint loader does.
+                merged[k] = loaded_value.astype(v.dtype) if loaded_value.dtype != v.dtype else loaded_value
         return traverse_util.unflatten_dict(merged, sep="/")
 
     def _debug_missing_keys(self, loaded_params: dict, target_params: dict):
@@ -221,7 +228,8 @@ class CheckpointWeightLoader_MoE:
             if "mlp_1" in path:
                 moe_path = path.replace("mlp_1", "moe_ffn_1/expert_0")
                 if moe_path in flat_new:
-                    diff = np.abs(flat_new[moe_path] - value).max()
+                    expected = value.astype(flat_new[moe_path].dtype, copy=False)
+                    diff = np.abs(flat_new[moe_path] - expected).max()
                     print(diff)
                     if diff > 1e-7:
                         print(f"[WARN] FFN→MoE param mismatch: {path} (max diff {diff})")

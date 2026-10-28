@@ -269,11 +269,8 @@ class TokenizePrompt(DataTransformFn):
 class TokenizeSubtaskTraining(DataTransformFn):
     """Tokenize prompt for pi0.5 subtask training (joint CE + flow-matching loss).
 
-    Uses identity subtask by default: high_prompt = low_prompt = prompt.
-    Produces token_ar_mask (causal on subtask portion) and token_loss_mask
-    (CE loss on subtask portion only).
-
-    Replace the high/low split logic here to plug in real subtask annotations.
+    Produces a causal target after the high-level task prefix and applies CE only
+    to the subtask text (including its EOS terminator).
     """
     tokenizer: _tokenizer.PaligemmaTokenizer
 
@@ -289,7 +286,9 @@ class TokenizeSubtaskTraining(DataTransformFn):
             subtask = subtask.item()
 
         high_prompt = prompt
-        low_prompt = subtask if subtask is not None else prompt
+        if subtask is None:
+            raise ValueError("Subtask label is required for subtask training")
+        low_prompt = subtask
 
         tokens, mask, ar_mask, loss_mask = self.tokenizer.tokenize_high_low_prompt(high_prompt, low_prompt)
         return {
@@ -299,6 +298,37 @@ class TokenizeSubtaskTraining(DataTransformFn):
             "token_ar_mask": ar_mask,
             "token_loss_mask": loss_mask,
         }
+
+
+@dataclasses.dataclass(frozen=True)
+class AttachLiberoSubtask(DataTransformFn):
+    """Attach an annotated LIBERO subtask using task prompt and segment id.
+
+    `eval_skill_segment == -1` maps to the explicit text sentinel "none".
+    The source dataset remains unchanged; this runs as an in-memory transform.
+    """
+
+    annotations: dict[str, list[str]]
+    no_segment_text: str = "none"
+
+    def __call__(self, data: DataDict) -> DataDict:
+        prompt = data.get("prompt")
+        segment = data.get("eval_skill_segment")
+        if prompt is None or segment is None:
+            raise ValueError("LIBERO subtask transform requires prompt and eval_skill_segment")
+        if not isinstance(prompt, str):
+            prompt = prompt.item()
+        if not isinstance(segment, (int, np.integer)):
+            segment = int(np.asarray(segment).item())
+        if segment == -1:
+            subtask = self.no_segment_text
+        else:
+            try:
+                plans = self.annotations[prompt]
+                subtask = plans[segment]
+            except (KeyError, IndexError) as exc:
+                raise ValueError(f"No subtask annotation for task={prompt!r}, segment={segment}") from exc
+        return {**data, "subtask": subtask}
 
 
 @dataclasses.dataclass(frozen=True)

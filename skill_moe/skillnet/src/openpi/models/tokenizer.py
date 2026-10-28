@@ -49,6 +49,49 @@ class PaligemmaTokenizer:
 
         return np.asarray(tokens), np.asarray(mask)
 
+    def tokenize_high_level_prefix(self, prompt: str) -> tuple[np.ndarray, np.ndarray]:
+        """Tokenize the exact prefix used by the subtask decoder."""
+        text = f"Task: {prompt.strip().replace('_', ' ').replace(chr(10), ' ')}. Subtask: "
+        tokens = self._tokenizer.encode(text, add_bos=True)
+        if len(tokens) > self._max_len:
+            raise ValueError(f"Subtask prefix has {len(tokens)} tokens; max_len={self._max_len}")
+        mask = [True] * len(tokens) + [False] * (self._max_len - len(tokens))
+        tokens += [0] * (self._max_len - len(tokens))
+        return np.asarray(tokens, dtype=np.int32), np.asarray(mask, dtype=np.bool_)
+
+    def detokenize(self, tokens: np.ndarray | list[int]) -> str:
+        """Decode a generated subtask, stopping before its EOS token."""
+        ids = [int(token) for token in np.asarray(tokens).reshape(-1).tolist()]
+        if 1 in ids:
+            ids = ids[: ids.index(1)]
+        else:
+            # In a max-length truncation there is no EOS; ignore only trailing
+            # padding, preserving any zero token in the interior.
+            while ids and ids[-1] == 0:
+                ids.pop()
+        return self._tokenizer.decode(ids).strip()
+
+    def tokenize_high_low_prompt(
+        self, high_prompt: str, low_prompt: str
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Tokenize Task + Subtask target and mark only the subtask/EOS for CE."""
+        prefix = f"Task: {high_prompt.strip().replace('_', ' ').replace(chr(10), ' ')}. Subtask: "
+        prefix_ids = self._tokenizer.encode(prefix, add_bos=True)
+        target_ids = self._tokenizer.encode(low_prompt.strip(), add_bos=False)
+        # PaliGemma uses token 1 for EOS. Include it in the target so decoding has
+        # an explicit, learned terminator.
+        ids = prefix_ids + target_ids + [1]
+        if len(ids) > self._max_len:
+            raise ValueError(f"Subtask sequence has {len(ids)} tokens; max_len={self._max_len}")
+        length = len(ids)
+        tokens = ids + [0] * (self._max_len - length)
+        mask = [True] * length + [False] * (self._max_len - length)
+        ar_mask = [False] * len(prefix_ids) + [True] * (length - len(prefix_ids)) + [False] * (self._max_len - length)
+        loss_mask = [False] * len(prefix_ids) + [True] * (length - len(prefix_ids)) + [False] * (self._max_len - length)
+        return tuple(np.asarray(value, dtype=dtype) for value, dtype in (
+            (tokens, np.int32), (mask, np.bool_), (ar_mask, np.int32), (loss_mask, np.bool_)
+        ))
+
 
 class FASTTokenizer:
 

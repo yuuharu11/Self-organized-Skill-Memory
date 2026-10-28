@@ -130,12 +130,24 @@ def patch_task_map(libero_root: Path, *, dry_run: bool) -> bool:
 
 
 def benchmark_registration_patch(text: str) -> str | None:
+    # The public skill manifest has nine tasks. Upstream's standard LIBERO
+    # suites use ten-task permutations, so preserve manifest order as for
+    # libero_90 instead. Also repair installs made by the previous helper.
+    patched = text.replace(
+        'if self.name == "libero_90":',
+        'if self.name in ("libero_90", "libero_skill_obj"):',
+    )
+    # These are the trusted LIBERO benchmark initial-state arrays, not model
+    # weights. Preserve upstream's pre-PyTorch-2.6 deserialization behavior.
+    patched = patched.replace(
+        "torch.load(init_states_path)",
+        "torch.load(init_states_path, weights_only=False)",
+    )
     if "LIBERO_SKILL" in text and "LIBERO_SKILL_OBJ" in text:
-        return None
+        return patched if patched != text else None
     if "register_benchmark" not in text or "Benchmark" not in text:
         return None
 
-    patched = text
     if "libero_skill_obj" not in patched and "task_maps = {}" in patched:
         patched = patched.replace(
             "task_maps = {}",

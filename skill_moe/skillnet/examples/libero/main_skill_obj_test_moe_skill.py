@@ -239,6 +239,7 @@ def eval_libero(args: Args) -> None:
                 except Exception:
                     logging.exception("Caught exception during rollout")
                     if args.fail_fast:
+                        env.close()
                         raise
                     break
 
@@ -263,6 +264,7 @@ def eval_libero(args: Args) -> None:
         # Log final results
         logging.info(f"Current task success rate: {float(task_successes) / float(task_episodes)}")
         logging.info(f"Current total success rate: {float(total_successes) / float(total_episodes)}")
+        env.close()
 
     logging.info(f"Total success rate: {float(total_successes) / float(total_episodes)}")
     logging.info(f"Total episodes: {total_episodes}")

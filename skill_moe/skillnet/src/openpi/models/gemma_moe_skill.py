@@ -27,7 +27,7 @@ We follow this einsum axis naming convention:
 
 from collections.abc import Sequence
 import dataclasses
-from typing import Literal, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 import einops
 import flax.linen as nn
@@ -39,6 +39,21 @@ import openpi.shared.array_typing as at
 import openpi.training.sharding as sharding
 
 PALIGEMMA_VOCAB_SIZE = 257_152
+
+
+def _masked_skill_softmax(attn_scores, skill_mask):
+    """Softmax over valid skill tokens; an all-masked row returns exact zeros."""
+    expanded = skill_mask[:, None, None, :].astype(bool)
+    has_skill = jnp.any(skill_mask, axis=-1)[:, None, None, None]
+    scores = jnp.where(expanded, attn_scores, -jnp.inf)
+    scores = jnp.where(has_skill, scores, 0.0)
+    weights = nn.softmax(scores, axis=-1).astype(attn_scores.dtype)
+    return jnp.where(has_skill, weights, 0.0)
+
+
+def _selected_expert(topk_idx):
+    """Expert actually dispatched by the top-k path (also resolves exact ties)."""
+    return topk_idx[..., -1].astype(jnp.int32)
 
 
 @dataclasses.dataclass
@@ -54,7 +69,7 @@ class Config:
     expert_num: int = 8
 
 
-Variant = Literal["dummy", "gemma_300m", "gemma_300m_lora", "gemma_2b", "gemma_2b_lora", "gemma_300m_moe", "gemma_300m_moe_4"]
+Variant = Literal["dummy", "dummy_moe_4", "gemma_300m", "gemma_300m_lora", "gemma_2b", "gemma_2b_lora", "gemma_300m_moe", "gemma_300m_moe_4"]
 
 
 def get_config(variant: Variant) -> Config:
@@ -68,6 +83,18 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=16,
             moe=False
+        )
+    if variant == "dummy_moe_4":
+        # Test-only MoE action expert (same shape as "dummy", four routed experts).
+        return Config(
+            width=64,
+            depth=4,
+            mlp_dim=128,
+            num_heads=8,
+            num_kv_heads=1,
+            head_dim=16,
+            moe=True,
+            expert_num=4,
         )
     if variant == "gemma_300m":
         # 311M params
@@ -188,7 +215,9 @@ class Embedder(nn.Module):
         )
 
     def encode(self, x):
-        x = self.input_embedding_table[(x,)]
+        # A restored checkpoint may keep this tied table as a host NumPy
+        # array; convert explicitly before indexing with traced decode tokens.
+        x = jnp.asarray(self.input_embedding_table)[(x,)]
         x *= jnp.sqrt(self.embed_dim).astype(x.dtype)
         return x
 
@@ -252,8 +281,28 @@ class Attention(nn.Module):
 
         if kv_cache is not None:
             cache_k, cache_v = kv_cache
-            k = jnp.concatenate([cache_k, k], axis=1)
-            v = jnp.concatenate([cache_v, v], axis=1)
+            if cache_k.shape[1] > k.shape[1] and k.shape[1] == 1 and cache_k.shape[1] == attn_mask.shape[-1]:
+                # Autoregressive subtask decoding uses a preallocated cache. The
+                # RoPE position is also the cache slot because the text prefix is
+                # left-aligned and its padding is masked.
+                slot = positions[:, 0]
+
+                def write_one(cache, value, index):
+                    return cache.at[index].set(value[0])
+
+                k = jax.vmap(write_one)(cache_k, k, slot)
+                v = jax.vmap(write_one)(cache_v, v, slot)
+            else:
+                # Flow-matching action suffixes append as a block to the prefix
+                # cache; preserve the existing non-autoregressive behavior.
+                k = jnp.concatenate([cache_k, k], axis=1)
+                v = jnp.concatenate([cache_v, v], axis=1)
+        elif attn_mask.shape[-1] > k.shape[1]:
+            # Subtask decoding preallocates room after the prefix. Padding the
+            # cache here keeps its shape static across lax.while_loop iterations.
+            pad = attn_mask.shape[-1] - k.shape[1]
+            k = jnp.pad(k, ((0, 0), (0, pad), (0, 0), (0, 0)))
+            v = jnp.pad(v, ((0, 0), (0, pad), (0, 0), (0, 0)))
 
         q = einops.rearrange(q, "B T (K G) H -> B T K G H", K=self.configs[0].num_kv_heads)
         logits = jnp.einsum("BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32)
@@ -362,13 +411,8 @@ class MoEFeedForward(nn.Module):
         # Scaled dot-product attention
         attn_scores = jnp.matmul(Q, K.transpose(0, 1, 3, 2)) / jnp.sqrt(head_dim)  # [B, num_heads, T, l_skill]
         
-        # Apply skill mask (mask out padded skills)
-        # Expand mask for heads: [B, 1, 1, l_skill]
-        mask_expanded = skill_mask[:, None, None, :].astype(dtype)
-        attn_scores = jnp.where(mask_expanded, attn_scores, -1e9)
-        
-        # Softmax to get attention weights
-        attn_weights = nn.softmax(attn_scores, axis=-1).astype(dtype)  # [B, num_heads, T, l_skill]
+        # All-masked rows return exact zeros; -1e9 alone would yield uniform weights.
+        attn_weights = _masked_skill_softmax(attn_scores, skill_mask).astype(dtype)
         
         # Apply attention to values
         attn_output = jnp.matmul(attn_weights, V)  # [B, num_heads, T, head_dim]
@@ -381,6 +425,7 @@ class MoEFeedForward(nn.Module):
 
         # Top-k mask: 1 for selected experts per token
         topk_idx = jnp.argsort(router_probs, axis=-1)[..., -self.top_k:]  # [B, T, top_k]
+        selected_expert = _selected_expert(topk_idx)
         topk_mask = jax.nn.one_hot(topk_idx, self.num_experts, dtype=dtype).sum(axis=-2) 
         dispatch_mask = (topk_mask * router_probs)[..., None].astype(dtype)
 
@@ -392,7 +437,15 @@ class MoEFeedForward(nn.Module):
             expert_outputs.append(expert_output) 
         expert_shared = FeedForward(features=self.output_dim, hidden_dim=self.hidden_dim, name="shared_expert") 
         shared_output = expert_shared(x) 
-        stacked = jnp.stack(expert_outputs, axis=-2) # [B, T, num_experts, D] 
+        stacked = jnp.stack(expert_outputs, axis=-2) # [B, T, num_experts, D]
+        selected_output = jnp.take_along_axis(
+            stacked, selected_expert[..., None, None], axis=-2
+        ).squeeze(axis=-2)
+        selected_weight = jnp.take_along_axis(router_probs, selected_expert[..., None], axis=-1)[..., 0]
+        selected_contribution_norm = jnp.linalg.norm(
+            (selected_output * selected_weight[..., None]).astype(jnp.float32), axis=-1
+        )
+        shared_output_norm = jnp.linalg.norm(shared_output.astype(jnp.float32), axis=-1)
         # Combine according to routing weights 
         y = shared_output + jnp.sum(stacked * dispatch_mask, axis=-2) 
         assert y.dtype == dtype
@@ -403,7 +456,8 @@ class MoEFeedForward(nn.Module):
         router_prob_per_expert = jnp.mean(router_probs, axis=(0, 1))  # [num_experts]
         load_balance_loss = self.num_experts * jnp.sum(tokens_per_expert * router_prob_per_expert)
 
-        return y, self.router_loss_scale * load_balance_loss
+        return (y, self.router_loss_scale * load_balance_loss, selected_expert,
+                selected_contribution_norm, shared_output_norm)
 
 @at.typecheck
 class Block(nn.Module):
@@ -439,17 +493,24 @@ class Block(nn.Module):
         out = []
         gates = []
         block_balance_losses = []
+        action_router_top1 = None
+        action_selected_norm = None
+        action_shared_norm = None
         for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)):
             if x is not None:
                 x, gate = RMSNorm(name=_name("pre_ffw_norm", i))(x, adarms_cond[i])  # noqa: PLW2901
                 if config.moe:
-                    x, balance_loss = MoEFeedForward(
+                    x, balance_loss, router_top1, selected_norm, shared_norm = MoEFeedForward(
                     num_experts=config.expert_num,  # 自定义
                     hidden_dim=config.mlp_dim,
                     output_dim=config.width,
                     name=_name("moe_ffn", i),
                     )(x, skill_embeds, skill_mask)
                     block_balance_losses.append(balance_loss)
+                    if i == 1:
+                        action_router_top1 = router_top1
+                        action_selected_norm = selected_norm
+                        action_shared_norm = shared_norm
                     # print(x.shape)
                 else:
                     x = lora.FeedForward(  # noqa: PLW2901
@@ -467,7 +528,10 @@ class Block(nn.Module):
         xs = [_gated_residual(x, y, gate) for x, y, gate in zip(xs, out, gates, strict=True)]
         xs = sharding.activation_sharding_constraint(xs)
 
-        return (xs, total_balance_loss), kv_cache
+        # Scan outputs retain layer-wise action-stream activations and router choices
+        # for opt-in pilot capture. Normal callers discard this auxiliary value.
+        return (xs, total_balance_loss), (kv_cache, (xs[1], action_router_top1,
+                                                       action_selected_norm, action_shared_norm))
 
 KVCache: TypeAlias = tuple[at.Float[at.Array, "l b _t _k _h"], at.Float[at.Array, "l b _t _v _h"]]
 
@@ -550,6 +614,11 @@ class Module(nn.Module):
         return position_embed        
 
     @at.typecheck
+    def logits(self, pre_logits: at.Float[at.Array, "b t d"]) -> at.Float[at.Array, "b t v"]:
+        """Tied PaliGemma vocabulary projection for language-model CE/decoding."""
+        return self.embedder.decode(pre_logits)
+
+    @at.typecheck
     def __call__(
         self,
         embedded: Sequence[at.Float[at.Array, "b _t _d"] | None],
@@ -561,7 +630,8 @@ class Module(nn.Module):
         *,
         kv_cache: KVCache | None = None,
         deterministic: bool = True,
-    ) -> tuple[Sequence[at.Float[at.Array, "b _t _d"] | None], KVCache, at.Float[at.Array, ""]]:
+        capture_auxiliary: bool = False,
+    ) -> Any:
         embedded = jax.tree.map(lambda e: e.astype(self.embed_dtype), embedded)
         mask = jnp.asarray(mask)[:, None, :, :]
         if adarms_cond is None:
@@ -571,15 +641,19 @@ class Module(nn.Module):
         total_router_loss = jnp.array(0.0, dtype=jnp.float32)
         mix_input = (embedded, total_router_loss)
 
-        mix_input, kv_cache = self.layers(mix_input, kv_cache, skill_embeds, skill_mask, positions, mask, adarms_cond, deterministic)
+        mix_input, scan_output = self.layers(mix_input, kv_cache, skill_embeds, skill_mask, positions, mask, adarms_cond, deterministic)
+        kv_cache, layer_aux = scan_output
         embedded, total_router_loss = mix_input
         total_router_loss = total_router_loss/18
 
         assert all(e.dtype == jnp.dtype(self.embed_dtype) for e in embedded if e is not None)
 
-        return [
+        outputs = [
             f(e, a)[0] if e is not None else e for f, e, a in zip(self.final_norms, embedded, adarms_cond, strict=True)
-        ], kv_cache, total_router_loss
+        ]
+        if capture_auxiliary:
+            return outputs, kv_cache, total_router_loss, layer_aux
+        return outputs, kv_cache, total_router_loss
 
     def init(self, use_adarms: Sequence[bool]):
         """Convenience method for initializing all parameters, necessary due to the quirks of linen."""

@@ -70,8 +70,6 @@ class WebsocketPolicyServer:
                 # ============================================
                 infer_time = time.monotonic() - infer_time
                 # =================================================
-                await websocket.send(packer.pack(return_action))
-
                 if isinstance(return_action, tuple):
                     action, attn_traj, router_traj, skill_embeds = return_action
                     return_action = {

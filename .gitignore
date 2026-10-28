@@ -34,3 +34,6 @@ skill_moe/skillnet/examples/libero/skillnet_env.sh
 Thumbs.db
 .idea/
 .vscode/
+
+# Local environment, checkpoints, caches, and experiment state.
+.skillnet-state/

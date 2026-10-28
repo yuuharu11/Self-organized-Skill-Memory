@@ -1,7 +1,9 @@
 from collections.abc import Iterator, Sequence
+import json
 import logging
 import multiprocessing
 import os
+import pathlib
 import typing
 from typing import Literal, Protocol, SupportsIndex, TypeVar
 
@@ -239,13 +241,60 @@ def create_torch_dataset(
     print('#############################')
     print(dataset_meta)
     print('#############################')
+    selected_episodes = None
+    if data_config.subtask_task_indices is not None:
+        if data_config.root is None:
+            raise ValueError("LIBERO subtask suite filtering requires DataConfig.root")
+        dataset_root = pathlib.Path(data_config.root)
+        task_rows = [json.loads(line) for line in (dataset_root / "meta/tasks.jsonl").read_text().splitlines() if line]
+        task_index_by_text = {row["task"]: int(row["task_index"]) for row in task_rows}
+        episodes_by_task: dict[int, list[int]] = {}
+        for line in (dataset_root / "meta/episodes.jsonl").read_text().splitlines():
+            if not line:
+                continue
+            row = json.loads(line)
+            for task_text in row["tasks"]:
+                if task_text in task_index_by_text:
+                    episodes_by_task.setdefault(task_index_by_text[task_text], []).append(int(row["episode_index"]))
+        selected: list[int] = []
+        holdout = float(data_config.subtask_holdout_fraction)
+        if not 0.0 <= holdout < 1.0:
+            raise ValueError("subtask_holdout_fraction must be in [0, 1)")
+        for task_index in data_config.subtask_task_indices:
+            task_episodes = sorted(set(episodes_by_task.get(int(task_index), [])))
+            if not task_episodes:
+                raise ValueError(f"No LIBERO episodes for task_index={task_index}")
+            n_holdout = int(round(len(task_episodes) * holdout))
+            if holdout > 0 and n_holdout == 0 and len(task_episodes) > 1:
+                n_holdout = 1
+            # Sorted episode ids make the held-out subset deterministic and
+            # episode-disjoint from the training split.
+            train_episodes = task_episodes[:-n_holdout] if n_holdout else task_episodes
+            heldout_episodes = task_episodes[-n_holdout:] if n_holdout else []
+            selected.extend(heldout_episodes if data_config.subtask_holdout_only else train_episodes)
+        selected_episodes = sorted(set(selected))
+
     dataset = lerobot_dataset.LeRobotDataset(
         data_config.repo_id,
         root=data_config.root,
+        episodes=selected_episodes,
         delta_timestamps={
             key: [t / dataset_meta.fps for t in range(action_horizon)] for key in data_config.action_sequence_keys
         },
     )
+
+    if selected_episodes is not None:
+        # LeRobot's selected dataset keeps global episode_index values in rows,
+        # but `_get_query_indices` expects the compact index used by its filtered
+        # episode_data_index. Translate only that lookup; row/action indices stay
+        # local to the selected parquet concatenation.
+        episode_to_local = {episode: i for i, episode in enumerate(selected_episodes)}
+        original_get_query_indices = dataset._get_query_indices
+
+        def _get_filtered_query_indices(row_index: int, episode_index: int):
+            return original_get_query_indices(row_index, episode_to_local[episode_index])
+
+        dataset._get_query_indices = _get_filtered_query_indices
 
     if data_config.prompt_from_task:
         dataset = TransformedDataset(dataset, [_transforms.PromptFromLeRobotTask(dataset_meta.tasks)])

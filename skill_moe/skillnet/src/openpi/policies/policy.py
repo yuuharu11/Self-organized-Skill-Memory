@@ -74,7 +74,10 @@ class Policy(BasePolicy):
             self._sample_actions = model.sample_actions
         else:
             # JAX model setup
-            self._sample_actions = nnx_utils.module_jit(model.sample_actions)
+            self._sample_actions = nnx_utils.module_jit(
+                model.sample_actions,
+                static_argnames=("capture_auxiliary", "capture_denoising_trace", "num_steps"),
+            )
             self._sample_actions_from_prefix_cache = (
                 nnx_utils.module_jit(model.sample_actions_from_prefix_cache)
                 if hasattr(model, "sample_actions_from_prefix_cache")
@@ -131,7 +134,7 @@ class Policy(BasePolicy):
 
         payload = {
             "trace_index": step,
-            "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "prompt": None if prompt is None else str(prompt),
             "generated_text": generated_text,
             "generated_token_ids": token_ids,
@@ -377,7 +380,14 @@ class Policy(BasePolicy):
         else:
             actions_output = self._sample_actions(sample_rng_or_pytorch_device, observation, **sample_kwargs)
 
-        if isinstance(actions_output, tuple):
+        memory_pilot_aux = None
+        if isinstance(actions_output, tuple) and len(actions_output) == 5:
+            # Opt-in memory-pilot capture: actions, per-layer action-stream states,
+            # and per-layer router top-1 choices from the final diffusion step.
+            actions, memory_pilot_aux = actions_output[0], actions_output[1:]
+            attn_traj = None
+            router_traj = None
+        elif isinstance(actions_output, tuple):
             # 新接口：actions + stats
             actions, attn_traj, router_traj, skills = actions_output
         else:
@@ -397,6 +407,18 @@ class Policy(BasePolicy):
             outputs = jax.tree.map(lambda x: np.asarray(x[0, ...]), outputs)
 
         outputs = self._output_transform(outputs)
+        if memory_pilot_aux is not None:
+            features, router_top1, selected_norm, shared_norm = memory_pilot_aux
+            if self._is_pytorch_model:
+                outputs["memory_pilot_features"] = np.asarray(features.detach().cpu())[:, 0, ...]
+                outputs["memory_pilot_router_top1"] = np.asarray(router_top1.detach().cpu())[:, 0, ...]
+                outputs["memory_pilot_selected_expert_contribution_norm"] = np.asarray(selected_norm.detach().cpu())[:, 0, ...]
+                outputs["memory_pilot_shared_expert_norm"] = np.asarray(shared_norm.detach().cpu())[:, 0, ...]
+            else:
+                outputs["memory_pilot_features"] = np.asarray(features)[:, 0, ...]
+                outputs["memory_pilot_router_top1"] = np.asarray(router_top1)[:, 0, ...]
+                outputs["memory_pilot_selected_expert_contribution_norm"] = np.asarray(selected_norm)[:, 0, ...]
+                outputs["memory_pilot_shared_expert_norm"] = np.asarray(shared_norm)[:, 0, ...]
         outputs["policy_timing"] = {
             "infer_ms": model_time * 1000,
         }

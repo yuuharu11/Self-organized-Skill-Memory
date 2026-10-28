@@ -86,6 +86,9 @@ class LiberoInputs(transforms.DataTransformFn):
 
         if "subtask_training_target" in data:
             inputs["subtask_training_target"] = data["subtask_training_target"]
+        # Kept only for the in-memory LIBERO subtask-label transform.
+        if "eval_skill_segment" in data:
+            inputs["eval_skill_segment"] = data["eval_skill_segment"]
         
         if "skills" in data:
             lst = ast.literal_eval(data["skills"])  # 把字符串安全地解析为 Python 列表
@@ -122,6 +125,14 @@ class LiberoInputs(transforms.DataTransformFn):
                 inputs["skills"] = arr
                 inputs["skill_mask"] = skill_mask
             ##################################################
+
+        if "skill_mask_override" in data:
+            inputs["skill_mask"] = np.asarray(data["skill_mask_override"], dtype=bool)
+        if "skill_embed_override" in data:
+            inputs["skill_embed_override"] = data["skill_embed_override"]
+        for key in ("memory_features", "memory_candidates", "memory_candidate_mask", "memory_enabled", "skill_z"):
+            if key in data:
+                inputs[key] = data[key]
 
         if "objects" in data:
             lst = ast.literal_eval(data["objects"])  # 把字符串安全地解析为 Python 列表

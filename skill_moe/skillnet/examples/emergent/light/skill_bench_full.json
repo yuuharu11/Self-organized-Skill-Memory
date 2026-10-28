@@ -1,0 +1,61 @@
+{
+  "description": "Full skill-formation comparison. Null epochs/batch_size means use each method's constructor defaults without shortening.",
+  "methods": [
+    "M0",
+    "M1_hsic0",
+    "M1_hsic0.01",
+    "M1_hsic0.1",
+    "M2_vq16",
+    "M2_vq32",
+    "M2_vq64",
+    "FSQ_16",
+    "FSQ_32",
+    "FSQ_64",
+    "M3_rvq16x16",
+    "M4_add_only",
+    "M4_adaptive",
+    "M4_merge",
+    "M5_fixed",
+    "M5_growing"
+  ],
+  "seeds": [0, 1, 2],
+  "horizons": [25, 10],
+  "epochs": null,
+  "batch_size": null,
+  "method_defaults": {
+    "M0": {"epochs": 10, "batch_size": 128},
+    "M1_hsic0": {"epochs": 10, "batch_size": 128},
+    "M1_hsic0.01": {"epochs": 10, "batch_size": 128},
+    "M1_hsic0.1": {"epochs": 10, "batch_size": 128},
+    "M2_vq16": {"epochs": 10, "batch_size": 128},
+    "M2_vq32": {"epochs": 10, "batch_size": 128},
+    "M2_vq64": {"epochs": 10, "batch_size": 128},
+    "FSQ_16": {"epochs": 10, "batch_size": 128},
+    "FSQ_32": {"epochs": 10, "batch_size": 128},
+    "FSQ_64": {"epochs": 10, "batch_size": 128},
+    "M3_rvq16x16": {"epochs": 30, "batch_size": 256},
+    "M4_add_only": {"epochs": 20, "batch_size": 128},
+    "M4_adaptive": {"epochs": 20, "batch_size": 128},
+    "M4_merge": {"epochs": 20, "batch_size": 128},
+    "M5_fixed": {"epochs": 20, "batch_size": 128},
+    "M5_growing": {"epochs": 20, "batch_size": 128}
+  },
+  "overlays": {
+    "S": {
+      "enabled_after_baseline": true,
+      "apply_to": "best_two_methods_selected_from_baseline",
+      "selection_uses": "object/goal-only training and spatial query metrics"
+    },
+    "C": {
+      "enabled_after_baseline": true,
+      "apply_to": "best_two_methods_selected_from_baseline",
+      "selection_uses": "object/goal-only training and spatial query metrics"
+    }
+  },
+  "runtime_estimate": {
+    "approximate_wall_time": "order of 1-3 days for serial full-data execution on one shared GPU plus CPU-only methods",
+    "basis": "about 20-23k train windows and 2.1-2.4k spatial query windows per horizon; 16 variants, 3 seeds, 2 horizons, two retrieval keys, method-default 10-30 epochs, plus unit-ablation and insertion-order diagnostics",
+    "uncertainty": "high; run one method/seed/horizon pilot without row caps and extrapolate before launching the full matrix"
+  },
+  "run_command": "cd /work && source env/activate.sh && export XLA_PYTHON_CLIENT_PREALLOCATE=false && python -m skill_moe.skillnet.examples.emergent.light.skill_bench --config skill_moe/skillnet/examples/emergent/light/skill_bench_full.json"
+}

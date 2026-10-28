@@ -35,6 +35,9 @@ class Pi0Config(_model.BaseModelConfig):
     skill_embed_dim: int = 64
     positional_encoding: bool = False
     t_coding: bool = False
+    # SigLIP variant for the image encoder. Released checkpoints use "So400m/14";
+    # tests may use a tiny variant such as "mu/32".
+    vision_variant: str = "So400m/14"
 
     def __post_init__(self):
         if self.max_token_len is None:

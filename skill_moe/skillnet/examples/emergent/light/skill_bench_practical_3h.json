@@ -1,0 +1,147 @@
+{
+  "description": "Practical full comparison under a shared-GPU 3–4 hour target. All 16 method variants, full query rows, method-default epochs with validation early stopping (patience 3), one shared train20-fitted retrieval key, and the canonical Object→Goal→Spatial→LIBERO-10 stream order. Remaining order variants are reserved for a seed-0/H25 follow-up on the best two methods.",
+  "methods": [
+    "M0",
+    "M1_hsic0",
+    "M1_hsic0.01",
+    "M1_hsic0.1",
+    "M2_vq16",
+    "M2_vq32",
+    "M2_vq64",
+    "FSQ_16",
+    "FSQ_32",
+    "FSQ_64",
+    "M3_rvq16x16",
+    "M4_add_only",
+    "M4_adaptive",
+    "M4_merge",
+    "M5_fixed",
+    "M5_growing"
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "horizons": [
+    25,
+    10
+  ],
+  "epochs": null,
+  "batch_size": null,
+  "method_defaults": {
+    "M0": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M1_hsic0": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M1_hsic0.01": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M1_hsic0.1": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M2_vq16": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M2_vq32": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M2_vq64": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "FSQ_16": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "FSQ_32": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "FSQ_64": {
+      "epochs": 10,
+      "batch_size": 128
+    },
+    "M3_rvq16x16": {
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "M4_add_only": {
+      "epochs": 20,
+      "batch_size": 128
+    },
+    "M4_adaptive": {
+      "epochs": 20,
+      "batch_size": 128
+    },
+    "M4_merge": {
+      "epochs": 20,
+      "batch_size": 128
+    },
+    "M5_fixed": {
+      "epochs": 20,
+      "batch_size": 128
+    },
+    "M5_growing": {
+      "epochs": 20,
+      "batch_size": 128
+    }
+  },
+  "overlays": {
+    "S": {
+      "enabled_after_baseline": true,
+      "apply_to": "best_two_methods_selected_from_baseline",
+      "selection_uses": "object/goal-only training and spatial query metrics"
+    },
+    "C": {
+      "enabled_after_baseline": true,
+      "apply_to": "best_two_methods_selected_from_baseline",
+      "selection_uses": "object/goal-only training and spatial query metrics"
+    }
+  },
+  "runtime_estimate": {
+    "approximate_wall_time": "3.6–3.9 hours for primary matrix; about 10 additional minutes for two non-canonical orders on the best two methods at H=25, seed=0",
+    "basis": "Measured 16-method H=25/seed=0 baseline: 20.27 min total, 76 sec/method; measured canonical sequential order: 64.1 sec/method. Extrapolation: 96 method×seed×horizon cells × (76+64.1) sec = 3.74 hours before early-stop savings. MI resampling lowered from 20/100 to 10/50, and early stopping patience=3 is enabled. Actual duration varies by horizon and shared-GPU contention.",
+    "uncertainty": "Moderate. The 64.1 sec sequential timing is one M0/H25 run; runtime may exceed 4h if other methods or H=10 produce materially slower suite metrics. Run serially to avoid GPU contention."
+  },
+  "run_command": "cd /work && source env/activate.sh && export XLA_PYTHON_CLIENT_PREALLOCATE=false && python -m skill_moe.skillnet.examples.emergent.light.skill_bench --config skill_moe/skillnet/examples/emergent/light/skill_bench_practical_3h.json",
+  "key_names": [
+    "combined_base_wrist_proprio"
+  ],
+  "early_stopping_patience": 3,
+  "sequential": true,
+  "sequential_orders": [
+    "spatial_then_libero10"
+  ],
+  "mi_permutations": 10,
+  "mi_bootstrap": 50,
+  "followup_order_sensitivity": {
+    "selected_from": "best_two_after_primary",
+    "seeds": [
+      0
+    ],
+    "horizons": [
+      25
+    ],
+    "orders": [
+      "libero10_then_spatial",
+      "random_mixed"
+    ],
+    "notes": "Run the two non-canonical order variants on the two leading methods only; retain the same full query rows.",
+    "run_command_template": "cd /work && source env/activate.sh && export XLA_PYTHON_CLIENT_PREALLOCATE=false && python -m skill_moe.skillnet.examples.emergent.light.skill_bench --config skill_moe/skillnet/examples/emergent/light/skill_bench_practical_3h.json --methods <two-selected-methods> --seeds 0 --horizons 25 --sequential-orders libero10_then_spatial random_mixed",
+    "protocol_order_definitions": {
+      "spatial_then_libero10": "Object → Goal → Spatial → LIBERO-10",
+      "libero10_then_spatial": "Object → Goal → LIBERO-10 → Spatial",
+      "random_mixed": "Object → Goal, then interleave Spatial and LIBERO-10 store rows with a fixed seed"
+    }
+  },
+  "libero10_root": "/work/.skillnet-state/outputs/memory-pilot/libero10-features-20261026T172715Z-a89f27"
+}

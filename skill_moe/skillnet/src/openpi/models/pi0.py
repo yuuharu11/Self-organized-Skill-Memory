@@ -421,7 +421,7 @@ class Pi0(_model.BaseModel):
     @at.typecheck
     def embed_prefix(
         self, obs: _model.Observation
-    ) -> tuple[at.Float[at.Array, "b s emb"], at.Bool[at.Array, "b s"], at.Bool[at.Array, " s"]]:
+    ) -> tuple[at.Float[at.Array, "b s emb"], at.Bool[at.Array, "b s"], at.Bool[at.Array, "... s"]]:
         input_mask = []
         ar_mask = []
         tokens = []
@@ -446,10 +446,25 @@ class Pi0(_model.BaseModel):
             tokens.append(tokenized_inputs)
             input_mask.append(obs.tokenized_prompt_mask)
             # full attention between image and language inputs
-            ar_mask += [False] * tokenized_inputs.shape[1]
+            if obs.token_ar_mask is None:
+                ar_mask += [False] * tokenized_inputs.shape[1]
+            else:
+                ar_mask.extend([False] * tokenized_inputs.shape[1])
         tokens = jnp.concatenate(tokens, axis=1)
         input_mask = jnp.concatenate(input_mask, axis=1)
         ar_mask = jnp.array(ar_mask)
+        if obs.token_ar_mask is not None:
+            token_ar_mask = obs.token_ar_mask.astype(jnp.bool_)
+            image_prefix_len = tokens.shape[1] - obs.tokenized_prompt.shape[1]
+            if token_ar_mask.ndim == 1:
+                ar_mask = jnp.concatenate(
+                    [jnp.zeros((image_prefix_len,), dtype=jnp.bool_), token_ar_mask], axis=0
+                )
+            else:
+                ar_mask = jnp.concatenate(
+                    [jnp.zeros((token_ar_mask.shape[0], image_prefix_len), dtype=jnp.bool_), token_ar_mask],
+                    axis=1,
+                )
         return tokens, input_mask, ar_mask
 
     @at.typecheck
@@ -505,6 +520,29 @@ class Pi0(_model.BaseModel):
     def compute_loss(
         self, rng: at.KeyArrayLike, observation: _model.Observation, actions: _model.Actions, *, train: bool = False
     ) -> at.Float[at.Array, "*b ah"]:
+        if observation.token_loss_mask is not None:
+            # Subtask-only objective. Action tokens and action-side parameters do not
+            # participate in this language-model pass.
+            preprocess_rng = rng if train else None
+            observation = _model.preprocess_observation(preprocess_rng, observation, train=train)
+            prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
+            attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
+            positions = jnp.cumsum(prefix_mask, axis=1) - 1
+            (prefix_out, _), _ = self.PaliGemma.llm(
+                [prefix_tokens, None], mask=attn_mask, positions=positions, adarms_cond=[None, None],
+                deterministic=not train,
+            )
+            image_prefix_len = prefix_tokens.shape[1] - observation.tokenized_prompt.shape[1]
+            text_out = prefix_out[:, image_prefix_len:-1]
+            logits = self.PaliGemma.llm(pre_logits=text_out, method="logits")
+            targets = observation.tokenized_prompt[:, 1:]
+            loss_mask = observation.token_loss_mask[:, 1:].astype(jnp.float32)
+            log_probs = jax.nn.log_softmax(logits.astype(jnp.float32), axis=-1)
+            selected = jnp.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0]
+            denom = jnp.maximum(jnp.sum(loss_mask, axis=-1), 1.0)
+            loss = -jnp.sum(selected * loss_mask, axis=-1) / denom
+            return loss, jnp.zeros((), dtype=jnp.float32)
+
         preprocess_rng, noise_rng, time_rng = jax.random.split(rng, 3)
         observation = _model.preprocess_observation(preprocess_rng, observation, train=train)
 
@@ -528,6 +566,84 @@ class Pi0(_model.BaseModel):
         v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
 
         return jnp.mean(jnp.square(v_t - u_t), axis=-1)
+
+    def build_full_observation(self, observation: _model.Observation, subtask_tokens: jax.Array) -> _model.Observation:
+        """Attach generated subtask tokens to the original task prefix."""
+        if observation.tokenized_prompt is None or observation.tokenized_prompt_mask is None:
+            raise ValueError("Subtask generation requires tokenized_prompt and tokenized_prompt_mask")
+        prefix = observation.tokenized_prompt
+        prefix_mask = observation.tokenized_prompt_mask
+        tokens = jnp.concatenate([prefix, subtask_tokens], axis=-1)
+        mask = jnp.concatenate([prefix_mask, subtask_tokens != 0], axis=-1)
+        return observation.replace(tokenized_prompt=tokens, tokenized_prompt_mask=mask, token_ar_mask=None, token_loss_mask=None)
+
+    def generate_subtask(self, observation: _model.Observation, *, max_tokens: int = 50) -> jax.Array:
+        """Greedy KV-cached decode, capped at 50 tokens by default.
+
+        EOS (PaliGemma id 1) is retained as the final generated token; later
+        positions are zero padded. If EOS is not reached, decoding stops at
+        ``max_tokens``. Text detokenization stops before the first EOS.
+        """
+        if observation.tokenized_prompt is None or observation.tokenized_prompt_mask is None:
+            raise ValueError("Subtask generation requires a tokenized Task/Subtask prefix")
+        if max_tokens < 1:
+            raise ValueError("max_tokens must be positive")
+        observation = _model.preprocess_observation(None, observation, train=False)
+        prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
+        prefix_attn = make_attn_mask(prefix_mask, prefix_ar_mask)
+        prefix_positions = jnp.cumsum(prefix_mask, axis=1) - 1
+        (prefix_out, _), cache = self.PaliGemma.llm(
+            [prefix_tokens, None], mask=prefix_attn, positions=prefix_positions, adarms_cond=[None, None]
+        )
+        image_prefix_len = prefix_tokens.shape[1] - observation.tokenized_prompt.shape[1]
+        last_text_index = image_prefix_len + jnp.maximum(jnp.sum(observation.tokenized_prompt_mask, axis=1) - 1, 0)
+        last_hidden = jnp.take_along_axis(prefix_out, last_text_index[:, None, None], axis=1)
+        next_logits = self.PaliGemma.llm(pre_logits=last_hidden, method="logits")[:, 0]
+
+        # Fixed-size cache permits a JAX loop while retaining per-token KV caching.
+        cache_len = prefix_tokens.shape[1] + max_tokens
+        def pad_layer_cache(x):
+            pad_width = [(0, 0)] * x.ndim
+            sequence_axis = 2 if x.ndim == 5 else 1
+            pad_width[sequence_axis] = (0, cache_len - x.shape[sequence_axis])
+            return jnp.pad(x, pad_width)
+
+        cache = jax.tree.map(pad_layer_cache, cache)
+        batch = prefix_tokens.shape[0]
+        generated = jnp.zeros((batch, max_tokens), dtype=jnp.int32)
+        finished = jnp.zeros((batch,), dtype=jnp.bool_)
+        prefix_valid = prefix_mask
+
+        def body(carry):
+            i, logits, kv_cache, output, done = carry
+            token = jnp.argmax(logits, axis=-1).astype(jnp.int32)
+            token = jnp.where(done, 0, token)
+            output = output.at[:, i].set(token)
+            done = jnp.logical_or(done, token == 1)
+            token_emb = self.PaliGemma.llm(token[:, None], method="embed")
+            cache_position = jnp.full((batch, 1), prefix_tokens.shape[1] + i, dtype=jnp.int32)
+            position = jnp.sum(prefix_valid, axis=1, keepdims=True).astype(jnp.int32) + i
+            all_valid = jnp.concatenate(
+                [prefix_valid, jnp.ones((batch, max_tokens), dtype=jnp.bool_)], axis=1
+            )
+            key_positions = jnp.arange(cache_len, dtype=jnp.int32)
+            key_mask = all_valid & (key_positions[None, :] <= prefix_tokens.shape[1] + i)
+            attention_mask = key_mask[:, None, :]
+            (decoded, _), updated_cache = self.PaliGemma.llm(
+                [token_emb, None], mask=attention_mask, positions=position, kv_cache=kv_cache,
+                adarms_cond=[None, None], cache_positions=cache_position,
+            )
+            logits = self.PaliGemma.llm(pre_logits=decoded, method="logits")[:, 0]
+            return i + 1, logits, updated_cache, output, done
+
+        def condition(carry):
+            i, _, _, _, done = carry
+            return (i < max_tokens) & ~jnp.all(done)
+
+        _, _, _, generated, _ = jax.lax.while_loop(
+            condition, body, (jnp.asarray(0, dtype=jnp.int32), next_logits, cache, generated, finished)
+        )
+        return generated
 
     @override
     def sample_actions(

@@ -95,6 +95,18 @@ class Observation(Generic[ArrayT]):
     # skills.
     # skills: at.Int[ArrayT, "*b k"] | None = None
     skills: at.Int[ArrayT, "..."] | None = None
+    # Optional post-embedding override used by memory-pilot G1 replay.
+    skill_embed_override: at.Float[ArrayT, "... d"] | None = None
+    # Optional retrieved memory inputs for action-side conditioning, kept separate
+    # from skill-ID embedding overrides used by G1.
+    memory_features: at.Float[ArrayT, "*b dz"] | None = None
+    memory_candidates: at.Float[ArrayT, "*b m dz"] | None = None
+    memory_candidate_mask: at.Bool[ArrayT, "*b m"] | None = None
+    # Optional externally supplied skill latent z (e.g. a memory blend) for the
+    # emergent-skill model (`Pi0SkillLatent`). Ignored by models without a z path.
+    skill_z: at.Float[ArrayT, "*b zd"] | None = None
+    # Static so a disabled run traces the original branch without adapter work.
+    memory_enabled: bool = struct.field(pytree_node=False, default=False)
     # Tokenized prompt mask.
     skill_mask: at.Bool[ArrayT, "*b k"] | None = None
     # objects.
@@ -135,7 +147,13 @@ class Observation(Generic[ArrayT]):
                 token_loss_mask=data.get("token_loss_mask"),
                 skills=data['skills'],
                 objects=data['objects'],
-                skill_mask=data['skill_mask']
+                skill_mask=data['skill_mask'],
+                skill_embed_override=data.get("skill_embed_override"),
+                memory_features=data.get("memory_features"),
+                memory_candidates=data.get("memory_candidates"),
+                memory_candidate_mask=data.get("memory_candidate_mask"),
+                memory_enabled=bool(np.asarray(data.get("memory_enabled", False)).item()),
+                skill_z=data.get("skill_z"),
             )
             return cls(
                 images=data["image"],
@@ -146,7 +164,13 @@ class Observation(Generic[ArrayT]):
                 token_ar_mask=data.get("token_ar_mask"),
                 token_loss_mask=data.get("token_loss_mask"),
                 skills=data['skills'],
-                skill_mask=data['skill_mask']
+                skill_mask=data['skill_mask'],
+                skill_embed_override=data.get("skill_embed_override"),
+                memory_features=data.get("memory_features"),
+                memory_candidates=data.get("memory_candidates"),
+                memory_candidate_mask=data.get("memory_candidate_mask"),
+                memory_enabled=bool(np.asarray(data.get("memory_enabled", False)).item()),
+                skill_z=data.get("skill_z"),
             )
         else:
             return cls(
@@ -156,7 +180,12 @@ class Observation(Generic[ArrayT]):
                 tokenized_prompt=data.get("tokenized_prompt"),
                 tokenized_prompt_mask=data.get("tokenized_prompt_mask"),
                 token_ar_mask=data.get("token_ar_mask"),
-                token_loss_mask=data.get("token_loss_mask")
+                token_loss_mask=data.get("token_loss_mask"),
+                memory_features=data.get("memory_features"),
+                memory_candidates=data.get("memory_candidates"),
+                memory_candidate_mask=data.get("memory_candidate_mask"),
+                memory_enabled=bool(np.asarray(data.get("memory_enabled", False)).item()),
+                skill_z=data.get("skill_z"),
             )
 
     def to_dict(self) -> at.PyTree[ArrayT]:
@@ -238,7 +267,13 @@ def preprocess_observation(
             token_loss_mask=observation.token_loss_mask,
             objects=observation.objects,
             skills=observation.skills,
-            skill_mask=observation.skill_mask
+            skill_mask=observation.skill_mask,
+            skill_embed_override=observation.skill_embed_override,
+            memory_features=observation.memory_features,
+            memory_candidates=observation.memory_candidates,
+            memory_candidate_mask=observation.memory_candidate_mask,
+            memory_enabled=observation.memory_enabled,
+            skill_z=observation.skill_z,
         )
     except:
         try:
@@ -251,7 +286,13 @@ def preprocess_observation(
             token_ar_mask=observation.token_ar_mask,
             token_loss_mask=observation.token_loss_mask,
             skills=observation.skills,
-            skill_mask=observation.skill_mask
+            skill_mask=observation.skill_mask,
+            skill_embed_override=observation.skill_embed_override,
+            memory_features=observation.memory_features,
+            memory_candidates=observation.memory_candidates,
+            memory_candidate_mask=observation.memory_candidate_mask,
+            memory_enabled=observation.memory_enabled,
+            skill_z=observation.skill_z,
             )
         except:
             return Observation(
@@ -261,7 +302,13 @@ def preprocess_observation(
                 tokenized_prompt=observation.tokenized_prompt,
                 tokenized_prompt_mask=observation.tokenized_prompt_mask,
                 token_ar_mask=observation.token_ar_mask,
-                token_loss_mask=observation.token_loss_mask
+                token_loss_mask=observation.token_loss_mask,
+                skill_embed_override=observation.skill_embed_override,
+                memory_features=observation.memory_features,
+                memory_candidates=observation.memory_candidates,
+                memory_candidate_mask=observation.memory_candidate_mask,
+                memory_enabled=observation.memory_enabled,
+            skill_z=observation.skill_z,
             )
 
 @dataclasses.dataclass(frozen=True)

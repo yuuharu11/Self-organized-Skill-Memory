@@ -87,6 +87,9 @@ download, normalization-stat computation, training launchers, and evaluation
 commands. The runnable SkillNet source root used by training commands is
 `skill_moe/skillnet`.
 
+For development inside the current container and local validation results,
+see [Development environment](docs/development_environment.md) (Japanese).
+
 Before installing simulator stacks, you can run:
 
 ```bash
