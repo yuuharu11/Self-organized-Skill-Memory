@@ -1,14 +1,8 @@
 name: SkillNet release checks
 
+# Release gate inherited from the upstream SkillNet public release. It checks
+# the upstream README layout (now docs/skillnet.md), so it runs only on demand.
 on:
-  push:
-    branches:
-      - main
-      - skillnet-public-release
-  pull_request:
-    branches:
-      - main
-      - skillnet-public-release
   workflow_dispatch:
 
 permissions:
