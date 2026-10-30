@@ -27,6 +27,15 @@ python -m skill_moe.skillnet.examples.emergent.light.intermediate.fair_compare -
 | `anchor_flow.py` | S1 anchor-flow training and prequential memory insertion |
 | `fair_compare.py` | Compare confidence-adaptive anchor starts with the ordinary flow under matched conditions |
 | `roundtrip.py` | Trace reconstruction and retrieval errors from a demo through memory to the final action |
+| `hier_skills.py` | S3: group short M6 primitives into longer, open-ended trajectory skills |
+| `review_tests.py` | R1–R8 intervention checks on transfer, confidence, training paths, and memory size |
+| `skill_v2.py` | V2/V2.1 skill-centred action generation and trajectory-skill selection |
+| `v2_compare.py` | Compare V2 combinations using frozen review-test checkpoints |
+| `selection_review.py` | E0–E3/E6–E7 audit of functional selection, frequency controls, and merging |
+| `skill_v3.py` | V3 scene-conditioned latent skills |
+| `skill_v3_competition.py` | Competitive experts and V4 geometric canonicalization |
+| `skill_v3c2.py` | Open-ended expert count, soft competition, and chance-aware scoring |
+| `skill_v3e.py` | E4/E5 representation follow-ups, including balanced assignment |
 
 These entry points test different conditions. Their module paths, CLI options,
 and result formats stay available for reproducing existing runs.
@@ -39,10 +48,17 @@ and result formats stay available for reproducing existing runs.
 | `physical_scales.py` | Fit per-axis action-to-motion scales using training episodes |
 | `../runtime.py` | Initialize Python, NumPy, and Torch RNGs for the initial light runners |
 | `../methods/_common.py` | Shared method input conversion and numerical/memory helpers |
+| `../../research_paths.py` | Checkout root and `SKILLNET_STATE_DIR` for portable research defaults |
 
 Shared split users import `splits.py` directly. `compare_splits.SPLITS` and
 `compare_splits._subset` remain importable for existing consumers. `geo_query.py`
 keeps its two-field split definitions and historical Split B task order.
+
+The V2/V3 scripts are distinct recorded experiments. Keep their original module
+names when reproducing a run, and use the table to choose the intended variant.
+Their historical run-directory defaults identify required prior artifacts;
+they do not download those artifacts. The input dataset, feature cache,
+checkpoints, and prior-run results must be supplied separately.
 
 The `fit_physical_scales` functions in `fair_compare.py` and `roundtrip.py`
 delegate to the same implementation, retaining their respective default caps of

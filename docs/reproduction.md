@@ -24,7 +24,7 @@
 ### コード版と保存先
 
 [README の取得手順](../README.md#コードを取得する) で対象のコード版を選び、リポジトリのルートで実行します。
-PR #2 のマージ前は README の `pull/2/head` の取得手順を使ってください。
+レビュー中のPRは README のPR取得手順で選択できます。mainに取り込まれた内容は通常のcloneで取得できます。
 
 ```bash
 export SKILLNET_REPO_ROOT="$(pwd)"
@@ -192,14 +192,20 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 
 研究ノートの数値まで比較する場合は、次も必要です。
 
-- 対応するコードのコミット ID。未コミットの実験スクリプトは、先に公開・レビューする対象を決める。
+- 対応するコードのコミット IDと、未コミットの変更があればその差分。
 - 元のデモとタスク番号の対応、全エピソード形式の生成方法、評価用注釈。
 - 特徴抽出に使った重み・トークナイザ・抽出条件と、キャッシュの manifest。
 - S1 のサブタスク条件と予測テキストを使う場合の生成器・出力。S2 の LIBERO-90 メモリ・正規化統計・行分割。
 - 実際のコマンド、seed、試行数、タスクごとの初期状態番号、対照条件、集計前の行単位・試行単位の結果。
 
-手元の10月30日のレビュー、較正・検索キー・区間スキル等の未コミットの追加コードや実験資産は、
-PR #2 の配布対象に含めていません。Git に存在しないスクリプト名を外部向け実行手順として案内しないでください。
+10月30日の[結果・レビュー](research/reviews/experiment_results_2026-10-30.md)と、
+較正・検索キー・区間スキル・場面適応・Optimus-R Stage AのコードとテストもGitで管理しています。
+[S2のスクリプト一覧と必要資産](../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)、
+[軽量実験の一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)、
+[Optimus-Rの実装範囲](../skill_moe/skillnet/examples/memory_pilot/optimus_r/DESIGN.md)を確認してください。
+コードの配布に、元データ・大容量キャッシュ・学習済みメモリ・実験出力の配布は含まれません。
+今回整理したスクリプトの既定保存先はチェックアウト先と `SKILLNET_STATE_DIR` から解決しますが、
+過去のrun名を含む入力は実際に用意した資産のパスへ指定し直す必要があります。
 
 ## 5. 検証の範囲と既知の問題
 

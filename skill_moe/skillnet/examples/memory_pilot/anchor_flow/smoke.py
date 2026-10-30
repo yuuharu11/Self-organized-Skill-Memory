@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 from pathlib import Path
+import sys
 import time
 
 import flax.nnx as nnx
@@ -18,7 +19,10 @@ from openpi.models.pi0_config_anchor_flow import Pi0AnchorFlowConfig, action_exp
 from openpi.training.weight_loaders import CheckpointWeightLoader
 from openpi.models import model as _model
 
-DEFAULT_CHECKPOINT = "/work/.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params"
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from research_paths import STATE_DIR
+
+DEFAULT_CHECKPOINT = str(STATE_DIR / "checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params")
 
 
 def parameter_digest(model,filter):
@@ -65,9 +69,11 @@ def _make_train_step(tx):
     trainable = action_expert_trainable_filter()
 
     @nnx.jit
-    def step(rng, model, opt_state, obs, actions, anchor_actions):
+    def step(rng, model, opt_state, obs, actions, anchor_actions, anchor_mask=None):
         def loss_fn(current_model, step_rng):
-            loss, balance = current_model.compute_anchor_loss(step_rng, obs, actions, anchor_actions, train=True)
+            loss, balance = current_model.compute_anchor_loss(
+                step_rng, obs, actions, anchor_actions, anchor_mask=anchor_mask, train=True
+            )
             return jnp.mean(loss) + balance, (jnp.mean(loss), balance)
 
         diff = nnx.DiffState(0, trainable)

@@ -30,6 +30,7 @@ from .experiment import (
     train_flow,
 )
 from ..methods.m6 import M6
+from ....research_paths import REPO_ROOT, STATE_DIR
 
 COMPONENT_DIM = 32
 EMBED_DIM = 3 * COMPONENT_DIM
@@ -38,9 +39,9 @@ EVAL_T0S = (0.2, 0.4, 0.6, 0.8)
 CLIP_EPOCHS = 35
 CLIP_PATIENCE = 6
 CLIP_BATCH = 256
-DEFAULT_PI05_BASE_PARAMS = Path("/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params")
-DEFAULT_PALIGEMMA_TOKENIZER = Path("/work/.skillnet-state/cache/skillnet/big_vision/paligemma_tokenizer.model")
-DEFAULT_ANNOTATIONS = Path("/work/skill_moe/skillnet/examples/libero/annotations/instruct2plan_40.json")
+DEFAULT_PI05_BASE_PARAMS = STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_base/params"
+DEFAULT_PALIGEMMA_TOKENIZER = STATE_DIR / "cache/skillnet/big_vision/paligemma_tokenizer.model"
+DEFAULT_ANNOTATIONS = REPO_ROOT / "skill_moe/skillnet/examples/libero/annotations/instruct2plan_40.json"
 
 
 def plan_text_for_segment(task_name, segment_id, annotations):

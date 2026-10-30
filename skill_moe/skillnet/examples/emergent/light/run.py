@@ -23,10 +23,10 @@ from .extract import dataset_episodes, extract_cache
 from .runtime import seed_experiment as _seed
 from .model import BottleneckModel, gaussian_kl, standardize
 
-ROOT = Path("/work")
-DEFAULT_DATA = ROOT / ".skillnet-state/data/lerobot/emergent/libero_40_unsegmented"
-DEFAULT_CKPT = ROOT / ".skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params"
-DEFAULT_OUTPUTS = ROOT / ".skillnet-state/outputs/memory-pilot"
+from ...research_paths import REPO_ROOT as ROOT, STATE_DIR
+DEFAULT_DATA = STATE_DIR / "data/lerobot/emergent/libero_40_unsegmented"
+DEFAULT_CKPT = STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_base/params"
+DEFAULT_OUTPUTS = STATE_DIR / "outputs/memory-pilot"
 
 
 def _quat_from_rotvec(v: np.ndarray) -> np.ndarray:

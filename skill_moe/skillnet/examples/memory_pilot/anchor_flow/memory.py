@@ -173,6 +173,189 @@ def _retrieved_components(memory, key: np.ndarray, *, top_k: int, meta=None):
     return rows, weights
 
 
+def prepare_online_query(memory, key, meta, *, top_k=5):
+    """Cache immutable keys/groups; prepare the same five candidates once.
+
+    Distances use the original normalized-key L2 expression and stable tie
+    order. Confidence, diagnostics, and sampling then reuse identical IDs.
+    No memory entries or codec parameters are changed.
+    """
+    signature = (id(memory.memory), len(memory.memory), "legacy")
+    if getattr(memory, '_s2_online_index_signature', None) != signature:
+        from collections import defaultdict
+        keys = np.stack([np.asarray(row['key'], np.float32).reshape(-1) for row in memory.memory])
+        keys /= np.maximum(np.linalg.norm(keys, axis=1, keepdims=True), 1e-8)
+        memory._s2_online_keys = keys
+        memory._s2_online_episodes = np.asarray([row.get('meta', {}).get('episode_id') for row in memory.memory])
+        memory._s2_online_initials = np.asarray([row.get('meta', {}).get('init_state_id') for row in memory.memory])
+        memory._s2_preparation_members = defaultdict(list)
+        for row in memory.memory:
+            memory._s2_preparation_members[row.get('unit_id')].append(row)
+        memory._s2_preparation_values = {}
+        memory._s2_online_index_signature = signature
+    query = np.asarray(key, np.float32).reshape(-1)
+    query = query / max(float(np.linalg.norm(query)), 1e-8)
+    distances = np.linalg.norm(memory._s2_online_keys - query[None], axis=1)
+    invalid = ((memory._s2_online_episodes == meta.get('episode_id'))
+               | (memory._s2_online_initials == meta.get('init_state_id')))
+    distances[invalid] = np.inf
+    count = min(top_k, int(np.isfinite(distances).sum()))
+    if not count:
+        raise ValueError('no eligible M6 entries for this query')
+    threshold = np.partition(distances, count - 1)[count - 1]
+    closer = np.flatnonzero(distances < threshold)
+    ties = np.flatnonzero(distances == threshold)[:count - len(closer)]
+    chosen = np.concatenate([closer, ties])
+    chosen = chosen[np.argsort(distances[chosen], kind='stable')]
+    return {**meta, '_prepared_candidates': chosen}
+
+
+def prepare_centered_online_query(memory, key, meta, *, top_k=5, temperature=0.05):
+    """Prepare deterministic top-k candidates in a centered VLM-key space.
+
+    The cached float32 matrix slot is shared with the legacy online index, so
+    switching conditions replaces its contents instead of retaining a second
+    full key matrix. This path keeps one matrix, the mean vector, and O(N)
+    episode/init metadata. Legacy retrieval uses its own signature and rebuilds
+    its original normalized matrix when requested.
+    """
+    if temperature <= 0 or top_k < 1:
+        raise ValueError("temperature and top_k must be positive")
+    signature = (id(memory.memory), len(memory.memory), "centered")
+    if getattr(memory, "_s2_online_index_signature", None) != signature:
+        from collections import defaultdict
+        keys = np.stack([np.asarray(row["key"], np.float32).reshape(-1)
+                         for row in memory.memory])
+        # Center and normalize in-place: do not retain raw and centered copies.
+        mean = keys.mean(axis=0, dtype=np.float64).astype(np.float32)
+        keys -= mean[None, :]
+        norms = np.maximum(np.linalg.norm(keys, axis=1, keepdims=True), 1e-8)
+        keys /= norms
+        memory._s2_online_keys = keys
+        memory._s2_centered_key_mean = mean
+        memory._s2_online_episodes = np.asarray(
+            [row.get("meta", {}).get("episode_id") for row in memory.memory])
+        memory._s2_online_initials = np.asarray(
+            [row.get("meta", {}).get("init_state_id") for row in memory.memory])
+        memory._s2_preparation_members = defaultdict(list)
+        for row in memory.memory:
+            memory._s2_preparation_members[row.get("unit_id")].append(row)
+        memory._s2_preparation_values = {}
+        memory._s2_online_index_signature = signature
+    query = np.asarray(key, np.float32).reshape(-1)
+    if query.shape != memory._s2_centered_key_mean.shape:
+        raise ValueError("query key width differs from memory key width")
+    query = query - memory._s2_centered_key_mean
+    query /= max(float(np.linalg.norm(query)), 1e-8)
+    # A single vectorized matrix product; masks prevent episode/init leakage.
+    similarities = memory._s2_online_keys @ query
+    invalid = ((memory._s2_online_episodes == meta.get("episode_id"))
+               | (memory._s2_online_initials == meta.get("init_state_id")))
+    similarities[invalid] = -np.inf
+    count = min(top_k, int(np.isfinite(similarities).sum()))
+    if not count:
+        raise ValueError("no eligible memory entries after episode/init exclusion")
+    cutoff = np.partition(similarities, len(similarities) - count)[len(similarities) - count]
+    candidates = np.flatnonzero(similarities >= cutoff)
+    order = np.lexsort((candidates, -similarities[candidates]))
+    chosen = candidates[order[:count]]
+    selected_similarities = similarities[chosen].astype(np.float32, copy=True)
+    logits = selected_similarities.astype(np.float64) / float(temperature)
+    weights = np.exp(logits - logits.max())
+    weights = (weights / weights.sum()).astype(np.float32)
+    return {**meta, "_prepared_candidates": chosen,
+            "_anchor_v2_similarities": selected_similarities,
+            "_anchor_v2_weights": weights,
+            "_anchor_v2_temperature": float(temperature),
+            "_anchor_v2_query_centered": query}
+
+
+def anchor_v2_components(memory, key, state, meta, *, source="dec_latent"):
+    """Return deterministic latent-mean, per-item decoded, or raw draft."""
+    ids = np.asarray(meta.get("_prepared_candidates"), np.int64)
+    weights = np.asarray(meta.get("_anchor_v2_weights"), np.float32)
+    if ids.ndim != 1 or len(ids) != len(weights) or not len(ids):
+        raise ValueError("meta must come from prepare_centered_online_query")
+    rows = [memory.memory[int(i)] for i in ids]
+    query = np.asarray(key, np.float32).reshape(1, -1)
+    state = np.asarray(state, np.float32).reshape(1, -1)
+    if source == "dec_latent":
+        bases = np.stack([np.asarray(row["base"], np.float32) for row in rows])
+        base_mean = np.einsum("k,kd->d", weights, bases).astype(np.float32)
+        _, residual = memory.prior(query, state)
+        draft = np.asarray(memory.decode(base_mean[None], residual, query, state)[0], np.float32)
+    elif source == "dec_each":
+        bases = np.stack([np.asarray(row["base"], np.float32) for row in rows])
+        _, residual = memory.prior(query, state)
+        count = len(rows)
+        # Decode all retrieved latents in one call with the same query, state,
+        # and prior residual, then blend in action space.
+        decoded = np.asarray(memory.decode(
+            bases, np.repeat(residual, count, axis=0),
+            np.repeat(query, count, axis=0), np.repeat(state, count, axis=0)), np.float32)
+        draft = np.einsum("k,khd->hd", weights, decoded).astype(np.float32)
+    elif source == "raw":
+        chunks = []
+        for row in rows:
+            action = (row.get("meta") or {}).get("raw_action")
+            if action is None:
+                raise ValueError("anchor_source=raw requires raw_action on every retrieved memory row")
+            chunks.append(np.asarray(action, np.float32))
+        draft = np.einsum("k,khd->hd", weights, np.stack(chunks)).astype(np.float32)
+    else:
+        raise ValueError("source must be dec_latent, dec_each, or raw")
+    similarities = np.asarray(meta["_anchor_v2_similarities"], np.float32)
+    records = [{"unit_id": row.get("unit_id"), "weight": float(weight),
+                "similarity": float(similarity),
+                "episode_id": (row.get("meta") or {}).get("episode_id"),
+                "task": (row.get("meta") or {}).get("task")}
+               for row, weight, similarity in zip(rows, weights, similarities, strict=True)]
+    return draft, records
+
+
+def anchor_v2_t0(top1_similarity, *, mode, fixed_t0=0.5, table=None,
+                 gate_threshold=None):
+    """Choose t0 and apply the low-similarity fallback gate."""
+    score = float(top1_similarity)
+    if not np.isfinite(score):
+        raise ValueError("top1 similarity must be finite")
+    if mode == "one":
+        return 1.0, None, None
+    if mode == "fixed":
+        t0, bin_id = float(fixed_t0), None
+        if gate_threshold is None and table is not None:
+            gate_threshold = table.get("gate_threshold", table.get("similarity_threshold",
+                table.get("holdout_similarity_median")))
+            if gate_threshold is None and "holdout_top1_similarities" in table:
+                holdout = np.asarray(table["holdout_top1_similarities"], np.float64)
+                if len(holdout) and np.isfinite(holdout).all():
+                    gate_threshold = float(np.median(holdout))
+    elif mode == "calibration":
+        if table is None:
+            raise ValueError("calibration mode needs a table")
+        edges = np.asarray(table.get("edges", table.get("top1_similarity_edges", [])), np.float64)
+        values = np.asarray(table.get("t0", table.get("t0_by_bin", [])), np.float64)
+        if len(values) != len(edges) + 1:
+            raise ValueError("invalid calibration table")
+        bin_id = int(np.searchsorted(edges, score, side="right"))
+        t0 = float(values[bin_id])
+        if gate_threshold is None:
+            gate_threshold = table.get("gate_threshold", table.get("similarity_threshold",
+                table.get("holdout_similarity_median")))
+            if gate_threshold is None and "holdout_top1_similarities" in table:
+                holdout = np.asarray(table["holdout_top1_similarities"], np.float64)
+                if len(holdout) and np.isfinite(holdout).all():
+                    gate_threshold = float(np.median(holdout))
+    else:
+        raise ValueError("mode must be calibration, fixed, or one")
+    if not 0.2 <= t0 <= 1.0:
+        raise ValueError("t0 must be in [.2,1]")
+    if gate_threshold is None or not np.isfinite(float(gate_threshold)):
+        raise ValueError("fixed/calibrated mode needs a finite holdout gate threshold")
+    threshold = float(gate_threshold)
+    return (1.0 if score <= threshold else t0), bin_id, threshold
+
+
 def _component_values(memory,unit,base,meta):
     if unit is None:
         return np.asarray(base,np.float32),0.

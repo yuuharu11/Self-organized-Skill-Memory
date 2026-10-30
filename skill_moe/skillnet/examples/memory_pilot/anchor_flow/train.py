@@ -73,13 +73,17 @@ def main():
     with np.load(args.libero90_cache, allow_pickle=True) as archive:
         data = {name: archive[name] for name in archive.files}
     needed = {"actions", "anchor_actions", "state", "tokenized_prompt", "tokenized_prompt_mask",
-              "image_base", "image_left_wrist"}
+              "image_base", "image_left_wrist", "source_kind"}
     if not needed.issubset(data):
         raise ValueError(f"training cache is missing {sorted(needed - data.keys())}")
     if "suite" not in data or not np.all(np.asarray(data["suite"]).astype(str) == "libero90"):
         raise ValueError("training cache must identify every row as LIBERO-90")
     if data["actions"].shape[1:] != (10, 32) or data["anchor_actions"].shape != data["actions"].shape:
         raise ValueError("actions and anchor_actions must share the normalized [N,10,32] shape")
+    source_kinds = np.asarray(data["source_kind"]).astype(str)
+    allowed_source_kinds = {"normal", "memory_anchor", "target_anchor"}
+    if source_kinds.shape != (len(data["actions"]),) or not set(np.unique(source_kinds)) <= allowed_source_kinds:
+        raise ValueError(f"source_kind must identify each row as one of {sorted(allowed_source_kinds)}")
     memory = load_memory(args.memory)
     if len(memory.memory) == 0 or memory.action_shape != (10, 32):
         raise ValueError("M6 memory is empty or was fit in the wrong action space")
@@ -109,8 +113,11 @@ def main():
         obs = observation_batch(rows, config)
         actions = jnp.asarray(rows["actions"], jnp.float32)
         anchor_actions = jnp.asarray(rows["anchor_actions"], jnp.float32)
+        anchor_mask = jnp.asarray(np.asarray(rows["source_kind"]).astype(str) != "normal")
         rng, step_rng = jax.random.split(rng)
-        loss, (flow, balance), opt_state = train_step(step_rng, model, opt_state, obs, actions, anchor_actions)
+        loss, (flow, balance), opt_state = train_step(
+            step_rng, model, opt_state, obs, actions, anchor_actions, anchor_mask
+        )
         jax.block_until_ready(loss)
         if step % 100 == 0 or step == args.steps - 1:
             now=time.perf_counter()

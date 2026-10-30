@@ -15,9 +15,11 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-DEFAULT_CACHE = Path("/work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache")
-DEFAULT_DATASET = Path("/work/.skillnet-state/data/lerobot/emergent/libero_40_unsegmented")
-DEFAULT_OUTPUT_ROOT = Path("/work/.skillnet-state/outputs/memory-pilot")
+from ....research_paths import STATE_DIR
+
+DEFAULT_CACHE = STATE_DIR / "outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache"
+DEFAULT_DATASET = STATE_DIR / "data/lerobot/emergent/libero_40_unsegmented"
+DEFAULT_OUTPUT_ROOT = STATE_DIR / "outputs/memory-pilot"
 TRAIN_TASK_INDICES = tuple(range(20, 40))
 GOAL_TASK_INDICES = tuple(range(10, 20))
 HORIZONS = (25, 10)
