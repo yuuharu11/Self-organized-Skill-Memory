@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,15 +18,11 @@ import torch
 from skill_moe.skillnet.examples.emergent.eval.data import load_z_run
 from skill_moe.skillnet.examples.emergent.eval.memory import EmergentMemory, KeyEncoder
 from skill_moe.skillnet.examples.memory_pilot.g2_retrieval.crosstask import _pairwise_outcomes
+from .runtime import seed_experiment as _seed
 from .model import BottleneckModel
 
 PREVIOUS = Path("/work/.skillnet-state/outputs/memory-pilot/emergent-light-heldout-20261026T061907Z-f96a16")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def _seed(seed: int) -> None:
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
-    torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
 
 
 def _load_memory(directory: Path, run):

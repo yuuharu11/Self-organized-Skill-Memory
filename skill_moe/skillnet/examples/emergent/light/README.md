@@ -1,5 +1,26 @@
 # Frozen-VLM light go/no-go
 
+## Script guide
+
+| Module / directory | Purpose |
+| --- | --- |
+| `extract.py` | Cache frozen VLM features for the light experiments |
+| `run.py` | Train and evaluate the initial bottleneck model |
+| `heldout.py` | Evaluate memory insertion on held-out spatial tasks |
+| `diagnose_sharing.py` | Diagnose whether transfer is limited by values or keys |
+| `compare_keys.py`, `compare_language_keys.py` | Compare camera and language key representations |
+| `skill_bench.py` | Compare the M0–M6 skill representations in `methods/` |
+| `libero10_features.py`, `extract_libero10_features.py` | Read and extract LIBERO-10 features |
+| [`intermediate/`](intermediate/README.md) | Compare intermediate actions, retrieval, and anchor-flow denoising |
+| `runtime.py` | Shared RNG initialization and CPU thread limit for the light runners |
+| `methods/_common.py` | Shared training-input conversion, numerical helpers, and memory operations |
+
+Run a script as `python -m skill_moe.skillnet.examples.emergent.light.<module>`
+from the repository root. Existing module names and command-line options are
+preserved; the table distinguishes the experiments that reuse the same helpers.
+
+## Initial experiment
+
 Run from `/work` after activating the project environment:
 
 ```bash

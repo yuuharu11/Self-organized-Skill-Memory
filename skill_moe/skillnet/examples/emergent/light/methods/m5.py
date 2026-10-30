@@ -8,33 +8,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
-from ._common import validation_split, update_early_stopping
-
-
-def _np(value: Any, *, dtype=np.float32) -> np.ndarray:
-    if isinstance(value, torch.Tensor):
-        value = value.detach().cpu().numpy()
-    return np.asarray(value, dtype=dtype)
-
-
-def _field(data: Any, names: tuple[str, ...], *, required: bool = True):
-    if isinstance(data, Mapping):
-        for name in names:
-            if name in data:
-                return data[name]
-    elif isinstance(data, (list, tuple)) and data and isinstance(data[0], Mapping):
-        values = []
-        for row in data:
-            found = next((row[n] for n in names if n in row), None)
-            if found is None:
-                if required:
-                    raise KeyError(f"training rows need one of {names}")
-                return None
-            values.append(found)
-        return values
-    if required:
-        raise KeyError(f"training data need one of {names}")
-    return None
+from ._common import _field, _np, validation_split, update_early_stopping
 
 
 class _SparseNet(nn.Module):

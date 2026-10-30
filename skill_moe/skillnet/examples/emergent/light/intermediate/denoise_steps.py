@@ -19,7 +19,7 @@ from .clip_retrieval import (
     CLIP_EPOCHS, CLIP_PATIENCE, _query_embedding,
     fit_dual_encoder, retrieve_embedding_top1,
 )
-from .compare_splits import SPLITS, _subset
+from .splits import SPLITS, subset_rows as _subset
 from .experiment import (
     DEFAULT_CACHE, DEFAULT_DATASET, DEFAULT_OUTPUT_ROOT, HORIZONS,
     _standardize, integrate_flow_sources, load_rows, train_flow,
