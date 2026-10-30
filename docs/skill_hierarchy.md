@@ -1,5 +1,10 @@
 # Skill Hierarchy
 
+This guide covers the annotation-based hierarchy inherited from SkillNet.
+For the self-organized motion-memory research and instructions for another
+machine, start with the [research index](research/README.md) and
+[reproduction guide](reproduction.md).
+
 SkillNet represents each high-level manipulation subtask with a compact
 hierarchical token. This document describes the public reproduction path for
 the hierarchy construction used by the release.

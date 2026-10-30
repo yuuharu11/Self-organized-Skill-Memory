@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,16 +20,12 @@ from skill_moe.skillnet.examples.memory_pilot.g2_retrieval.crosstask import (
     METRICS, _cluster_bootstrap, _knn_weights, _pairwise_outcomes, _standardized_distances,
 )
 from .extract import extract_cache
+from .runtime import seed_experiment as _seed
 from .model import BottleneckModel
 from .run import DEFAULT_CKPT, DEFAULT_DATA, DEFAULT_OUTPUTS, _collect, _fit, _write_eval_input
 
 PREVIOUS_RUN = Path("/work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T054800Z-85a58f")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def _seed(seed: int) -> None:
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
-    torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
 
 
 def _rows_for(records, episodes):

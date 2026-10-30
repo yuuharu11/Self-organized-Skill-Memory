@@ -1,17 +1,48 @@
 # Frozen-VLM light go/no-go
 
-Run from `/work` after activating the project environment:
+For a fresh machine, follow the [reproduction guide](../../../../../docs/reproduction.md)
+before running these commands. The full-episode LIBERO-40 dataset and feature
+caches used by the research are separate assets; their schema and availability
+are described there. The standard skill-sliced `libero_40_v1` dataset has
+different episode boundaries and is not a replacement for that input.
+
+## Script guide
+
+| Module / directory | Purpose |
+| --- | --- |
+| `extract.py` | Cache frozen VLM features for the light experiments |
+| `run.py` | Train and evaluate the initial bottleneck model |
+| `heldout.py` | Evaluate memory insertion on held-out spatial tasks |
+| `diagnose_sharing.py` | Diagnose whether transfer is limited by values or keys |
+| `compare_keys.py`, `compare_language_keys.py` | Compare camera and language key representations |
+| `skill_bench.py` | Compare the M0–M6 skill representations in `methods/` |
+| `libero10_features.py`, `extract_libero10_features.py` | Read and extract LIBERO-10 features |
+| [`intermediate/`](intermediate/README.md) | Compare intermediate actions, retrieval, and anchor-flow denoising |
+| `runtime.py` | Shared RNG initialization and CPU thread limit for the light runners |
+| `methods/_common.py` | Shared training-input conversion, numerical helpers, and memory operations |
+
+Run a script as `python -m skill_moe.skillnet.examples.emergent.light.<module>`
+from the repository root. Existing module names and command-line options are
+preserved; the table distinguishes the experiments that reuse the same helpers.
+
+## Initial experiment
+
+Run from the repository root after installing and activating the project environment.
+Place the full-episode dataset and π0.5 base parameters at the paths below, or
+pass your own paths explicitly:
 
 ```bash
 source env/activate.sh
 python -m skill_moe.skillnet.examples.emergent.light.run \
-  --dataset /work/.skillnet-state/data/lerobot/emergent/libero_40_unsegmented \
-  --checkpoint /work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params \
-  --vision-batch 2 --train-batch 256 --epochs 20
+  --dataset "$HF_LEROBOT_HOME/emergent/libero_40_unsegmented" \
+  --checkpoint "$SKILLNET_STATE_DIR/checkpoints/pi05_base/params" \
+  --cache-dir "$SKILLNET_STATE_DIR/cache/emergent-light" \
+  --output-root "$SKILLNET_STATE_DIR/outputs/memory-pilot" \
+  --vision-batch 2 --train-batch 256 --epochs 20 --seed 0
 ```
 
 The run creates a unique `emergent-light-*` directory under
-`/work/.skillnet-state/outputs/memory-pilot/`. A persistent feature cache can be
+`$SKILLNET_STATE_DIR/outputs/memory-pilot/`. A persistent feature cache can be
 provided with `--cache-dir`; completed per-episode feature files are reused. Do not
 point it at an existing output run. For a quick plumbing check, `--max-episodes 12`
 extracts a small prefix (not a valid go/no-go data sample).
@@ -50,7 +81,11 @@ Reuse the completed feature cache from the first run and run:
 ```bash
 source env/activate.sh
 python -m skill_moe.skillnet.examples.emergent.light.heldout \
-  --cache-dir /work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache
+  --dataset "$HF_LEROBOT_HOME/emergent/libero_40_unsegmented" \
+  --checkpoint "$SKILLNET_STATE_DIR/checkpoints/pi05_base/params" \
+  --cache-dir "$SKILLNET_STATE_DIR/cache/emergent-light" \
+  --output-root "$SKILLNET_STATE_DIR/outputs/memory-pilot" \
+  --seed 0
 ```
 
 This trains only on libero_object/libero_goal (20 tasks), fits action/state/feature

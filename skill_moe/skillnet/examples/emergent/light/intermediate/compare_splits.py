@@ -11,6 +11,7 @@ import numpy as np
 import torch
 
 from .abstracted_m1 import _run_horizon
+from .splits import SPLITS, subset_rows as _subset
 from .experiment import (
     DEFAULT_CACHE, DEFAULT_DATASET, DEFAULT_OUTPUT_ROOT, HORIZONS, T0_VALUES,
     _episode_train_validation_indices, _onehot, _query_features, _query_key,
@@ -20,17 +21,9 @@ from .experiment import (
     predict_v,
 )
 
-SPLITS = {
-    "A": (tuple(range(20, 40)), tuple(range(10, 20)), "object+spatial → goal"),
-    "B": (tuple(range(10, 30)), tuple(range(30, 40)), "object+goal → spatial"),
-}
 QUERY_MODES = ("none", "concat", "same_class")
 RETRIEVAL_T0S = (0.8, 0.6, 0.4)
 III_T0S = (0.0, 0.2, 0.4)
-
-
-def _subset(rows, mask):
-    return {name: value[mask] for name, value in rows.items()}
 
 
 def _same_class_alternatives(train_classes, query_classes, selected, seed):

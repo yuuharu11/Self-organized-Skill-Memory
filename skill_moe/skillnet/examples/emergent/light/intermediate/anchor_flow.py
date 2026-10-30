@@ -26,7 +26,7 @@ from .clip_retrieval import (
     _query_embedding, attach_subtask_texts, fit_dual_encoder,
     frozen_pi05_plan_embeddings,
 )
-from .compare_splits import SPLITS, _subset
+from .splits import SPLITS, subset_rows as _subset
 from .experiment import (
     DEFAULT_CACHE, DEFAULT_DATASET, DEFAULT_OUTPUT_ROOT,
     FlowActionHead, _episode_train_validation_indices,

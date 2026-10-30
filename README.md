@@ -8,7 +8,23 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 > オフラインの行動誤差が中心です。環境での成功率はまだ確定していません。
 > 最新の状況は [docs/research/skill_memory_findings.md](docs/research/skill_memory_findings.md) を参照してください。
 
-## 研究の主張
+## 初めて読む方・再現する方へ
+
+**別の環境での手順は [再現ガイド](docs/reproduction.md) から始めてください。**
+新規の環境構築、公開重みの取得、実行コマンド、出力の確認先、研究実験に必要な追加資産をまとめています。
+
+| 確認したいこと | 読む場所 |
+| --- | --- |
+| この研究の仮説と測定結果 | [研究ノートの入口](docs/research/README.md)、[これまでの結果](docs/research/skill_memory_findings.md) |
+| 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
+| 各研究スクリプトの役割 | [軽量実験の一覧](skill_moe/skillnet/examples/emergent/light/README.md)、[中間行動実験の一覧](skill_moe/skillnet/examples/emergent/light/intermediate/README.md) |
+| ベースの SkillNet の学習・データ処理 | [Quick Start](docs/quick_start.md)、[学習と評価](docs/training_and_evaluation.md) |
+
+コードと小さな設定・注釈は Git に含まれます。データセット、重み、特徴キャッシュ、実験出力は別途用意します。
+研究ノートの `.skillnet-state/` 以下へのリンクは測定時のローカル記録で、公開ダウンロード先ではありません。
+公開重みの評価と、研究ノートの数値を同じ条件で再現するための要件は、再現ガイドでそれぞれ説明しています。
+
+## 検証する仮説
 
 1. **スキル = 場面に依存しない運動の型。** タスク・言語のラベルなしに運動経験から自己組織化し、個数は事前に決めない。
    場面との対応はメモリ（鍵 = 観測の埋め込み、値 = 運動の型）が受け持つ。
@@ -38,18 +54,26 @@ SkillNet 由来の構成（`skill_moe/`, `data_process/` など）に、次を�
 | `env/` | 現在のコンテナ用の環境設定・スモークテスト・依存の固定リスト |
 | `tests/` | 追加コードのテスト |
 
-## 開発環境
+## コードを取得する
 
 ```bash
 git clone https://github.com/yuuharu11/Self-organized-Skill-Memory.git
 cd Self-organized-Skill-Memory
-source env/activate.sh
-python env/smoke_test.py --render
-python -m pytest -q tests/test_websocket_policy_server.py
+git rev-parse HEAD
 ```
 
-環境の詳細は [docs/development_environment.md](docs/development_environment.md)、
-検証結果は [docs/environment_validation.md](docs/environment_validation.md) を参照してください。
+この案内を含む **PR #2 をマージ前に確認する場合**は、取得後に次を実行します。
+共有・比較の際は、ブランチ名と併せて `git rev-parse HEAD` のコミット ID を記録してください。
+
+```bash
+git fetch origin pull/2/head
+git switch --detach FETCH_HEAD
+git rev-parse HEAD
+```
+
+続いて [再現ガイドの環境構築](docs/reproduction.md#2-別環境でのセットアップ) へ進んでください。
+`env/activate.sh` はインストール済みの環境を有効化するスクリプトです。新規 clone には依存の導入が必要です。
+元のコンテナの検証記録は [docs/environment_validation.md](docs/environment_validation.md) にあります。
 
 ## ベースの SkillNet
 

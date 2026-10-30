@@ -256,9 +256,21 @@ def build_temporal_summary(episode_rows: dict[str, list[dict[str, Any]]], *,
         task = str(ordered[0]["task"])
         task_sequences[task][tuple(compressed)] += 1
     values = np.asarray(run_lengths, np.float64)
+    overlap = max(0, 10 - int(stride))
+    if overlap:
+        interpretation = (
+            f"Window-switch rate compares consecutive windows that start {int(stride)} steps apart "
+            f"({int(stride) / sampling_rate_hz:.2f} s at {sampling_rate_hz:g} Hz); 10-step windows "
+            f"overlap by {overlap} steps, so adjacent windows share actions and the switch rate is "
+            "not directly comparable to the non-overlapping stride=10 setting.")
+    else:
+        interpretation = (
+            f"Window-switch rate compares consecutive 10-step chunks; stride={int(stride)} at "
+            f"{sampling_rate_hz:g} Hz, so windows are non-overlapping and the switch rate reflects "
+            "unit-ID changes between successive windows, not a boundary artifact from overlapping windows.")
     return {
         "window_stride_steps": int(stride), "window_horizon_steps": 10,
-        "window_overlap_steps": max(0, 10 - int(stride)),
+        "window_overlap_steps": overlap,
         "sampling_rate_hz": float(sampling_rate_hz),
         "run_count": int(len(values)),
         "run_length_windows": {"mean": float(values.mean()) if len(values) else None,
@@ -276,10 +288,7 @@ def build_temporal_summary(episode_rows: dict[str, list[dict[str, Any]]], *,
                                           for seq, count in counts.most_common(3)]}
             for task, counts in sorted(task_sequences.items()) if counts
         ],
-        "interpretation": (
-            "Window-switch rate compares consecutive 10-step chunks; default stride=10 at 20 Hz, "
-            "so windows are 0.5 s and non-overlapping. The 79% rate reflects frequent unit-ID "
-            "changes between successive half-second windows, not a boundary artifact from overlapping windows."),
+        "interpretation": interpretation,
     }
 
 
@@ -583,8 +592,16 @@ def analyze_arrays(memory: Any, rows: dict[str, np.ndarray], keys: np.ndarray,
                    output_dir: Path, *, frame_loader: Callable | None = None,
                    rlds_root: Path | None = None, stability_samples: int = 16,
                    image_source: str = "LIBERO-90 RLDS TFRecords",
-                   physical_calibration: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Build a catalog from already-loaded arrays and an M6 memory object."""
+                   physical_calibration: dict[str, Any] | None = None,
+                   sampling_stride: int = 10) -> dict[str, Any]:
+    """Build a catalog from already-loaded arrays and an M6 memory object.
+
+    sampling_stride is the export stride (export_libero90.py --stride) between
+    successive window starts; it sets run durations and window overlap.
+    """
+    sampling_stride = int(sampling_stride)
+    if sampling_stride < 1:
+        raise ValueError(f"sampling_stride must be positive, got {sampling_stride}")
     output_dir = Path(output_dir)
     if output_dir.exists():
         raise FileExistsError(f"refusing to reuse output directory: {output_dir}")
@@ -866,7 +883,7 @@ def analyze_arrays(memory: Any, rows: dict[str, np.ndarray], keys: np.ndarray,
                          and not unit["motion_pattern_interpretable"]]
 
     pca_figure = _render_pca_traversal(pca_axes, units, figures_dir / "pca_traversal.jpg")
-    temporal = build_temporal_summary(episode_rows)
+    temporal = build_temporal_summary(episode_rows, stride=sampling_stride)
     duplicate_descriptions = motion_description_overlap(units)
     result = {
         "schema_version": "s2-m6-unit-interpretability-v1",
@@ -889,9 +906,9 @@ def analyze_arrays(memory: Any, rows: dict[str, np.ndarray], keys: np.ndarray,
                 "it remains dimensionless controller command, not physical position/rotation."),
             "physical_motion_calibration": physical_calibration,
             "physical_motion_calibration_scope": "all LIBERO-90 row episodes, no task/plan labels",
-            "windowing": {"horizon_steps": 10, "stride_steps": 10, "sampling_rate_hz": 20,
-                          "overlap_steps": 0, "window_seconds": 0.5,
-                          "source": "export_libero90.py complete_starts(length,horizon=10,stride=10)"},
+            "windowing": {"horizon_steps": 10, "stride_steps": sampling_stride, "sampling_rate_hz": 20,
+                          "overlap_steps": max(0, 10 - sampling_stride), "window_seconds": 0.5,
+                          "source": f"export_libero90.py complete_starts(length,horizon=10,stride={sampling_stride})"},
             "interpretability_rule": (
                 "motion-pattern interpretable iff >=3 sampled contexts and direction, rotation, "
                 "and gripper command mode each have >=0.70 modal agreement"),
@@ -984,7 +1001,7 @@ def _render_summary(result: dict[str, Any]) -> str:
         lines.append(f"| {unit['unit_id']} | {unit['support_count']} | {unit['episode_count']} | {comp['n_tasks']} | {comp['n_scenes']} | {comp['primary_task_verb_purity']:.2f} | {stable['direction']:.2f} / {stable['rotation']:.2f} / {stable['gripper']:.2f} | {unit['automatic_description']} ({sig['direction']}, {sig['rotation']}, {sig['gripper_mode']}) |")
     lines += ["", "## Whole-memory summaries", "",
              f"- Sparse unit transition edges: {len(summary['unit_transition_statistics']['transition_matrix_sparse'])}; unit-switch fraction among adjacent windows: {summary['unit_transition_statistics']['switch_fraction_of_adjacent_pairs']:.1%}.",
-              f"- Windows are {meta['windowing']['horizon_steps']} steps / {meta['windowing']['window_seconds']:.1f}s with stride {meta['windowing']['stride_steps']} ({meta['windowing']['overlap_steps']} overlap); the switch rate is therefore not caused by overlapping windows.",
+              f"- Windows are {meta['windowing']['horizon_steps']} steps / {meta['windowing']['window_seconds']:.1f}s with stride {meta['windowing']['stride_steps']} ({meta['windowing']['overlap_steps']} overlap); " + ("the switch rate is therefore not caused by overlapping windows." if meta['windowing']['overlap_steps'] == 0 else "adjacent windows overlap, so the switch rate is not comparable to the non-overlapping setting."),
               f"- Contiguous run length: median {summary['temporal_run_statistics']['run_length_windows']['median']:.1f} windows ({summary['temporal_run_statistics']['run_length_seconds']['median']:.2f}s), p90 {summary['temporal_run_statistics']['run_length_seconds']['p90']:.2f}s.",
               f"- Repeated categorical motion description: {summary['duplicate_motion_description_statistics']['units_in_duplicated_groups']}/{summary['duplicate_motion_description_statistics']['unit_count']} units ({summary['duplicate_motion_description_statistics']['fraction_units_with_duplicate_description']:.1%}) share a direction × gripper × rotation description.",
               f"- PCA traversal figure: [figures/pca_traversal.jpg](figures/pca_traversal.jpg).",
@@ -1032,6 +1049,9 @@ def run(memory_path: Path, rows_path: Path, keys_path: Path, norm_path: Path,
         if missing:
             raise ValueError(f"row cache is missing fields: {missing}")
         rows = {name: archive[name] for name in needed}
+        # Older exports predate the field and always used stride 10.
+        sampling_stride = int(np.asarray(archive["sampling_stride"]).item()
+                              if "sampling_stride" in archive.files else 10)
     with np.load(keys_path, allow_pickle=True) as archive:
         if "key" not in archive.files:
             raise ValueError("key cache has no key array")
@@ -1044,7 +1064,8 @@ def run(memory_path: Path, rows_path: Path, keys_path: Path, norm_path: Path,
     annotations = json.loads(Path(annotations_path).read_text())
     print(f"loaded rows={len(rows['actions'])} key_shape={keys.shape}; fetching representative RGB frames", flush=True)
     result = analyze_arrays(memory, rows, keys, annotations, norm_stats, output_dir,
-                            rlds_root=rlds_root, stability_samples=stability_samples)
+                            rlds_root=rlds_root, stability_samples=stability_samples,
+                            sampling_stride=sampling_stride)
     result["metadata"]["elapsed_seconds"] = float(time.perf_counter() - t0)
     # `analyze_arrays` wrote a complete first version; replace only the newly
     # created output's own files with the elapsed time included.

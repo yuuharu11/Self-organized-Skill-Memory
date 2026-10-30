@@ -41,7 +41,8 @@ import torch
 from . import anchor_flow as af
 from .clip_retrieval import (DEFAULT_ANNOTATIONS, DEFAULT_PALIGEMMA_TOKENIZER,
                              DEFAULT_PI05_BASE_PARAMS, frozen_pi05_plan_embeddings)
-from .compare_splits import SPLITS, _subset
+from .splits import SPLITS, subset_rows as _subset
+from .physical_scales import fit_physical_scales as _fit_physical_scales
 from .experiment import (DEFAULT_CACHE, DEFAULT_DATASET, DEFAULT_OUTPUT_ROOT,
                          _episode_train_validation_indices, _standardize,
                          _standardize_fit, load_rows)
@@ -108,10 +109,14 @@ def rollout(model, norm, f, s, anchors, eps, t0, n=None, *, device, chunk=QUERY_
         dt = -t0_t / nf
         with torch.no_grad():
             for j in range(int(n_np.max())):
-                frac = torch.as_tensor((1 - j / n_np).astype(np.float32), device=device)
-                t_now = t0_t * frac
-                active = (j < n_t)[:, None]
-                x = torch.where(active, x + dt[:, None] * model(x, t_now, ft, st), x)
+                # Evaluate the model only on trajectories that still have steps
+                # left, so each row costs exactly its own n evaluations.
+                idx_np = np.flatnonzero(j < n_np)
+                idx = torch.as_tensor(idx_np, device=device)
+                frac = torch.as_tensor((1 - j / n_np[idx_np]).astype(np.float32), device=device)
+                xa = x[idx]
+                v = model(xa, t0_t[idx] * frac, ft[idx], st[idx])
+                x[idx] = xa + dt[idx, None] * v
         out[:, lo:hi] = x.reshape(samples, c, dim).cpu().numpy()
     out = out * norm["a_scale"] + norm["a_mean"]
     return out.reshape(samples, count, *norm["action_shape"])
@@ -561,33 +566,12 @@ def attach_text(rows, texts_by_source, emb, source):
     return out
 
 
-def fit_physical_scales(cache_dir, episode_ids, *, horizon=HORIZON, max_episodes=300, seed=0, stride=5):
-    """Per-axis LSQ: summed action commands -> measured EE motion (training suite)."""
-    from scipy.spatial.transform import Rotation
-    manifest = json.loads((Path(cache_dir) / "manifest.json").read_text())
-    wanted = set(map(str, episode_ids))
-    entries = [e for e in manifest["episodes"] if str(e["episode_id"]) in wanted]
-    rng = np.random.default_rng(seed)
-    if len(entries) > max_episodes:
-        entries = [entries[i] for i in np.sort(rng.choice(len(entries), max_episodes, replace=False))]
-    xp, yp, xr, yr = [], [], [], []
-    for entry in entries:
-        with np.load(entry["cache"], allow_pickle=False) as cache:
-            action = np.asarray(cache["action"], np.float32)
-            state = np.asarray(cache["env_state"], np.float32)
-        for t in range(0, min(len(action), len(state)) - horizon - 1, stride):
-            xp.append(action[t:t + horizon, :3].sum(0)); yp.append(state[t + horizon, :3] - state[t, :3])
-            xr.append(action[t:t + horizon, 3:6].sum(0))
-            rel = Rotation.from_rotvec(state[t + horizon, 3:6]) * Rotation.from_rotvec(state[t, 3:6]).inv()
-            yr.append(rel.as_rotvec())
-    xp, yp, xr, yr = (np.asarray(v, np.float64) for v in (xp, yp, xr, yr))
-    k_pos = (xp * yp).sum(0) / np.maximum((xp * xp).sum(0), 1e-12)
-    k_rot = (xr * yr).sum(0) / np.maximum((xr * xr).sum(0), 1e-12)
-    corr = lambda x, y: [float(np.corrcoef(x[:, d], y[:, d])[0, 1]) for d in range(3)]
-    return {"pos_m_per_action_unit_step": k_pos.astype(np.float32).tolist(),
-            "rot_rad_per_action_unit_step": k_rot.astype(np.float32).tolist(),
-            "pos_fit_correlation": corr(xp, yp), "rot_fit_correlation": corr(xr, yr),
-            "windows": int(len(xp)), "episodes": int(len(entries))}
+def fit_physical_scales(cache_dir, episode_ids, *, horizon=HORIZON, max_episodes=300,
+                        seed=0, stride=5):
+    """Fit motion scales with this experiment's historical episode cap."""
+    return _fit_physical_scales(
+        cache_dir, episode_ids, horizon=horizon, max_episodes=max_episodes,
+        seed=seed, stride=stride)
 
 
 # --------------------------------------------------------------------------
