@@ -6,7 +6,8 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 
 > 研究は進行中です。現時点の結果は、凍結した π0.5 の特徴の上で小さなモデルを学習する軽量版での、
 > オフラインの行動誤差が中心です。環境での成功率はまだ確定していません。
-> 最新の状況は [docs/research/skill_memory_findings.md](docs/research/skill_memory_findings.md) を参照してください。
+> 10月30日時点の測定と限界は [実験結果のまとめ](docs/research/reviews/experiment_results_2026-10-30.md)、
+> 軽量版の経緯は [これまでの結果](docs/research/skill_memory_findings.md) を参照してください。
 
 ## 初めて読む方・再現する方へ
 
@@ -16,8 +17,10 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 | 確認したいこと | 読む場所 |
 | --- | --- |
 | この研究の仮説と測定結果 | [研究ノートの入口](docs/research/README.md)、[これまでの結果](docs/research/skill_memory_findings.md) |
+| 10月30日時点の結果と停止した測定 | [実験結果のまとめ](docs/research/reviews/experiment_results_2026-10-30.md)、[引き継ぎ記録](docs/research/reviews/handoff_2026-10-30.md) |
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 各研究スクリプトの役割 | [軽量実験の一覧](skill_moe/skillnet/examples/emergent/light/README.md)、[中間行動実験の一覧](skill_moe/skillnet/examples/emergent/light/intermediate/README.md) |
+| S2の較正・検索・オフライン診断 | [S2スクリプトの一覧](skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md) |
 | ベースの SkillNet の学習・データ処理 | [Quick Start](docs/quick_start.md)、[学習と評価](docs/training_and_evaluation.md) |
 
 コードと小さな設定・注釈は Git に含まれます。データセット、重み、特徴キャッシュ、実験出力は別途用意します。
@@ -62,11 +65,11 @@ cd Self-organized-Skill-Memory
 git rev-parse HEAD
 ```
 
-この案内を含む **PR #2 をマージ前に確認する場合**は、取得後に次を実行します。
+レビュー中のPRを確認する場合は、PRの番号を `SKILLNET_PR_NUMBER` に設定してから、取得後に次を実行します。
 共有・比較の際は、ブランチ名と併せて `git rev-parse HEAD` のコミット ID を記録してください。
 
 ```bash
-git fetch origin pull/2/head
+git fetch origin "pull/${SKILLNET_PR_NUMBER:?PR番号を設定してください}/head"
 git switch --detach FETCH_HEAD
 git rev-parse HEAD
 ```

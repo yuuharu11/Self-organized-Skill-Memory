@@ -22,7 +22,7 @@ from torch import nn
 
 from . import anchor_flow as af
 from . import fair_compare as fc
-from .compare_splits import SPLITS, _subset
+from .splits import SPLITS, subset_rows as _subset
 from .experiment import (DEFAULT_CACHE, DEFAULT_DATASET, FlowActionHead,
                          _episode_train_validation_indices,
                          _standardize, _standardize_fit, load_rows)

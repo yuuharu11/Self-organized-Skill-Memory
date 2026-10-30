@@ -21,7 +21,7 @@ from torch.nn import functional as F
 from . import anchor_flow as af
 from . import fair_compare as fc
 from . import skill_v2 as v2
-from .compare_splits import SPLITS, _subset
+from .splits import SPLITS, subset_rows as _subset
 from .experiment import (DEFAULT_CACHE, DEFAULT_DATASET,
                          _episode_train_validation_indices, _standardize,
                          _standardize_fit, load_rows)

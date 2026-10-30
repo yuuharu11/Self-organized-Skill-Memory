@@ -416,7 +416,7 @@ def run(*, output, splits=("A","B"), seeds=(0,1,2), device="cuda", threads=8,
         smoke=False, max_queries=None):
     """Run the V3/V4 comparison through v2's action-flow evaluation helpers."""
     from . import anchor_flow as af, fair_compare as fc
-    from .compare_splits import SPLITS, _subset
+    from .splits import SPLITS, subset_rows as _subset
     from .experiment import DEFAULT_CACHE, DEFAULT_DATASET, _episode_train_validation_indices, load_rows
     output=Path(output)
     if output.exists(): raise FileExistsError(output)

@@ -201,7 +201,7 @@ def _summary(payload,out):
 
 def run(*,output,splits=("A","B"),seeds=(0,1,2),device="cuda",threads=8,smoke=False,configs=CONFIGS):
     from . import anchor_flow as af,fair_compare as fc,clip_retrieval as cr
-    from .compare_splits import SPLITS,_subset
+    from .splits import SPLITS, subset_rows as _subset
     from .experiment import DEFAULT_CACHE,DEFAULT_DATASET,_episode_train_validation_indices,load_rows
     out=Path(output)
     if out.exists():raise FileExistsError(out)

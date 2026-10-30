@@ -730,7 +730,7 @@ def run_interventions(output: Path, *, splits=("A", "B"), seeds=(0, 1, 2),
     from datetime import datetime, timezone
     from . import anchor_flow as af
     from . import fair_compare as fc
-    from .compare_splits import SPLITS, _subset
+    from .splits import SPLITS, subset_rows as _subset
     from .experiment import DEFAULT_CACHE, DEFAULT_DATASET, load_rows
     torch.set_num_threads(int(threads))
     try: torch.set_num_interop_threads(1)
@@ -1081,7 +1081,7 @@ def run_secondary(output: Path, *, splits=("A", "B"), device_name="cuda", thread
     from datetime import datetime, timezone
     from . import anchor_flow as af
     from . import fair_compare as fc
-    from .compare_splits import SPLITS, _subset
+    from .splits import SPLITS, subset_rows as _subset
     from .experiment import DEFAULT_CACHE, DEFAULT_DATASET, load_rows
     output = Path(output)
     if not output.is_dir() or not (output / "results.json").is_file():
