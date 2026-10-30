@@ -4,17 +4,19 @@
 
 比較対象は SkillNet、Optimus-R、SkillMemo、AtomicVLA。
 
+**このリポジトリの外で作業する場合**は、先に [examples/skill_conditioning/README.md](../../skill_moe/skillnet/examples/skill_conditioning/README.md) を読むこと。upstream の SkillNet で事実を確かめる手順と、最初の実験（T0）の手順がある。コードへのリンクは upstream のコミット `52e3caf` に固定している。
+
 ## 1. 相談の前提として確認した事実
 
 コードと手元の測定で確かめたこと。
 
 | 項目 | 内容 | 根拠 |
 | --- | --- | --- |
-| SkillNetのMoE | action expertのFFNにexpert 4、top-1、共有expert 1。スキルはcross-attentionを通してルーターのlogitにだけ入る。損失はload balancingだけ | [gemma_moe_skill.py:376](../../skill_moe/skillnet/src/openpi/models/gemma_moe_skill.py#L376) |
-| SkillNetのスキル入力 | **評価では、タスク全体のスキル列（`all_classes`）を毎step同じものとして渡す。いまどのスキルを実行中かは渡していない** | [main_skill_obj_test_moe_skill.py](../../skill_moe/skillnet/examples/libero/main_skill_obj_test_moe_skill.py)（`"skills": all_classes`） |
-| 学習データ | スキル境界で切ったslice単位で保存されている。各フレームに、現在のスキル`class`とタスク全体の`all_classes`がある | [libero_data_processing.md](../libero_data_processing.md)「Skill-Slice Inputs」 |
-| 論文のスキル | 人手で付けた6桁の運動コード、VerbNet、動詞からなる階層。公開のLIBERO設定は平らなIDで、引き出しと電子レンジの開閉はすべてクラス3 | [skill_hierarchy.md](../skill_hierarchy.md)、`instruct2plan_obj_90.json` |
-| クラス3の中の運動差 | 手首の回転は、上段の引き出しが6〜12°、下段が64〜77°。電子レンジは開けるとき弧（道のり／直線距離＝2.6）、閉めるときほぼ直線（1.2）。コンロ（クラス4）は掴んで2〜4 cm動かし、54〜88°ひねる | LIBERO-90の各50デモ。対象の関節が動いている区間だけを測った |
+| SkillNetのMoE | action expertのFFNにexpert 4、top-1、共有expert 1。スキルはcross-attentionを通してルーターのlogitにだけ入る。損失はload balancingだけ | upstream [gemma_moe_skill.py L327–L404](https://github.com/VIPL-VSU/SkillNet/blob/52e3caf52bb183413bbdda83c359f76bb41250eb/skill_moe/skillnet/src/openpi/models/gemma_moe_skill.py#L327-L404) |
+| SkillNetのスキル入力 | **評価では、タスク全体のスキル列（`all_classes`）を毎step同じものとして渡す。いまどのスキルを実行中かは渡していない** | upstream [main_skill_obj_test_moe_skill.py L217](https://github.com/VIPL-VSU/SkillNet/blob/52e3caf52bb183413bbdda83c359f76bb41250eb/skill_moe/skillnet/examples/libero/main_skill_obj_test_moe_skill.py#L217)（`"skills": all_classes`） |
+| 学習データ | スキル境界で切ったslice単位で保存されている。各フレームに、現在のスキル`class`とタスク全体の`all_classes`がある | upstream [libero_data_processing.md](https://github.com/VIPL-VSU/SkillNet/blob/52e3caf52bb183413bbdda83c359f76bb41250eb/docs/libero_data_processing.md)「Skill-Slice Inputs」 |
+| 論文のスキル | 人手で付けた6桁の運動コード、VerbNet、動詞からなる階層。公開のLIBERO設定は平らなIDで、引き出しと電子レンジの開閉はすべてクラス3 | upstream [skill_hierarchy.md](https://github.com/VIPL-VSU/SkillNet/blob/52e3caf52bb183413bbdda83c359f76bb41250eb/docs/skill_hierarchy.md)、[instruct2plan_obj_90.json](https://github.com/VIPL-VSU/SkillNet/blob/52e3caf52bb183413bbdda83c359f76bb41250eb/skill_moe/skillnet/examples/libero/annotations/instruct2plan_obj_90.json) |
+| クラス3の中の運動差 | 手首の回転は、上段の引き出しが6〜12°、下段が64〜77°。電子レンジは開けるとき弧（道のり／直線距離＝2.6）、閉めるときほぼ直線（1.2）。コンロ（クラス4）は掴んで2〜4 cm動かし、54〜88°ひねる | LIBERO-90の各50デモ。対象の関節が動いている区間だけを測った。[measure_articulation_motion.py](../../skill_moe/skillnet/examples/skill_conditioning/measure_articulation_motion.py) |
 | skill IDの入れ替え | 行動の変化はノイズを変えたときの約1/4〜1/6。libero_10の成功率は20/20から19/20 | **学習したタスクでの結果**（2026-10-25）。LIBERO-Skillでは未測定 |
 | 公表されている成功率 | LIBERO-Skillで、SkillNet 47.8%、Vanilla MoE 33.1%、π0.5 31.8% | [baselines_success_rates.md](baselines_success_rates.md) |
 

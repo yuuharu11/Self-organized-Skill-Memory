@@ -23,6 +23,7 @@ Git に含まれないファイルや未コミットの新しい実験を、こ�
 ## 別軸の候補（インターン向け）
 
 - [skill_conditioning_fixes.md](skill_conditioning_fixes.md) — 既存スキル系VLAの構造的な弱点と小さな改善。外部エージェントの案の検証、順位、シミュと実機のタスク設定
+- [外部から参照する手順](../../skill_moe/skillnet/examples/skill_conditioning/README.md) — このリポジトリ外（upstream の SkillNet）で事実を確かめる手順、計測スクリプト、最初の実験 T0
 
 ## 検索メモリ（前段の事前判定）
 
