@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from skill_moe.skillnet.examples.memory_pilot.anchor_flow import interpret_units as iu
 
@@ -101,6 +102,18 @@ def test_temporal_summary_reports_stride_duration_and_task_sequences():
     assert result["typical_collapsed_sequences_by_task"][0]["sequences"][0]["unit_sequence"] == [2, 5]
 
 
+def test_temporal_summary_uses_export_stride_for_duration_and_overlap():
+    episodes = {"e": [
+        {"row_index": 0, "frame": 0, "unit_id": 2, "task": "taskA"},
+        {"row_index": 1, "frame": 5, "unit_id": 2, "task": "taskA"},
+        {"row_index": 2, "frame": 10, "unit_id": 5, "task": "taskA"},
+    ]}
+    result = iu.build_temporal_summary(episodes, stride=5)
+    assert result["window_overlap_steps"] == 5
+    assert result["run_length_seconds"]["median"] == pytest.approx(.375)
+    assert "overlap by 5 steps" in result["interpretation"]
+
+
 def test_duplicate_motion_description_groups_units_by_direction_grip_rotation():
     units = [{"unit_id": 0, "center_motion_signature": {"direction": "+x", "gripper_mode": "close_command", "rotation": "none"}},
              {"unit_id": 1, "center_motion_signature": {"direction": "+x", "gripper_mode": "close_command", "rotation": "none"}},
@@ -123,7 +136,8 @@ def test_context_agreement_and_interpretability_threshold():
     assert not iu.interpretability_label(unstable)
 
 
-def test_synthetic_catalog_writes_machine_readable_units_and_figures(tmp_path: Path):
+@pytest.mark.parametrize("sampling_stride", [10, 5])
+def test_synthetic_catalog_writes_machine_readable_units_and_figures(tmp_path: Path, sampling_stride: int):
     class FakeBackbone:
         def prior(self, key, state):
             return np.zeros((len(key), 2), np.float32), np.zeros((len(key), 1), np.float32)
@@ -188,7 +202,7 @@ def test_synthetic_catalog_writes_machine_readable_units_and_figures(tmp_path: P
                    "paired_windows": 4}
     result = iu.analyze_arrays(memory, rows, keys, annotations, norm_stats, output,
                                frame_loader=fake_frames, stability_samples=4,
-                               physical_calibration=calibration)
+                               physical_calibration=calibration, sampling_stride=sampling_stride)
 
     assert result["metadata"]["labels_used_for_unit_creation"] is False
     assert result["metadata"]["plan_boundary_alignment"] is None
@@ -198,6 +212,8 @@ def test_synthetic_catalog_writes_machine_readable_units_and_figures(tmp_path: P
     assert (output / "summary.md").is_file()
     assert (output / "figures/unit_000.jpg").is_file()
     assert (output / "figures/pca_traversal.jpg").is_file()
+    windowing = result["metadata"]["windowing"]
+    temporal = result["summary"]["temporal_run_statistics"]
+    assert windowing["stride_steps"] == temporal["window_stride_steps"] == sampling_stride
+    assert windowing["overlap_steps"] == temporal["window_overlap_steps"] == 10 - sampling_stride
 
-
-import pytest

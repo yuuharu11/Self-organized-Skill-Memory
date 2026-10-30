@@ -108,10 +108,14 @@ def rollout(model, norm, f, s, anchors, eps, t0, n=None, *, device, chunk=QUERY_
         dt = -t0_t / nf
         with torch.no_grad():
             for j in range(int(n_np.max())):
-                frac = torch.as_tensor((1 - j / n_np).astype(np.float32), device=device)
-                t_now = t0_t * frac
-                active = (j < n_t)[:, None]
-                x = torch.where(active, x + dt[:, None] * model(x, t_now, ft, st), x)
+                # Evaluate the model only on trajectories that still have steps
+                # left, so each row costs exactly its own n evaluations.
+                idx_np = np.flatnonzero(j < n_np)
+                idx = torch.as_tensor(idx_np, device=device)
+                frac = torch.as_tensor((1 - j / n_np[idx_np]).astype(np.float32), device=device)
+                xa = x[idx]
+                v = model(xa, t0_t[idx] * frac, ft[idx], st[idx])
+                x[idx] = xa + dt[idx, None] * v
         out[:, lo:hi] = x.reshape(samples, c, dim).cpu().numpy()
     out = out * norm["a_scale"] + norm["a_mean"]
     return out.reshape(samples, count, *norm["action_shape"])

@@ -52,6 +52,22 @@ def test_per_row_t0_and_steps_match_individual_rollouts():
     assert np.allclose(t0 / fc.steps_for(t0), 0.1)
 
 
+def test_rollout_evaluates_model_only_for_active_trajectories():
+    model, norm, rows, eps = _setup()
+    batch_sizes = []
+    original_forward = model.forward
+
+    def counting_forward(x, *args):
+        batch_sizes.append(len(x))
+        return original_forward(x, *args)
+
+    model.forward = counting_forward
+    t0 = np.asarray([0.1, 1.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], np.float32)
+    fc.rollout(model, norm, rows["f"], rows["s"], rows["a"], eps, t0, device="cpu")
+    # Each row costs its own n evaluations, not the chunk maximum.
+    assert sum(batch_sizes) == fc.SAMPLES * int(fc.steps_for(t0).sum())
+
+
 def test_noise_is_paired_and_methods_differ_only_by_start():
     model, norm, rows, eps = _setup()
     a1 = np.zeros(rows["a"].shape, np.float32)
