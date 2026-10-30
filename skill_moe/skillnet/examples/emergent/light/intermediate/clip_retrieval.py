@@ -17,8 +17,9 @@ from .abstracted_m1 import (
     _decode_residual_draws, _fit_abstracted_regressor, _mse,
     _predict_abstracted, _prepare_m1_train,
 )
+from .splits import SPLITS, subset_rows as _subset
 from .compare_splits import (
-    QUERY_MODES, RETRIEVAL_T0S, SPLITS, _same_class_alternatives, _subset,
+    QUERY_MODES, RETRIEVAL_T0S, _same_class_alternatives,
     _predict_xhat0,
 )
 from .experiment import (

@@ -26,7 +26,7 @@ from .clip_retrieval import (
     _query_embedding, _suite_horizon, attach_subtask_texts,
     fit_dual_encoder, frozen_pi05_plan_embeddings, retrieve_embedding_top1,
 )
-from .compare_splits import _subset
+from .splits import subset_rows as _subset
 from .experiment import (
     DEFAULT_CACHE, DEFAULT_DATASET, DEFAULT_OUTPUT_ROOT, load_rows,
 )

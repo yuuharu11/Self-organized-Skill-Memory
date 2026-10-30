@@ -1,12 +1,41 @@
 """Small shared numerical and episodic-memory helpers for method modules."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 import numpy as np
 import torch
 from torch import nn
 import hashlib
 
 _CALIBRATION_CACHE = {}
+
+
+def _np(value: Any, *, dtype=np.float32) -> np.ndarray:
+    if isinstance(value, torch.Tensor):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value, dtype=dtype)
+
+
+def _field(data: Any, names: tuple[str, ...], *, required: bool = True):
+    if isinstance(data, Mapping):
+        for name in names:
+            if name in data:
+                return data[name]
+    elif isinstance(data, (list, tuple)) and data and isinstance(data[0], Mapping):
+        values = []
+        for row in data:
+            found = next((row[n] for n in names if n in row), None)
+            if found is None:
+                if required:
+                    raise KeyError(f"training rows need one of {names}")
+                return None
+            values.append(found)
+        return values
+    if required:
+        raise KeyError(f"training data need one of {names}")
+    return None
 
 
 def validation_split(n, seed, fraction=0.1):

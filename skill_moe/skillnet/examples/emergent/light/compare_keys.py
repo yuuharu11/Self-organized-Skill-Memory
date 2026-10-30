@@ -4,8 +4,6 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import os
-import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,16 +17,12 @@ from skill_moe.skillnet.examples.emergent.eval.memory import KeyEncoder
 from skill_moe.skillnet.examples.memory_pilot.g2_retrieval.crosstask import _pairwise_outcomes
 from .diagnose_sharing import PREVIOUS, _decode_mse
 from .extract import dataset_episodes
+from .runtime import seed_experiment as _seed
 from .model import BottleneckModel
 
 DATA = Path("/work/.skillnet-state/data/lerobot/emergent/libero_40_unsegmented")
 CKPT = Path("/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def _seed(seed):
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
-    torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
 
 
 def _camera_pooler(checkpoint: Path, batch_size: int):

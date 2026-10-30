@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,17 +20,13 @@ from skill_moe.skillnet.examples.emergent.eval.gonogo import GoNoGoCriteria
 from skill_moe.skillnet.examples.emergent.eval.metrics import MIConfig
 from skill_moe.skillnet.examples.emergent.eval.pipeline import run_all
 from .extract import dataset_episodes, extract_cache
+from .runtime import seed_experiment as _seed
 from .model import BottleneckModel, gaussian_kl, standardize
 
 ROOT = Path("/work")
 DEFAULT_DATA = ROOT / ".skillnet-state/data/lerobot/emergent/libero_40_unsegmented"
 DEFAULT_CKPT = ROOT / ".skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params"
 DEFAULT_OUTPUTS = ROOT / ".skillnet-state/outputs/memory-pilot"
-
-
-def _seed(seed: int):
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
-    torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
 
 
 def _quat_from_rotvec(v: np.ndarray) -> np.ndarray:
