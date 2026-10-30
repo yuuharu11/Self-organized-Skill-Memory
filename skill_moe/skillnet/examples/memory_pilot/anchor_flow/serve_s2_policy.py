@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 from pathlib import Path
 import socket
 
@@ -24,8 +25,9 @@ from openpi.training.weight_loaders import CheckpointWeightLoader
 
 from s2_policy import S2WebsocketPolicy
 from smoke import DEFAULT_CHECKPOINT, load_model
+from research_paths import STATE_DIR
 
-DEFAULT_PI05_GENERATOR = "/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_base/params"
+DEFAULT_PI05_GENERATOR = str(STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_base/params")
 
 
 def load_generator(checkpoint: str, seed: int):
@@ -42,6 +44,8 @@ def load_generator(checkpoint: str, seed: int):
 
 
 def main():
+    import torch
+    torch.set_num_threads(int(os.environ["OMP_NUM_THREADS"]))
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT,
                         help="same S2 fine-tuned snapshot for every evaluation condition")
@@ -59,6 +63,16 @@ def main():
     parser.add_argument("--absolute-similarity-high", type=float, default=0.8)
     parser.add_argument("--fixed-t0", type=float, default=0.5)
     parser.add_argument("--generated-subtask-tokens", type=int, default=32)
+    parser.add_argument("--calibration", default="", help="LIBERO-90-only calibrated temperature and monotone t0 table")
+    parser.add_argument("--anchor-source", "--anchor-v2-source", dest="anchor_v2_source",
+                        choices=("dec_latent", "dec_each", "raw"), default="dec_each")
+    parser.add_argument("--anchor-v2-tau", type=float, default=0.05)
+    parser.add_argument("--anchor-v2-t0-mode", choices=("calibration", "fixed", "one"), default="fixed")
+    parser.add_argument("--anchor-v2-fixed-t0", type=float, default=0.5)
+    parser.add_argument("--anchor-v2-calibration", default="",
+                        help="JSON with similarity edges, per-bin t0, and holdout gate_threshold")
+    parser.add_argument("--anchor-v2-gate-threshold", type=float, default=None,
+                        help="top-1 similarity <= threshold falls back to t0=1; default can come from calibration JSON")
     args = parser.parse_args()
     if not 0 < args.port < 65536:
         raise ValueError("port must be in [1,65535]")
@@ -83,6 +97,11 @@ def main():
         absolute_similarity_low=args.absolute_similarity_low,
         absolute_similarity_high=args.absolute_similarity_high, fixed_t0=args.fixed_t0,
         generated_subtask_tokens=args.generated_subtask_tokens,
+        calibration_path=args.calibration,
+        anchor_v2_source=args.anchor_v2_source, anchor_v2_tau=args.anchor_v2_tau,
+        anchor_v2_t0_mode=args.anchor_v2_t0_mode, anchor_v2_fixed_t0=args.anchor_v2_fixed_t0,
+        anchor_v2_calibration_path=args.anchor_v2_calibration,
+        anchor_v2_gate_threshold=args.anchor_v2_gate_threshold,
     )
     server = WebsocketPolicyServer(policy, host=args.host, port=args.port,
         metadata={"model": "pi0.5-libero90-s2", "checkpoint": str(Path(args.checkpoint).resolve()),

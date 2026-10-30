@@ -114,6 +114,40 @@ def completed_trial_indices(rows_path: Path) -> set[int]:
     return {index for index, status in latest.items() if status == "complete"}
 
 
+def suite_control_limit(suite: str) -> int:
+    """Skill uses the released zero-shot budget; Long keeps its official 520."""
+    return {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300,
+            "libero_10": 520, "libero_90": 400,
+            "libero_skill_obj": 1600, "libero_skill": 1600}[_suite_name(suite)]
+
+
+def initial_state_index(trial_index: int, available: int) -> int:
+    # The released evaluator uses initial_states[episode_idx], never wraps.
+    if not 0 <= trial_index < available:
+        raise IndexError(f"trial {trial_index} exceeds {available} public initial states")
+    return trial_index
+
+
+def environment_seed(suite: str, seed_base: int, trial_index: int) -> int:
+    # Match the released Skill evaluator's env.seed(args.seed). Existing
+    # non-Skill paired experiments retain their documented trial seeds.
+    return seed_base if _suite_name(suite) in ("libero_skill_obj", "libero_skill") else seed_base + trial_index
+
+
+def environment_horizon(max_steps: int, wait_steps: int) -> int:
+    # LIBERO replaces the returned timeout `done` with success, but robosuite
+    # still refuses subsequent steps after its internal horizon. Keep the
+    # released 1000-step horizon where sufficient and allow the full budget.
+    return max(1000, max_steps + wait_steps + 1)
+
+
+def episode_status(env, returned_done: bool) -> tuple[bool, bool]:
+    """Separate task success from termination, including masked timeouts."""
+    success = bool(env.check_success())
+    terminated = success or bool(returned_done) or bool(env.env.done)
+    return success, terminated
+
+
 def _run_trial(job: dict) -> dict:
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs import OffScreenRenderEnv
@@ -125,17 +159,21 @@ def _run_trial(job: dict) -> dict:
     language = _task_language(suite_name, task)
     annotation = _load_annotation(suite_name, language)
     initial_states = suite.get_task_init_states(job["task_id"])
-    state_index = job["trial_index"] % len(initial_states)
+    state_index = initial_state_index(job["trial_index"], len(initial_states))
     initial_state = np.asarray(initial_states[state_index])
     init_digest = hashlib.sha256(np.ascontiguousarray(initial_state).view(np.uint8)).hexdigest()
     trial_seed = job["seed_base"] + job["trial_index"]
     bddl = Path(get_libero_path("bddl_files")) / task.problem_folder / task.bddl_file
-    env = OffScreenRenderEnv(bddl_file_name=str(bddl), camera_heights=256, camera_widths=256)
-    env.seed(trial_seed)
+    horizon = environment_horizon(job["max_steps"], job["wait_steps"])
+    env = OffScreenRenderEnv(bddl_file_name=str(bddl), camera_heights=256, camera_widths=256,
+                             horizon=horizon)
+    env_seed = environment_seed(suite_name, job["seed_base"], job["trial_index"])
+    env.seed(env_seed)
     client = None
     traces = []
     started = time.perf_counter()
     done = False
+    success = False
     steps = 0
     query_id = 0
     action_plan = []
@@ -145,8 +183,10 @@ def _run_trial(job: dict) -> dict:
         obs = env.set_init_state(initial_state)
         dummy = [0.0] * 6 + [-1.0]
         for _ in range(job["wait_steps"]):
-            obs, _, done, _ = env.step(dummy)
-        done = False
+            obs, _, returned_done, _ = env.step(dummy)
+            success, done = episode_status(env, returned_done)
+            if done:
+                break
         while steps < job["max_steps"] and not done:
             if not action_plan:
                 image = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
@@ -183,25 +223,35 @@ def _run_trial(job: dict) -> dict:
                 traces.append(response.get("s2_debug", {"query_id": query_id, "missing_debug": True}))
                 query_id += 1
             action = action_plan.pop(0)
-            obs, _, done, _ = env.step(np.asarray(action).tolist())
+            obs, _, returned_done, _ = env.step(np.asarray(action).tolist())
+            success, done = episode_status(env, returned_done)
             steps += 1
         return {
             "trial_index": job["trial_index"], "trial_seed": trial_seed,
+            "environment_seed": env_seed, "max_env_steps": job["max_steps"],
+            "stabilization_steps": job["wait_steps"], "replan_steps": job["replan_steps"],
+            "initial_state_selection": "public_initial_states[trial_index]",
             "initial_state_index": state_index, "initial_state_sha256": init_digest,
             "task_suite": suite_name, "task_id": job["task_id"], "task": language,
             "condition": job["condition"], "memory_snapshot": job["memory_snapshot"],
             "checkpoint": job["checkpoint"], "query_text_source": job["query_text_source"],
-            "success": bool(done), "env_steps": steps, "num_policy_queries": query_id,
+            "success": success, "env_steps": steps, "num_policy_queries": query_id,
+            "environment_horizon": horizon,
+            "termination_reason": "success" if success else "environment_terminated" if done else "control_budget",
             "selected_units_and_t0": traces, "elapsed_seconds": time.perf_counter() - started,
             "status": "complete",
         }
     except Exception as exc:
         return {"trial_index": job["trial_index"], "trial_seed": trial_seed,
+                "environment_seed": env_seed, "max_env_steps": job["max_steps"],
+                "stabilization_steps": job["wait_steps"], "replan_steps": job["replan_steps"],
+                "initial_state_selection": "public_initial_states[trial_index]",
                 "initial_state_index": state_index, "initial_state_sha256": init_digest,
                 "task_suite": suite_name, "task_id": job["task_id"], "task": language,
                 "condition": job["condition"], "memory_snapshot": job["memory_snapshot"],
                 "checkpoint": job["checkpoint"], "query_text_source": job["query_text_source"],
                 "success": False, "env_steps": steps, "num_policy_queries": query_id,
+                "environment_horizon": horizon,
                 "selected_units_and_t0": traces,
                 "status": "error", "error": repr(exc), "traceback": traceback.format_exc(),
                 "elapsed_seconds": time.perf_counter() - started}
@@ -249,9 +299,27 @@ def main():
     complete = completed_trial_indices(rows_path)
     suite_obj = __import__("libero.libero.benchmark", fromlist=["get_benchmark_dict"]).get_benchmark_dict()[suite]()
     task = suite_obj.get_task(task_id)
-    limits = {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300,
-              "libero_10": 520, "libero_90": 400, "libero_skill_obj": 800, "libero_skill": 800}
-    max_steps = args.max_env_steps or limits[suite]
+    max_steps = args.max_env_steps or suite_control_limit(suite)
+    initial_states = suite_obj.get_task_init_states(task_id)
+    if trials:
+        initial_state_index(trials - 1, len(initial_states))
+    protocol = {"max_env_steps": max_steps, "stabilization_steps": args.wait_steps,
+                "max_total_env_steps": max_steps + args.wait_steps,
+                "environment_horizon": environment_horizon(max_steps, args.wait_steps),
+                "termination_rule": "check_success distinct from returned_done or internal env.done",
+                "replan_steps": args.replan_steps,
+                "initial_state_selection": "public_initial_states[trial_index]",
+                "initial_state_ids": list(range(trials)),
+                "public_init_file": task.init_states_file,
+                "environment_seed_rule": "fixed seed_base" if suite in ("libero_skill_obj", "libero_skill") else "seed_base + trial_index (paired S2 protocol)",
+                "environment_seeds": [environment_seed(suite, metadata["seed_base"], i) for i in range(trials)],
+                "policy_trial_seed_rule": "seed_base + trial_index; paired explicit query noise",
+                "custom_max_step_override": bool(args.max_env_steps)}
+    protocol_path = output / "evaluation-protocol.json"
+    if protocol_path.exists() and json.loads(protocol_path.read_text()) != protocol:
+        raise ValueError("existing evaluation protocol differs; use a fresh output directory")
+    if not protocol_path.exists():
+        protocol_path.write_text(json.dumps(protocol, indent=2) + "\n")
     jobs = [{"host": args.host, "port": args.port, "suite": suite, "task_id": task_id,
              "trial_index": index, "seed_base": metadata["seed_base"], "condition": metadata["condition"],
              "memory_snapshot": metadata["memory_snapshot"], "query_text_source": metadata["query_text_source"],
