@@ -1,5 +1,10 @@
 # Intermediate-action experiments
 
+For setup, required research assets, and the limits of reproducing the recorded
+results on another machine, see the [reproduction guide](../../../../../../docs/reproduction.md).
+Some later runners still refer to machine-specific defaults beyond the CLI
+arguments; consult that guide before launching a full experiment.
+
 Choose the module by the question being tested. Run from the repository root
 after activating the project environment, for example:
 
