@@ -5,20 +5,20 @@ configs and the LIBERO-Skill OOD evaluation entrypoint.
 
 ## Prepare SkillNet
 
-Clone SkillNet and use `skill_moe/skillnet` as the runnable source root:
+Clone this repository and use `skill_moe/skillnet` as the runnable source root:
 
 ```bash
-git -c core.longpaths=true clone --branch skillnet-public-release --depth 1 https://github.com/VIPL-VSU/SkillNet.git SkillNet
-cd SkillNet/skill_moe/skillnet
+git -c core.longpaths=true clone --depth 1 https://github.com/yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
+cd Self-organized-Skill-Memory/skill_moe/skillnet
 git -C ../.. config core.longpaths true
 ```
 
-If HTTPS cloning is blocked by your network, use the same release branch over
+If HTTPS cloning is blocked by your network, clone over
 SSH:
 
 ```bash
-git -c core.longpaths=true clone --branch skillnet-public-release --depth 1 git@github.com:VIPL-VSU/SkillNet.git SkillNet
-cd SkillNet/skill_moe/skillnet
+git -c core.longpaths=true clone --depth 1 git@github.com:yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
+cd Self-organized-Skill-Memory/skill_moe/skillnet
 git -C ../.. config core.longpaths true
 ```
 

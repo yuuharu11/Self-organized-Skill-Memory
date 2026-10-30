@@ -180,6 +180,21 @@ def test_export_uses_only_complete_nonoverlapping_chunks():
     assert not len(complete_starts(9))
 
 
+def test_export_rejects_missing_declared_rlds_shards(tmp_path):
+    import json
+    path=EXAMPLES/'memory_pilot/anchor_flow';sys.path.insert(0,str(path))
+    from export_libero90 import source_inventory
+    (tmp_path/'dataset_info.json').write_text(json.dumps({'splits':[{
+        'name':'train','shardLengths':['3','4']}]}))
+    (tmp_path/'liber_o90-train.tfrecord-00000-of-00002').touch()
+    try:source_inventory(tmp_path)
+    except ValueError:pass
+    else:raise AssertionError('accepted missing RLDS shard')
+    (tmp_path/'liber_o90-train.tfrecord-00001-of-00002').touch()
+    files,n=source_inventory(tmp_path)
+    assert len(files)==2 and n==7
+
+
 def test_prepared_cosine_search_matches_exclusion_and_stable_ties():
     path=EXAMPLES/'memory_pilot/anchor_flow';sys.path.insert(0,str(path))
     from prepare_sources import training_neighbors

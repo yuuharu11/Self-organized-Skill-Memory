@@ -15,18 +15,18 @@ LIBERO/RoboTwin simulator evaluation is Linux-oriented.
 # On Windows, clone under a short, non-user-specific directory because
 # LIBERO-Skill task filenames are long. The -c flag handles checkout; the
 # local config keeps later git status/diff commands from hitting path limits.
-git -c core.longpaths=true clone --branch skillnet-public-release --depth 1 https://github.com/VIPL-VSU/SkillNet.git SkillNet
-cd SkillNet
+git -c core.longpaths=true clone --depth 1 https://github.com/yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
+cd Self-organized-Skill-Memory
 git config core.longpaths true
 export SKILLNET_REPO_ROOT="${PWD}"
 ```
 
-If HTTPS cloning is blocked by your network, use the same release branch over
+If HTTPS cloning is blocked by your network, clone over
 SSH:
 
 ```bash
-git -c core.longpaths=true clone --branch skillnet-public-release --depth 1 git@github.com:VIPL-VSU/SkillNet.git SkillNet
-cd SkillNet
+git -c core.longpaths=true clone --depth 1 git@github.com:yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
+cd Self-organized-Skill-Memory
 git config core.longpaths true
 export SKILLNET_REPO_ROOT="${PWD}"
 ```

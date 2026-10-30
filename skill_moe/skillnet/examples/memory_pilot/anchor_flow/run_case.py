@@ -58,7 +58,7 @@ def _suite_name(name: str) -> str:
 
 def _load_annotation(task_suite: str, task_language: str) -> dict:
     here = Path(__file__).resolve().parents[2] / "libero" / "annotations"
-    files = ("instruct2plan_obj_90.json", "libero_skill_obj_annotations.json")
+    files = ("instruct2plan_obj_90.json", "instruct2plan_40.json", "libero_skill_obj_annotations.json")
     if task_suite in ("libero_skill", "libero_skill_obj"):
         files = ("libero_skill_obj_annotations.json",)
     for filename in files:
@@ -69,6 +69,21 @@ def _load_annotation(task_suite: str, task_language: str) -> dict:
         if task_language in annotations:
             return annotations[task_language]
     raise KeyError(f"No task-level SkillNet annotation for {task_language!r} in {files}")
+
+
+def _task_language(task_suite: str, task) -> str:
+    """Resolve portable skill_obj aliases to the public full instruction."""
+    if task_suite not in ("libero_skill", "libero_skill_obj"):
+        return str(task.language).strip()
+    from libero.libero import get_libero_path
+    manifest_path = (Path(get_libero_path("bddl_files")) / task.problem_folder
+                     / "public_task_manifest.json")
+    manifest = json.loads(manifest_path.read_text())
+    alias = Path(task.bddl_file).stem
+    details = {row["task"]: row for row in manifest["task_details"]}
+    if alias not in details:
+        raise KeyError(f"No public instruction for {alias!r} in {manifest_path}")
+    return str(details[alias]["language"]).strip()
 
 
 def _quat2axisangle(quat):
@@ -107,7 +122,7 @@ def _run_trial(job: dict) -> dict:
     suite_name = _suite_name(job["suite"])
     suite = benchmark.get_benchmark_dict()[suite_name]()
     task = suite.get_task(job["task_id"])
-    language = str(task.language).strip()
+    language = _task_language(suite_name, task)
     annotation = _load_annotation(suite_name, language)
     initial_states = suite.get_task_init_states(job["task_id"])
     state_index = job["trial_index"] % len(initial_states)

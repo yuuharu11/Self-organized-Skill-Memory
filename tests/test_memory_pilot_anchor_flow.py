@@ -3,7 +3,7 @@ import pytest
 
 from skill_moe.skillnet.examples.emergent.light.intermediate.anchor_flow import (
     _gripper_timing_tv, _rollout_flow, entropy_t0, join_predicted_subtask_rows,
-    moment_match_bases, parse_source_mix, predicted_subtask_file,
+    attach_subtask_source, moment_match_bases, parse_source_mix, predicted_subtask_file,
     similarity_t0, softmax_cosine,
 )
 
@@ -94,6 +94,21 @@ def test_split_specific_predicted_files_use_held_out_suite_checkpoints():
     file_b = predicted_subtask_file(root, "B")
     assert "split-a" in str(file_a)
     assert "split-b" in str(file_b)
+
+
+def test_none_and_instruction_sources_have_expected_text(tmp_path):
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "manifest.json").write_text(
+        '{"episodes":[{"episode_id":"ep-a","task":"open the drawer"}]}'
+    )
+    rows = {"episode_id": np.asarray(["ep-a"]), "frame": np.asarray([0])}
+    none = attach_subtask_source(rows, "none", split="A", cache_dir=cache,
+                                annotations_path="unused", predicted_root="unused")
+    instruction = attach_subtask_source(rows, "instruction", split="A", cache_dir=cache,
+                                        annotations_path="unused", predicted_root="unused")
+    assert none["subtask_text"].tolist() == [""]
+    assert instruction["subtask_text"].tolist() == ["open the drawer"]
 
 
 def test_unknown_motion_classes_are_not_removed_from_s1_evaluation():

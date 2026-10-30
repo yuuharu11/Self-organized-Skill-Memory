@@ -819,7 +819,7 @@ def _report(summary):
     lines = [
         "# Anchor-flow S1 results",
         "",
-        f"M1 and E were fitted on Split A/B training suites only and frozen. Query subtask source: {source_desc}. E always uses language-free k and proprioception (f zeroed only in E). For a controlled source comparison, training rows are restricted to episodes covered by the split-specific predicted cache; validation and query rows retain their complete selected coverage. One shared F and 10 Euler steps are used by ALL comparisons, including iii_top1. F fits epsilon-A on ordinary paths and the clean-action estimate x_t-t*F to A on augmented anchor paths. Retrieved-anchor training leaves out all recordings of the query task, including their contributions to centers, keys and sigma; no exclusion fallback is allowed. This conservative rule covers nearby recordings within a task because source/init IDs are absent.",
+        f"M1 and E were fitted on Split A/B training suites only and frozen. Query subtask source: {source_desc}. E always uses language-free k and proprioception (f zeroed only in E). All valid H=25 training-suite rows are retained in each source condition; predicted mode requires exact (episode_id, step) coverage for training and query rows. One shared F and 10 Euler steps are used by ALL comparisons, including iii_top1. F fits epsilon-A on ordinary paths and the clean-action estimate x_t-t*F to A on augmented anchor paths. Retrieved-anchor training leaves out all recordings of the query task, including their contributions to centers, keys and sigma; no exclusion fallback is allowed. This conservative rule covers nearby recordings within a task because source/init IDs are absent.",
         "",
         "The stream shuffles whole episodes: every window is evaluated before any value from that episode is inserted. M6 is flushed at episode boundaries without lowering support=10 / episodes=3 / epsilon; pending age advances by actual new evidence. No unknown motion classes are removed. Component samples and isotropic sigma are in b space before decoding. OptimusVLA moment matching is also in b space. Fixed and confidence t0 (including t0=1 fallback) are calibrated on independent training-suite episodes using the same sampled-component distribution and real F features as evaluation. RAGDP has its own validation-selected fixed t0. White noise is common across all methods, and latent/residual draws are shared across anchor ablations.",
         "",
@@ -853,14 +853,13 @@ def _run_one(rows, *, split, seed, device, source_mix, smoke,
         rows, split, smoke=False, seed=seed,
         smoke_train_episodes=smoke_train_episodes,
         smoke_eval_episodes=smoke_eval_episodes)
-    # Use the same available training examples across the four source modes.
-    # The split-specific predictor cache contains held-out training episodes
-    # (20%) and all rows of that split's unseen suite; no oracle fallback is used.
-    prediction_path = predicted_subtask_file(predicted_root, split)
     original_train_rows = len(train["episode_id"])
-    train = join_predicted_subtask_rows(train, prediction_path, allow_missing=True)
-    if not len(train["episode_id"]):
-        raise ValueError(f"no training rows have split-{split.lower()} predicted subtasks")
+    if subtask_source == "predicted":
+        prediction_path = predicted_subtask_file(predicted_root, split)
+        train = join_predicted_subtask_rows(train, prediction_path)
+        test = join_predicted_subtask_rows(test, prediction_path)
+    prediction_covered_train_rows = len(train["episode_id"])
+    prediction_missing_train_rows = original_train_rows - prediction_covered_train_rows
     if smoke:
         train_tasks, eval_tasks, _ = SPLITS[split]
         train = _select_episodes(train, train_tasks, smoke_train_episodes, seed + 101)
@@ -1143,8 +1142,9 @@ def _run_one(rows, *, split, seed, device, source_mix, smoke,
             'gripper_minus_normal':{k:star['gripper_timing_tv'][k]-ordinary['gripper_timing_tv'][k] for k in GRIP_METRICS}}
     return {"split": split, "seed": seed, "horizon": HORIZON,
             "train_rows": len(train_fit["a"]), "validation_rows": len(validation["a"]),
-            "prediction_covered_train_rows": int(len(train["episode_id"])),
-            "prediction_missing_train_rows": int(original_train_rows-len(train["episode_id"])),
+            "prediction_covered_train_rows": int(prediction_covered_train_rows),
+            "prediction_missing_train_rows": int(prediction_missing_train_rows),
+            "smoke_selected_train_rows": int(len(train["episode_id"])),
             "query_rows": len(test["a"]), "excluded_unknown_class_rows": excluded,
             "M6_training_unit_count": int(len(initial_ids)),
             "M6_after_stream_unit_count": int(len(m6.prototypes)),
@@ -1175,7 +1175,7 @@ def run(*, output_root=DEFAULT_OUTPUT_ROOT, cache_dir=DEFAULT_CACHE,
         smoke_train_episodes=3, smoke_eval_episodes=3,
         m1_epochs=60, f_epochs=80, fiii_epochs=80, batch_size=512,
         subtask_source="gold",
-        predicted_root=Path("/work/.skillnet-state/outputs/memory-pilot/subtask-pi05-20261027T165005Z")):
+        predicted_root=Path("/work/.skillnet-state/outputs/memory-pilot/subtask-pi05-full-cache-20261028T072222Z")):
     torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
     device = torch.device(device_name)
     start = time.perf_counter()
@@ -1203,9 +1203,9 @@ def run(*, output_root=DEFAULT_OUTPUT_ROOT, cache_dir=DEFAULT_CACHE,
         "spec": "/work/docs/research/anchor_flow_skill_memory.md §2, §4 S1",
         "seed_list": list(seeds), "splits": list(splits), "horizon": HORIZON,
         "subtask_source": subtask_source,
-        "predicted_subtask_files_for_common_training_coverage": {
+        "predicted_subtask_files": {
             split: str(predicted_subtask_file(predicted_root, split)) for split in splits},
-        "training_coverage_policy": "all subtask-source modes use the same train rows covered by split-specific predicted cache; evaluation rows are not filtered",
+        "training_coverage_policy": "all valid H=25 rows in each training suite; predicted source is joined exactly by episode_id and step",
         "device": str(device), "smoke": bool(smoke),
         "source_mix_retrieved_anchor_gold_anchor_ordinary_path": list(source_mix),
         "anchor_start_formula": "b'~N(c_k,sigma_k^2 I); a_k=Dec(b',r,s); x_t0=(1-t0)*a_k+t0*epsilon",
@@ -1259,7 +1259,7 @@ def main(argv=None):
     parser.add_argument("--subtask-source", choices=("gold", "none", "instruction", "predicted"),
                         default="gold")
     parser.add_argument("--predicted-subtask-root", type=Path,
-                        default=Path("/work/.skillnet-state/outputs/memory-pilot/subtask-pi05-20261027T165005Z"))
+                        default=Path("/work/.skillnet-state/outputs/memory-pilot/subtask-pi05-full-cache-20261028T072222Z"))
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--smoke-train-episodes", type=int, default=3)
     parser.add_argument("--smoke-eval-episodes", type=int, default=3)

@@ -23,12 +23,26 @@ def complete_starts(length,horizon=10,stride=10):
     return np.arange(0,max(length-horizon+1,0),stride,dtype=np.int64)
 
 
+def source_inventory(root):
+    """Check every declared TFDS shard before accepting partial task coverage."""
+    info=json.loads((root/'dataset_info.json').read_text())
+    split=next(item for item in info['splits'] if item['name']=='train')
+    lengths=split['shardLengths']
+    files=sorted(root.glob('*train.tfrecord-*'))
+    suffixes={f'{i:05d}-of-{len(lengths):05d}' for i in range(len(lengths))}
+    if {p.name.rsplit('tfrecord-',1)[-1] for p in files}!=suffixes:
+        raise ValueError('RLDS shard inventory is incomplete or inconsistent')
+    return files,sum(map(int,lengths))
+
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--rlds',type=Path,default=Path('/work/.skillnet-state/data/libero/libero90_rlds/libero_90_openvla_processed/1.0.0'))
     parser.add_argument('--raw90',type=Path,default=Path('/work/data/LIBERO/libero_90'))
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--stride',type=int,default=10)
+    parser.add_argument('--allow-missing-tasks',action='store_true',
+                        help='explicitly allow missing tasks in a complete RLDS release; report them')
     args=parser.parse_args()
     if args.output.exists(): raise FileExistsError(args.output)
     if args.stride<1: raise ValueError('stride must be positive')
@@ -57,8 +71,7 @@ def main():
         LiberoInputs(ModelType.PI05),transforms.Normalize(stats,use_quantiles=True),
         transforms.ResizeImages(224,224),transforms.TokenizePrompt(tokenizer,discrete_state_input=False),
         transforms.PadStatesAndActions(32)])
-    files=sorted(args.rlds.glob('*tfrecord*'))
-    if not files: raise FileNotFoundError(args.rlds)
+    files,expected_episodes=source_inventory(args.rlds)
     cols=defaultdict(list)
     task_counts=defaultdict(int)
     for episode_index,serialized in enumerate(tf.data.TFRecordDataset([str(p) for p in files],num_parallel_reads=1)):
@@ -103,12 +116,19 @@ def main():
                 image_mask_right_wrist_0_rgb=np.zeros(n,bool),
                 initialization_grouping=np.asarray('all recordings of same original task file'),
                 checkpoint=np.asarray(DEFAULT_CHECKPOINT),sampling_stride=np.asarray(args.stride))
-    if len(task_counts)!=90: raise ValueError(f'only {len(task_counts)} task sources in RLDS')
+    if episode_index+1!=expected_episodes:
+        raise ValueError(f'RLDS episode count {episode_index+1} != declared {expected_episodes}')
+    missing_tasks=sorted(allowed_files-set(task_counts))
+    if missing_tasks and not args.allow_missing_tasks:
+        raise ValueError(f'missing task sources in complete RLDS release: {missing_tasks}')
+    data['missing_source_tasks']=np.asarray(missing_tasks,dtype=str)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with args.output.open('xb') as stream:np.savez_compressed(stream,**data)
     report={'rows':n,'episodes':episode_index+1,'tasks':len(task_counts),'stride':args.stride,
             'horizon':10,'no_incomplete_chunks':True,'source':str(args.rlds.resolve()),
             'allowed_source_files':sorted(allowed_files),'key_text_source':'instruction_only',
+            'missing_source_tasks':missing_tasks,'complete_shard_inventory':True,
+            'expected_episodes':expected_episodes,
             'normalization_file':str(norm_file),'normalization_sha256':norm_sha,
             'initialization_grouping':'conservative task-wide exclusion; not claimed true init IDs'}
     with args.output.with_suffix('.json').open('x') as f:json.dump(report,f,indent=2)

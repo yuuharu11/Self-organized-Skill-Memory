@@ -1,5 +1,9 @@
 # SkillNet Release Status
 
+> This page records the release status of the upstream SkillNet public release
+> ([VIPL-VSU/SkillNet](https://github.com/VIPL-VSU/SkillNet)). In this repository the
+> release gate workflow runs only on manual dispatch.
+
 This page records the public-release readiness state for the
 `skillnet-public-release` branch. It is intentionally conservative: do not claim
 that a workflow is externally runnable until the listed evidence passes from a
