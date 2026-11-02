@@ -88,6 +88,9 @@ def summarize(root):
             exact=len(a)==len(b) and all(all(x[k]==y[k] for k in ("step","seed","image_sha256","state","actions")) for x,y in zip(a,b))
             replay_checks.append(dict(task=task+1,init=init,condition=condition,identical_full_trajectory=exact))
     summary["unchanged_prompt_replay"]=replay_checks
+    for model_name in ("monitor","effect"):
+        path=root/"models"/(model_name+"_report.json")
+        summary[model_name+"_training_report"]=json.loads(path.read_text()) if path.exists() else None
     summary["parents_complete"]=len(list((root/"parents").glob("*/result.json")))
     summary["paired_arms_complete"]=len(list((root/"pairs").glob("*/result.json")))
     summary["incomplete_attempts"]=[]
@@ -121,8 +124,32 @@ def summarize(root):
     for task in range(9):
         arms=[value for key,value in complete_five.items() if key[0]==task]
         lines.append("| "+" | ".join([f"{task+1:02d}",str(len(arms))]+[str(sum(a[c]["success"] for a in arms)) for c in CONDITIONS])+" |")
+    lines += ["", "## 現時点の採否", ""]
+    comparison=summary["comparisons"]["effect_vs_achievement"]
+    if len(complete_five)<18:
+        decision="予定した全18初期状態の5条件がまだ揃っていない。以下は途中の対応比較であり、現時点で方法を採用・棄却しない。未完了の偏りが結論に影響し得る。"
+    else:
+        task_deltas=list(comparison["task_differences"].values())
+        broad=sum(value>0 for value in task_deltas)>=2 and sum(task_deltas)-max(task_deltas)>0
+        if comparison["difference"]>=.1 and broad:
+            decision="効果予測は、単純な達成確認に対する事前の予備的進行基準を点推定では満たした。次段階の候補とする。ただし上の区間、別ノイズ、独立した再学習・既存方式比較を確認するまで、有効性や新規性の証明とはしない。"
+        elif comparison["difference"]<=0:
+            decision="今回の効果予測器は、単純な達成確認に対する追加価値を点推定でも示さなかった。複雑な選択器を採用する根拠は得られていない。達成確認自体の比較を見て、単純な方法を候補に残すか判断する。一般的な同等性やスキルの無効性を証明したものではない。"
+        else:
+            decision="効果予測の点推定は単純な達成確認を上回るが、事前の進行基準を満たさない。今回の小標本から複雑な方法への追加投資を正当化しない。単純な達成確認と元指示の比較を優先する。"
+    summary["decision"]=decision
+    # Refresh JSON after adding the explicit decision.
+    tmp=report_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(summary,ensure_ascii=False,indent=2)+"\n");tmp.replace(report_path)
+    lines += [decision, "", "## 切替と追加計算", "", "| 条件 | 完了本数 | 更新回数 | 全体指示への復帰 | 未確認のまま切替 | 監視時間合計 |", "|---|---:|---:|---:|---:|---:|"]
+    for condition in CONDITIONS:
+        own=[row for row in outcomes if row["condition"]==condition]
+        lines.append(f"| {condition} | {len(own)} | {sum(x['switches'] for x in own)} | {sum(x['rollbacks'] for x in own)} | {sum(x['switch_while_unverified'] is True for x in own)} | {sum(x['monitor_s'] for x in own):.1f}s |")
+    if replay_checks:
+        lines += ["", f"指示を一度も変えなかった対応走行の全画像・状態・行動一致：{sum(x['identical_full_trajectory'] for x in replay_checks)}/{len(replay_checks)}。一致しない場合は介入以外の実行差の監査が必要。"]
     lines += ["", "## 判断の範囲", "", "学習・検証とテストの初期状態を分離し、各保存点・全分岐を親軌跡単位で管理する。task06・09はコントローラの学習・検証から除外。人手の分解・テンプレートは共有しており、自動計画の研究とは呼ばない。oracleは特権的な参考条件。", "",
         "単一の学習設定・評価ノイズseed、9タスク・18初期状態の探索的な結果。途中の分母差を混ぜて優位を主張しない。効果予測が単純な達成確認を上回らなければ、その追加価値を支持しない。図の生成は優先しない。", "",
+        "言語介入の改善予測自体は既存研究（Learning What to Say to Your VLA）にある。この構成だけで論文の新規性が立ったとは言わない。関連研究との重なりはリポジトリのrelated_instruction_intervention_2026-11-03.md参照。", "",
         "親軌跡完了: "+str(summary["parents_complete"])+"、分岐arm完了: "+str(summary["paired_arms_complete"])+"。",
         "\n入力・制御予算・split・閾値・期限は親ディレクトリのmanifest.json、モデル適合データはmodels/*_report.json、個別成否と切替はepisodes.csvに保存。"]
     (analysis/"report.md").write_text("\n".join(lines)+"\n")
