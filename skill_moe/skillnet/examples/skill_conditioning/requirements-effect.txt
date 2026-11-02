@@ -1,0 +1,3 @@
+# Optional CPU-only models for the bounded instruction-update pilot.
+# Install into the existing SkillNet environment; no policy weights are updated.
+scikit-learn==1.7.2
