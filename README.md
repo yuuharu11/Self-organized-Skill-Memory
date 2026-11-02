@@ -4,10 +4,9 @@
 Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへの汎化を高める研究のコードと研究ノートです。
 [SkillNet](https://github.com/VIPL-VSU/SkillNet)（ICML 2026）の公開コードをベースにしています。
 
-> 研究は進行中です。現時点の結果は、凍結した π0.5 の特徴の上で小さなモデルを学習する軽量版での、
-> オフラインの行動誤差が中心です。環境での成功率はまだ確定していません。
-> 10月30日時点の測定と限界は [実験結果のまとめ](docs/research/reviews/experiment_results_2026-10-30.md)、
-> 軽量版の経緯は [これまでの結果](docs/research/skill_memory_findings.md) を参照してください。
+> 2026-11-02現在、検索・混合方式の追加改良、Aの新規学習、DMPの追加実験は保留しています。
+> 次は公開SkillNetの失敗原因を診断します。[最新の判断・DMP停止記録・途中結果](docs/research/reviews/diagnosis_2026-11-02.md)を参照してください。
+> オフラインの保留タスク評価と、基盤方策にとって未見の組み合わせの閉ループ評価は区別しています。
 
 ## 初めて読む方・再現する方へ
 
@@ -17,6 +16,7 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 | 確認したいこと | 読む場所 |
 | --- | --- |
 | この研究の仮説と測定結果 | [研究ノートの入口](docs/research/README.md)、[これまでの結果](docs/research/skill_memory_findings.md) |
+| 現在の方針とSkillNetの弱点候補 | [停止記録と失敗診断](docs/research/reviews/diagnosis_2026-11-02.md)、[夜間のオフライン結果](docs/research/reviews/overnight_2026-11-02.md) |
 | 10月30日時点の結果と停止した測定 | [実験結果のまとめ](docs/research/reviews/experiment_results_2026-10-30.md)、[引き継ぎ記録](docs/research/reviews/handoff_2026-10-30.md) |
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 各研究スクリプトの役割 | [軽量実験の一覧](skill_moe/skillnet/examples/emergent/light/README.md)、[中間行動実験の一覧](skill_moe/skillnet/examples/emergent/light/intermediate/README.md) |
