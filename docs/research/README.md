@@ -2,7 +2,7 @@
 
 環境構築・データ処理の手順とは別に、進行中の研究の方針・判定基準・調査をまとめたもの。
 
-現在の研究判断は[停止記録とSkillNetの失敗診断](reviews/diagnosis_2026-11-02.md)から読む。
+現在の実測は[SkillNetのスキル利用と指示介入](reviews/skillnet_interventions_2026-11-03.md)から読む。
 別環境で動かす場合は[再現ガイド](../reproduction.md)を参照する。
 再現ガイドには公開コードの対象範囲と必要な入力資産を、
 [スクリプト一覧](../../skill_moe/skillnet/examples/emergent/light/intermediate/README.md) には実験ごとの入口を記載しています。
@@ -10,9 +10,11 @@
 ノート中の日時付き run 名や `.skillnet-state/` へのリンクはローカルの実行記録です。
 Git に含まれないファイルや未コミットの新しい実験を、このチェックアウトだけで再現できるとは扱いません。
 
-## 現在の方針（2026-11-02）
+## 現在の方針（2026-11-03）
 
-- [停止記録とSkillNetの失敗診断](reviews/diagnosis_2026-11-02.md) — **最新**。A・DMPを保留し、言語・段階移行・操作の原因を分けて調べる。360行の途中結果を固定して再集計。
+- [SkillNetのスキル利用と指示介入](reviews/skillnet_interventions_2026-11-03.md) — **最新**。9初期観測のスキル介入、4開発例の同一状態分岐、内部計測の数値差と把持解除を監査。
+- [診断の収集プロトコル](skillnet_diagnostic_protocol_2026-11-03.md) — 説明の論理に沿って必要な証拠・対照・解釈の限界を整理。
+- [停止記録とSkillNetの失敗診断](reviews/diagnosis_2026-11-02.md) — A・DMPを保留し、言語・段階移行・操作の原因を分けて調べる。360行の途中結果を固定して再集計。
 - [夜間のオフライン結果](reviews/overnight_2026-11-02.md) — 検索・区間スキル・5-shot対照。入力特徴差と評価条件を訂正済み。
 - [DMP設計の履歴](dmp_routing_plan_2026-11-02.md) — 69/135試行でユーザー指示により停止。実施指示ではない。
 - [診断の再集計スクリプト](../../skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnostics.py) — 固定JSONLの共通組だけを比較。GPU・重みは不要。
@@ -55,7 +57,7 @@ Git に含まれないファイルや未コミットの新しい実験を、こ�
 
 ## レビュー・報告・ログ（`reviews/`）
 
-最新は[11-02の停止記録と診断](reviews/diagnosis_2026-11-02.md)。過去の提案は当時の判断の記録として保存し、現在の実施方針と混同しない。
+最新は[11-03のスキル利用と指示介入](reviews/skillnet_interventions_2026-11-03.md)。過去の提案は当時の判断の記録として保存し、現在の実施方針と混同しない。
 
 ### 報告（単独で読める）
 

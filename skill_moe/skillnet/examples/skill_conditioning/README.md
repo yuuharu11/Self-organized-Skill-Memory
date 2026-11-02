@@ -1,5 +1,7 @@
 # スキル条件の診断と改善：外部から参照するための手順
 
+**2026-11-03の実測：** [スキル利用と指示介入](../../../../docs/research/reviews/skillnet_interventions_2026-11-03.md)、[収集プロトコル](../../../../docs/research/skillnet_diagnostic_protocol_2026-11-03.md)を参照。新しい収集器は`diagnostic_server.py`、`collect_interventions.py`、`collect_released_interventions.py`。`analyze_interventions.py`は既存出力を再集計して図・表を生成する。計測付き経路と未変更の公開経路を分けて扱う。
+
 **2026-11-02更新：現在は方式の追加実装を保留し、SkillNetの失敗原因を診断する。[最新の停止記録と診断](../../../../docs/research/reviews/diagnosis_2026-11-02.md)を参照。下のT0・改善案は過去の検討手順であり、現在の実行指示ではない。**
 
 固定した結果ログだけを再集計する場合は、リポジトリルートから以下を実行する。標準Pythonだけで動き、環境・重み・GPUは不要。途中結果の共通組を使い、タスク間の不確実性と公式目標の履歴を報告する。
