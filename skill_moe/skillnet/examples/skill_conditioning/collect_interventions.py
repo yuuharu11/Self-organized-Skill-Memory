@@ -90,11 +90,12 @@ def counterfactual_inputs(raw, remaining):
 
 
 class Collector:
-    def __init__(self, output):
+    def __init__(self, output, *, public_only=False):
         self.out = output
         self.manifest = json.loads((output / "manifest.json").read_text())
         self.started = time.monotonic()
-        self.client = S2WebsocketClientPolicy("127.0.0.1", self.manifest["port"])
+        self.public_only = public_only
+        self.client = None if public_only else S2WebsocketClientPolicy("127.0.0.1", self.manifest["port"])
         self.reference = S2WebsocketClientPolicy("127.0.0.1", self.manifest.get("reference_port", 38723))
         frozen = output / "frozen"
         sys.path.insert(0, str(frozen))
@@ -161,8 +162,12 @@ class Collector:
                 self.check_budget()
                 raw = policy_input(obs, prompt, annotation, init=init, query=q, evaluator=self.evaluator)
                 tick = time.monotonic()
-                response = rpc(self.client, raw)
-                if getattr(self, "reference_behavior", False):
+                if self.public_only:
+                    response = rpc(self.reference, raw)
+                    response["behavior_source"] = "untouched_public_server"
+                else:
+                    response = rpc(self.client, raw)
+                if not self.public_only and getattr(self, "reference_behavior", False):
                     # Instrumentation can change XLA floating-point evaluation.
                     # Use the untouched public server for follow-up behavior;
                     # retain instrumented routes with an explicit parity audit.

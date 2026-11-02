@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 from types import SimpleNamespace
+import json
 
 import numpy as np
 import pytest
@@ -66,3 +67,26 @@ def test_rpc_rejects_nonfinite_actions(monkeypatch):
                              _ws=SimpleNamespace(send=lambda _: None, recv=lambda timeout: b""))
     with pytest.raises(ValueError, match="invalid action"):
         collection.rpc(client, {})
+
+
+def test_resume_does_not_retry_completed_failures(monkeypatch, tmp_path):
+    import collect_released_interventions as released
+    branches = ["released_original", "released_remaining", "released_original_repeat"]
+    (tmp_path / "released_followup_manifest.json").write_text(json.dumps({"branches": branches, "control_budget_each": 200}))
+    case = tmp_path / "task01-init00"
+    for branch in branches:
+        (case / branch).mkdir(parents=True)
+        (case / branch / "result.json").write_text('{"status":"complete","success":false}\n')
+    class FakeCollector:
+        def __init__(self, root, *, public_only):
+            assert public_only
+            self.manifest = {"initial_states": [0], "tasks_zero_based": [0]}
+            self.client = None
+            self.reference = SimpleNamespace(close=lambda: None)
+        def check_budget(self):
+            pass
+    monkeypatch.setattr(released, "Collector", FakeCollector)
+    released.run(tmp_path, resume=True, public_only=True)
+    assert (tmp_path / "RELEASED_FOLLOWUP_DONE").exists()
+    for branch in branches:
+        assert (case / branch / "result.json").read_text() == '{"status":"complete","success":false}\n'

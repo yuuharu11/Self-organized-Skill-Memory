@@ -6,6 +6,7 @@ commands, then branch only the instruction. These are exploratory follow-ups,
 kept separate from the original preregistered cohort.
 """
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -54,25 +55,49 @@ def find_released_snapshot(c, case, task, init):
         env.close()
 
 
-def run(root):
+def run(root, *, resume=False, public_only=False):
     followup = {"status": "exploratory measurement-correction follow-up", "cases": "same four development cases, no replacements",
                 "selection": "first baseline replan with stable placement, absent grasp contact, five prior open commands, fixture goal false",
                 "branches": ["released_original", "released_remaining", "released_original_repeat"], "control_budget_each": 200,
                 "reason": "placement-goal truth does not imply the gripper has released the object",
                 "behavior_source": "untouched public server; instrumented routes are audited auxiliary readouts"}
-    (root / "released_followup_manifest.json").write_text(json.dumps(followup, indent=2) + "\n")
-    c = Collector(root)
+    if not resume:
+        (root / "released_followup_manifest.json").write_text(json.dumps(followup, indent=2) + "\n")
+    else:
+        existing = json.loads((root / "released_followup_manifest.json").read_text())
+        assert existing["branches"] == followup["branches"] and existing["control_budget_each"] == 200
+        append(root / "resume_events.jsonl", {"utc": datetime.now(timezone.utc).isoformat(),
+            "reason": "finish administratively interrupted cohort; do not retry completed failures",
+            "public_only": public_only})
+    c = Collector(root, public_only=public_only)
     c.reference_behavior = True
     try:
         for init in c.manifest["initial_states"]:
             for task in c.manifest["tasks_zero_based"]:
                 c.check_budget()
                 case = root / f"task{task+1:02d}-init{init:02d}"
-                snap = find_released_snapshot(c, case, task, init)
+                if resume and all((case / b / "result.json").exists() for b in followup["branches"]):
+                    continue
+                if resume and (case / "released_snapshot/selection.json").exists():
+                    selection = json.loads((case / "released_snapshot/selection.json").read_text())
+                    with np.load(case / "released_snapshot/observation.npz") as z:
+                        saved_state = z["sim_state"].copy()
+                    prefix = [r["action"] for r in read_jsonl(case / "baseline/states.jsonl") if r["step"] <= selection["step"]]
+                    assert len(prefix) == selection["step"]
+                    snap = {**selection, "prefix": prefix, "sim_state": saved_state}
+                else:
+                    snap = find_released_snapshot(c, case, task, init)
                 if snap is None:
                     append(root / "released_snapshot_missing.jsonl", {"task_id": task, "init": init, "reason": "no released qualifying baseline state"})
                     continue
                 for condition in followup["branches"]:
+                    branch = case / condition
+                    if resume and (branch / "result.json").exists():
+                        continue
+                    if resume and branch.exists():
+                        archive = branch.with_name(condition + "_interrupted_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
+                        branch.rename(archive)
+                        append(root / "resume_events.jsonl", {"preserved_interrupted_branch": str(archive.relative_to(root)), "not_scored": True})
                     env, obs, prompt, annotation = c.setup(task, init)
                     stage = c.Stages(env.env, task, annotation["plan"])
                     stage.observe(0, -1)
@@ -88,16 +113,21 @@ def run(root):
                         if delta > c.manifest["restore_tolerance_sim_state"] or not same:
                             raise RuntimeError("released follow-up did not reproduce identical input")
                         branch_prompt = annotation["plan"][-1] if condition == "released_remaining" else prompt
-                        c.segment(env, obs, branch_prompt, annotation, stage, case / condition, init=init,
+                        c.segment(env, obs, branch_prompt, annotation, stage, branch, init=init,
                                   start_step=snap["step"], cap=200)
                     finally:
                         env.close()
         (root / "RELEASED_FOLLOWUP_DONE").write_text("complete\n")
     finally:
-        c.client.close();c.reference.close()
+        if c.client is not None:
+            c.client.close()
+        c.reference.close()
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("root", type=Path)
-    run(p.parse_args().root)
+    p.add_argument("--resume", action="store_true", help="Preserve completed results and resume only missing branches")
+    p.add_argument("--public-only", action="store_true", help="Use only the existing public server; no diagnostic GPU server needed")
+    args = p.parse_args()
+    run(args.root, resume=args.resume, public_only=args.public_only)
