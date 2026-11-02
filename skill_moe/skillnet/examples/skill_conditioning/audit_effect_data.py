@@ -17,7 +17,8 @@ def audit(root):
             assert job["init"] in ({10,11} if job["split"]=="train" else {12})
             assert job["task"] in (0,1,2,3,4,6,7)
         if job["kind"]=="evaluation":
-            assert job["init"] in (20,21) and job["seed"]==43
+            assert job["init"] in (20,21)
+            assert job["seed"]==(59 if job["directory"].startswith("replication/") else 43)
         if job["kind"]=="pair":
             replay=json.loads((result.parent/"replay_audit.json").read_text())
             assert replay["state_max_abs"]==0 and replay["images_equal"]

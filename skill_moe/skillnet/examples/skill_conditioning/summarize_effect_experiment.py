@@ -44,11 +44,13 @@ def summarize(root):
     analysis.mkdir(exist_ok=True)
     matched = defaultdict(dict)
     outcomes = []
+    query_records = {}
     for result in sorted((root / "evaluation").glob("*/result.json")):
         row = json.loads(result.read_text())
         job = row["job"]
         matched[job["task"],job["init"]][job["condition"]] = row
         queries = [json.loads(line) for line in (result.parent/"queries.jsonl").read_text().splitlines()]
+        query_records[job["task"],job["init"],job["condition"]] = queries
         switch = next((q for q in queries if q["switched"]), None)
         first_verified = next((q["step"] for q in queries if q["truth"]["verified"][0]), None)
         monitor_queries = [q for q in queries if q["step"]%10==0]
@@ -63,6 +65,7 @@ def summarize(root):
     summary = dict(updated_utc=datetime.now(timezone.utc).isoformat(), planned_episodes=90,
         completed_episodes=len(outcomes), complete_five_condition_initial_states=len(complete_five),
         conditions={}, common_five_conditions={}, comparisons={}, held_controller_tasks={}, outcomes=outcomes)
+    summary["pipeline_error"] = json.loads((root/"PIPELINE_ERROR.json").read_text()) if (root/"PIPELINE_ERROR.json").exists() else None
     for condition in CONDITIONS:
         own=[row for row in outcomes if row["condition"]==condition]
         common=[arms[condition] for arms in complete_five.values()]
@@ -73,6 +76,18 @@ def summarize(root):
         summary["comparisons"][first+"_vs_"+second]=paired_statistics(matched,first,second)
     held={key:arms for key,arms in matched.items() if key[0] in (5,8)}
     summary["held_controller_tasks"]=paired_statistics(held,"effect","achievement")
+    replay_checks=[]
+    for (task,init),arms in matched.items():
+        if "original" not in arms:
+            continue
+        for condition in ("achievement","effect"):
+            if condition not in arms or arms[condition]["switches"] or arms[condition]["rollbacks"]:
+                continue
+            a=query_records[task,init,"original"]
+            b=query_records[task,init,condition]
+            exact=len(a)==len(b) and all(all(x[k]==y[k] for k in ("step","seed","image_sha256","state","actions")) for x,y in zip(a,b))
+            replay_checks.append(dict(task=task+1,init=init,condition=condition,identical_full_trajectory=exact))
+    summary["unchanged_prompt_replay"]=replay_checks
     summary["parents_complete"]=len(list((root/"parents").glob("*/result.json")))
     summary["paired_arms_complete"]=len(list((root/"pairs").glob("*/result.json")))
     summary["incomplete_attempts"]=[]
@@ -90,6 +105,8 @@ def summarize(root):
         "提案：凍結VLAに対し、達成確認と予測した介入効果に基づいて残り指示へ更新する。", "",
         f"完了 {len(outcomes)}/90。5条件が揃う初期状態 {len(complete_five)}/18。未完了・実行エラーを方策失敗に数えない。",
         "", "## 5条件が共通に完了した初期状態だけの比較", "", "| 条件 | 成功 / 試行 | 成功率 |", "|---|---:|---:|"]
+    if summary["pipeline_error"]:
+        lines[4:4]=["**実行パイプラインはエラーで停止。方策の失敗とは数えない。** "+summary["pipeline_error"]["error"], ""]
     for condition in CONDITIONS:
         value=summary["common_five_conditions"][condition]
         rate=f"{100*value['successes']/value['n']:.1f}%" if value["n"] else "未集計"
