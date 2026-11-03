@@ -1,6 +1,7 @@
 """Read-only result aggregation and explicit decisions for the rescue pilot."""
 from collections import Counter,defaultdict
 from datetime import datetime,timezone
+import csv
 import json
 from pathlib import Path
 
@@ -84,6 +85,7 @@ def summarize(root):
     decision=main_decision(main,original,eligible) if original else dict(complete=False,passes=False,reason="replay pending")
     physical=phase_rows(root,"physical");confirmation=phase_rows(root,"confirmation")
     physical_tables={arm:pair_table(physical,arm,"baseline5") for arm in ("replan2","teacher")}
+    physical_tables["teacher_vs_replan2"]=pair_table(physical,"teacher","replan2")
     confirmation_tables={"C_vs_A":pair_table(confirmation,"C","A"),"C_vs_D":pair_table(confirmation,"C","D")}
     counts={phase:len(list((root/phase).glob("*/result.json"))) for phase in ("main","physical","confirmation")}
     incomplete=[]
@@ -119,6 +121,18 @@ def summarize(root):
     payload=dict(updated_utc=datetime.now(timezone.utc).isoformat(),counts=counts,incomplete=incomplete,
         main_decision=decision,physical=physical_tables,confirmation=confirmation_tables,classification=classification,
         final=final,adoption=adoption)
+    episodes=[]
+    for phase,records in (("main",main),("physical",physical),("confirmation",confirmation)):
+        for (case,seed),arms in records.items():
+            for condition,result in arms.items():
+                episodes.append(dict(phase=phase,case=case,seed=seed,condition=condition,success=result["success"],
+                    start_step=result["start_step"],end_step=result["end_step"],
+                    query_count=result["query_count"],teacher_steps=result["teacher_steps"],
+                    inference_s=result["inference_s"],rollout_wall_s=result["wall_s"]))
+    if episodes:
+        with (root/"analysis/episodes.csv").open("w") as stream:
+            writer=csv.DictWriter(stream,fieldnames=list(episodes[0]));writer.writeheader();writer.writerows(episodes)
+    payload["episodes"]=episodes
     write(root/"analysis/summary.json",payload)
     lines=["# SkillNetの元の失敗を救済する半日診断", "", adoption, "",
         f"完了：主比較 {counts['main']}/48、物理診断 {counts['physical']}/24、未使用状態確認 {counts['confirmation']}/24。後二つは条件分岐で、両方を実施する計画ではない。", "",
@@ -144,6 +158,12 @@ def summarize(root):
         for row in selection["states"]:
             if not row["teacher_available"]:
                 lines.append(row["case"]+"の教師条件は未実施："+row["teacher_unavailable_reason"]+"。失敗に数えない。")
+    if physical:
+        lines += ["", "## 物理診断の計算量", "", "各条件の完了例自身の合計。教師未実施などで対象数が違う場合は、この合計だけで効率を比較しない。", "",
+                  "| 条件 | 完了数 | 方策問い合わせ回数 | 教師制御step | 方策推論時間 |", "|---|---:|---:|---:|---:|"]
+        for condition in ("baseline5","replan2","teacher"):
+            own=[row for row in episodes if row["phase"]=="physical" and row["condition"]==condition]
+            lines.append(f"| {condition} | {len(own)} | {sum(row['query_count'] for row in own)} | {sum(row['teacher_steps'] for row in own)} | {sum(row['inference_s'] for row in own):.1f}s |")
     lines += ["", "未完了："+str(len(incomplete))+"。失敗に補完しない。", "",
         "再計画を短くした条件は推論回数・実時間が増える。教師は実行した最大20ステップも800の総予算に含める。正解状態・接触は診断専用で、実行可能な方式の入力とは区別する。", "",
         "新しい学習、DMP、expert追加は実施しない。全体目標と現在操作の併用や失敗修正学習自体を新規性とはしない。"]
