@@ -98,8 +98,12 @@ def summarize(root):
     if not final:
         adoption="収集中。途中の成功率で手法を選ばない。"
     elif decision["passes"]:
-        positive=all(value["n_seed_pairs"]==8 and value["net"]>0 for value in confirmation_tables.values()) and confirmation_tables["C_vs_A"]["harm"]==0
-        adoption="全体目標を保持した現在操作指定を、次段階の候補に残す。切替は特権情報を使っており、実行可能な方式の完成ではない。" if positive else "主比較の予備基準は通過したが、未使用状態での追加価値を確認できず、今回は候補を採用しない。"
+        confirmed_complete=all(value["n_seed_pairs"]==8 for value in confirmation_tables.values())
+        positive=confirmed_complete and all(value["net"]>0 for value in confirmation_tables.values()) and confirmation_tables["C_vs_A"]["harm"]==0
+        if not confirmed_complete:
+            adoption="主比較の予備基準は通過したが、未使用状態で必要な対応比較が未完了のため採否を保留する。"
+        else:
+            adoption="全体目標を保持した現在操作指定を、次段階の候補に残す。切替は特権情報を使っており、実行可能な方式の完成ではない。" if positive else "主比較の予備基準は通過したが、未使用状態での追加価値を確認できず、今回は候補を採用しない。"
     else:
         teacher=physical_tables["teacher"];short=physical_tables["replan2"]
         selected=json.loads((root/"PHYSICAL_SELECTION.json").read_text())["states"] if (root/"PHYSICAL_SELECTION.json").exists() else []
@@ -111,6 +115,8 @@ def summarize(root):
             adoption="教師による短い修正で複数の元方策失敗が復帰した。対象の観測現象と修正動作を固定し、通常成功データを混ぜた修正学習を次段階の候補にする。教師そのものを新手法とは呼ばない。"
         elif expected_short and short["n_seed_pairs"]==expected_short and short["net"]>0 and short["harm"]==0:
             adoption="短い再計画周期を強いベースラインとして残す。追加推論コストがあり、新手法とは呼ばない。"
+        elif expected_short and (short["n_seed_pairs"]!=expected_short or teacher["n_seed_pairs"]!=expected_teacher):
+            adoption="物理診断で必要な対応比較が未完了のため、物理修正の採否は保留する。未完了を失敗に補完しない。"
         elif not decision.get("complete") and not physical:
             adoption="必要な対応比較が未完了のため、採否は保留する。未完了を失敗に補完しない。"
         else:
