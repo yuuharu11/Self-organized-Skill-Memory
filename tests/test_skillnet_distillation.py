@@ -64,3 +64,14 @@ def test_only_actually_executed_tail_is_allowed():
     assert not any(len(actions[i:i+10])==10 for i in range(0,len(actions),5))
     with pytest.raises(ValueError,match='noncontiguous'):
         executed_actions([queries[1]],125,132)
+
+
+def test_saved_parameters_roundtrip_through_public_checkpoint_loader(tmp_path):
+    from distill_train import save_public_parameters
+    from openpi.models.model import restore_params
+    tree={'layer':{'kernel':np.arange(6,dtype=np.float32).reshape(2,3)}}
+    path=tmp_path/'params'
+    save_public_parameters(path,tree)
+    restored=restore_params(path,restore_type=np.ndarray)
+    np.testing.assert_array_equal(restored['layer']['kernel'],tree['layer']['kernel'])
+    assert restored['layer']['kernel'].dtype==np.float32

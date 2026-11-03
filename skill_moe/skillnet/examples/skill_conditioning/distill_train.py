@@ -13,6 +13,12 @@ def write(path,value):
     path.write_text(json.dumps(value,indent=2))
 
 
+def save_public_parameters(path,tree):
+    import orbax.checkpoint as ocp
+    with ocp.PyTreeCheckpointer() as checkpointer:
+        checkpointer.save(str(path),{'params':tree})
+
+
 class MatchedData:
     def __init__(self,root):
         index=json.loads((root/'data/index.json').read_text())
@@ -53,7 +59,6 @@ def main(root):
     import jax
     import jax.numpy as jnp
     import optax
-    import orbax.checkpoint as ocp
     from smoke import load_model,parameter_digest
     from distill_loss import ordinary_flow_loss
     from openpi.models.pi0_config_anchor_flow import action_expert_trainable_filter
@@ -140,7 +145,7 @@ def main(root):
                 if (i+1)%10==0:print(json.dumps(dict(model=condition,step=i+1,loss=loss,elapsed=row['elapsed'])),flush=True)
         after_frozen=parameter_digest(model,frozen);after_trainable=parameter_digest(model,trainable)
         if after_frozen!=before_frozen or after_trainable==before_trainable:raise AssertionError('frozen/update invariant failed')
-        ocp.PyTreeCheckpointer().save(str(directory/'params'),nnx.state(model).to_pure_dict())
+        save_public_parameters(directory/'params',nnx.state(model).to_pure_dict())
         (directory/'assets').symlink_to(Path(manifest['base_checkpoint']).parent/'assets',target_is_directory=True)
         write(directory/'result.json',dict(status='complete',updates=steps,frozen_before=before_frozen,frozen_after=after_frozen,trainable_after=after_trainable,seconds=time.monotonic()-started,checkpoint=str(directory/'params')))
     (root/'TRAIN_READY').write_text(str(time.time()))

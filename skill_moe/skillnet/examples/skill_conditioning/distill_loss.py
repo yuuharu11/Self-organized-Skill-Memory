@@ -1,7 +1,7 @@
 """Public ordinary flow objective, with batched autoregressive-mask compatibility.
 
-The released SkillNet loss concatenates a batched prefix mask and a 1-D suffix
-mask on axis 0. The inference-compatible prefix implementation returns [B,L].
+The existing inference fork returns a [B,L] prefix mask, while the inherited
+ordinary loss expects a 1-D prefix and concatenates on axis 0.
 Only this concatenation is corrected here; corruption, target, balance term,
 conditioning and model parameters remain the ordinary SkillNet objective.
 """

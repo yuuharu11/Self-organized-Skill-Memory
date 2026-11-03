@@ -51,7 +51,7 @@ def summarize(root):
         report+=['',f"データ監査：通常成功 {sum(x['samples'] for x in shards if x['kind']=='normal')} 窓、C成功 {sum(x['samples'] for x in shards if x['kind']=='recovery')} 窓。除外親走行 {len(data['excluded_parents'])}。全教師を画像・自己状態・公式成功まで再生照合し、正規化の往復を確認した。",'', '| 教師 | seed | 開始→成功step | 学習窓 |','|---|---:|---:|---:|']
         for r in shards:
             if r['kind']=='recovery':report.append(f"| {r['case']} | {r['id'].rsplit('-',1)[-1]} | {r['start_step']}→{r['end_step']} | {r['samples']} |")
-    report+=['','公開損失の既存実装には、バッチ化されたprefixマスクと1次元suffixマスクをaxis=0で連結する不整合があった。両方をバッチ化してaxis=1で連結する互換修正を両モデルに適用した。通常のフローマッチングのノイズ・時刻分布・目標・補助損失は維持し、検索アンカーは使用しない。','']
+    report+=['','今回利用する既存の推論用実装と通常損失の間に、prefixマスクの次元の不整合があった。両方をバッチ化してaxis=1で連結する互換修正を両モデルに適用した。通常のフローマッチングのノイズ・時刻分布・目標・補助損失は維持し、検索アンカーは使用しない。','']
     training={}
     for c in ('M0','M1'):
         path=root/'models'/c/'result.json'

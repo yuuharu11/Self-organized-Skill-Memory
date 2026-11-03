@@ -30,7 +30,7 @@ def run(root,job):
     start=step;prefix=[];stable=0;probe_saved=False
     client=S2WebsocketClientPolicy('127.0.0.1',job['port'])
     started=time.monotonic();success=False;done=False;queries=0;inference=0.
-    ever=[False]*len(goals);regressions=[0]*len(goals)
+    ever=list(truth(env.env,goals)['raw_goals']);regressions=[0]*len(goals)
     try:
         while step<800 and not done:
             if time.time()>=job['hard_deadline'] or (root/'STOP_REQUESTED').exists():raise TimeoutError('collection deadline; not a policy failure')
