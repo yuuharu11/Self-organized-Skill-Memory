@@ -39,6 +39,10 @@ def audit(root):
                     assert np.isfinite(np.asarray(q["actions"])).all(),"nonfinite actions"
                     before_switch=phase=="confirmation" and (result["switch_step"] is None or q["step"]<result["switch_step"])
                     assert q["prompt"]==(result["full_prompt"] if before_switch else expected),"prompt changed after freezing"
+                    if job.get("prompts_file"):
+                        key="A" if before_switch else job["condition"]
+                        assert q["token_audit"]["ids"]==frozen["audits"][key]["ids"],"actual token IDs differ from frozen input"
+                        assert q["token_audit"]["mask"]==frozen["audits"][key]["mask"],"actual token mask differs from frozen input"
                 if phase=="main" and queries:
                     key=(job["case"],job["seed"])
                     current=(start,queries[0]["image_sha256"],queries[0]["state"],queries[0]["sim_state"])
