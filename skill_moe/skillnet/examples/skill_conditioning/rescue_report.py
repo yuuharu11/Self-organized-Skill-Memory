@@ -120,7 +120,9 @@ def summarize(root):
         elif not decision.get("complete") and not physical:
             adoption="必要な対応比較が未完了のため、採否は保留する。未完了を失敗に補完しない。"
         else:
-            adoption="元方策に対する正味改善を支持する結果は得られていない。候補を採用せず、予測器や指示文を追加して方向を維持しない。"
+            ca=decision.get("C_vs_A",{})
+            adoption=(f"主比較のC対Aは救済{ca.get('rescue',0)}・悪化{ca.get('harm',0)}（正味{ca.get('net',0):+d}）だったが、採用基準を満たさなかった。"
+                      "今回の物理診断も次段階へ進む基準を満たさず、候補を採用しない。言語更新や物理修正一般の否定とはしない。")
     error=root/"PIPELINE_ERROR.json"
     if error.exists():
         adoption="実行パイプラインが技術的なエラーで停止。未完了を方策失敗や方法の無効性に読み替えず、採否は保留する。"
@@ -142,6 +144,25 @@ def summarize(root):
         with (root/"analysis/episodes.csv").open("w") as stream:
             writer=csv.DictWriter(stream,fieldnames=list(episodes[0]));writer.writeheader();writer.writerows(episodes)
     payload["episodes"]=episodes
+    teacher_checks=[]
+    for arms in physical.values():
+        if "teacher" not in arms:
+            continue
+        result=arms["teacher"];job=result["job"]
+        records=[row for row in read_rows(root/job["directory"]/"states.jsonl") if row["source"]=="teacher"]
+        if not records:
+            continue
+        reference=job["teacher_reference"];last=records[-1]
+        q=np.asarray(last["quat"]);r=np.asarray(reference["quat"])
+        angle=2*np.arccos(np.clip(abs(float(np.dot(q,r)))/(np.linalg.norm(q)*np.linalg.norm(r)),0,1))*180/np.pi
+        teacher_checks.append(dict(case=job["case"],seed=job["seed"],executed_steps=len(records),
+            actual_retreat_height_mm=float((max(row["eef"][2] for row in records)-reference["retreat_origin"][2])*1000),
+            final_reference_position_error_mm=float(np.linalg.norm(np.asarray(last["eef"])-reference["eef"])*1000),
+            final_reference_orientation_error_deg=float(angle),
+            first10_target_contact_steps=sum(row["target_contact"] for row in records[:10]),
+            last10_target_contact_steps=sum(row["target_contact"] for row in records[10:]),
+            achieved_after_teacher=last["truth"]["raw_goals"]))
+    payload["teacher_execution_checks"]=teacher_checks
     write(root/"analysis/summary.json",payload)
     lines=["# SkillNetの元の失敗を救済する半日診断", "", adoption, "",
         f"完了：主比較 {counts['main']}/48、物理診断 {counts['physical']}/24、未使用状態確認 {counts['confirmation']}/24。後二つは条件分岐で、両方を実施する計画ではない。", "",
@@ -156,6 +177,10 @@ def summarize(root):
     for name in ("C_vs_A","C_vs_D","C_vs_B","D_vs_A"):
         if name in decision:
             row=decision[name];lines.append(f"| {name} | {row['n_seed_pairs']} | {row['n_parent_states']} | {row['rescue']} | {row['harm']} | {row['net']:+d} |")
+    common=[arms for arms in main.values() if set(arms)=={"A","B","C","D"}]
+    lines += ["", "| 条件 | 共通に完了したseed対応での成功 |", "|---|---:|"]
+    for condition in ("A","B","C","D"):
+        lines.append(f"| {condition} | {sum(arms[condition]['success'] for arms in common)} / {len(common)} |")
     lines += ["", "予備的な進行基準通過："+str(decision["passes"]), "", "## 次段階の比較", "", "| 比較 | seed対応組 | 救済 | 悪化 | 正味 |", "|---|---:|---:|---:|---:|"]
     for name,row in {**physical_tables,**confirmation_tables}.items():
         if row["n_seed_pairs"]:
@@ -173,6 +198,15 @@ def summarize(root):
         for condition in ("baseline5","replan2","teacher"):
             own=[row for row in episodes if row["phase"]=="physical" and row["condition"]==condition]
             lines.append(f"| {condition} | {len(own)} | {sum(row['query_count'] for row in own)} | {sum(row['teacher_steps'] for row in own)} | {sum(row['inference_s'] for row in own):.1f}s |")
+    if teacher_checks:
+        lines += ["", "## 教師指令と実際の動作", "", "5cmの退避目標を指令したことと、その高さ・参照姿勢に実際に到達したことを分ける。この固定20step試行は、最適な物理修正の上限ではない。", "",
+            "| 例/seed | 実退避高さmm | 末尾の参照位置差mm | 参照姿勢差deg | 前半/後半の対象接触step |", "|---|---:|---:|---:|---|"]
+        for row in teacher_checks:
+            lines.append(f"| {row['case']}/{row['seed']} | {row['actual_retreat_height_mm']:.1f} | {row['final_reference_position_error_mm']:.1f} | {row['final_reference_orientation_error_deg']:.1f} | {row['first10_target_contact_steps']}/{row['last10_target_contact_steps']} |")
+    validation=root/"VALIDATION.json"
+    if validation.exists():
+        checked=json.loads(validation.read_text())
+        lines += ["", f"検証：{checked['tests_passed']}テスト通過。公開行動監査{checked['public_action_parity_checks']}条件の差0。元走行と再生の目標・把持真偽も{checked['replay_goal_query_checks']}確認点で一致。確認点数は再現監査の数で、独立な評価状況数ではない。"]
     lines += ["", "未完了："+str(len(incomplete))+"。失敗に補完しない。", "",
         "再計画を短くした条件は推論回数・実時間が増える。教師は実行した最大20ステップも800の総予算に含める。正解状態・接触は診断専用で、実行可能な方式の入力とは区別する。", "",
         "新しい学習、DMP、expert追加は実施しない。全体目標と現在操作の併用や失敗修正学習自体を新規性とはしない。"]
