@@ -112,8 +112,8 @@ def physical(root,summary):
 
 
 def prepare_followup(root,decision):
-    from rescue_report import summarize
-    summary=summarize(root)
+    import rescue_report
+    summary=importlib.reload(rescue_report).summarize(root)
     if decision["passes"]:
         return "confirmation",confirmation(root,decision)
     return "physical",physical(root,summary)

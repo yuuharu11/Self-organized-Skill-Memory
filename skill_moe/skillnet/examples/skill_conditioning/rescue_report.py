@@ -4,6 +4,8 @@ from datetime import datetime,timezone
 import json
 from pathlib import Path
 
+import numpy as np
+
 from effect_worker import write
 from rescue_protocol import MAIN_CASES,main_decision,pair_table,read_rows,window_phenomena
 from rescue_runtime import last_contact_reference
@@ -32,6 +34,10 @@ def failure_classification(root):
         # Only the terminal failure window labels a failure. Earlier transient
         # approach/contact absence is recorded as evidence, not a failure cause.
         observed,evidence=window_phenomena(trace)
+        eef=np.asarray([row["eef"] for row in trace[-50:]],float)
+        evidence.update(window_start=trace[-50]["step"],window_end=trace[-1]["step"],
+            eef_path_mm=float(np.linalg.norm(np.diff(eef,axis=0),axis=1).sum()*1000),
+            eef_displacement_mm=float(np.linalg.norm(eef[-1]-eef[0])*1000))
         for i in range(2):
             if any(row["truth"]["raw_goals"][i] for row in trace) and not any(row["truth"]["raw_goals"][i] for row in trace[-5:]):
                 observed.append("achieved_goal_regression")
@@ -117,10 +123,11 @@ def summarize(root):
     lines=["# SkillNetの元の失敗を救済する半日診断", "", adoption, "",
         f"完了：主比較 {counts['main']}/48、物理診断 {counts['physical']}/24、未使用状態確認 {counts['confirmation']}/24。後二つは条件分岐で、両方を実施する計画ではない。", "",
         "## 元方策の8失敗：再生による観測分類", "", "接触解析は画像・自己状態の再現が一致した例のみ。末尾50制御ステップの現象と達成状態の崩れを分類し、原因は断定しない。", "",
-        "| 例 | 元方策/正解切替の群 | 再現一致 | 観測現象 |", "|---|---|---|---|"]
+        "| 例 | 元方策/正解切替の群 | 再現一致 | 観測現象 | 末尾接触step/50 | 正規化変動幅 |", "|---|---|---|---|---:|---:|"]
     for row in classification["cases"]:
         if not row["original_success"]:
-            lines.append(f"| {row['case']} | {row['group']} | {row['replay_matches']} | {'、'.join(LABELS[k] for k in row['labels'])} |")
+            evidence=row.get("terminal_evidence",{})
+            lines.append(f"| {row['case']} | {row['group']} | {row['replay_matches']} | {'、'.join(LABELS[k] for k in row['labels'])} | {evidence.get('target_contact_steps','—')} | {evidence.get('normalized_progress_span','—')} |")
     lines += ["", "## 指示の4条件比較", "", "A=元指示、B=残り指示、C=全体指示＋現在操作、D=全体指示＋中立的リマインダ。切替後固定・巻戻しなし。選択した6状態の開発用診断であり、一般的な成功率とは呼ばない。", "",
         "| 比較 | seed対応組 | 保存状態 | 救済 | 悪化 | 正味 |", "|---|---:|---:|---:|---:|---:|"]
     for name in ("C_vs_A","C_vs_D","C_vs_B","D_vs_A"):
