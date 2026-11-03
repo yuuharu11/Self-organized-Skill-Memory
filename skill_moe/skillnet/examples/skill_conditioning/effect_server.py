@@ -39,11 +39,28 @@ def main():
     class Public:
         def infer(self, observation):
             raw = dict(observation)
+            audit_tokens = raw.pop("diagnostic_tokens", False)
+            tokens_only = raw.pop("diagnostic_tokens_only", False)
             feature_prompt = raw.pop("monitor_prompt", None)
             feature_only = raw.pop("monitor_only", False)
             raw.pop("s2_arm", None)
             raw["s2_condition"] = "anchor_disabled_t0_1"
-            out = {} if feature_only else base.infer(raw)
+            out = {} if feature_only or tokens_only else base.infer(raw)
+            if audit_tokens or tokens_only:
+                if train.model.discrete_state_input:
+                    raise ValueError("token audit currently requires the frozen checkpoint's text-only tokenization")
+                transformed = integer_object_ids(base._input_transform(dict(raw)))
+                tokens = np.asarray(transformed["tokenized_prompt"], np.int32)
+                mask = np.asarray(transformed["tokenized_prompt_mask"], bool)
+                tokenizer = base._subtask_tokenizer._tokenizer
+                clean = str(raw["prompt"]).strip().replace("_", " ").replace("\n", " ")
+                full = tokenizer.encode(clean, add_bos=True) + tokenizer.encode("\n")
+                expected = np.asarray(full[:len(tokens)], np.int32)
+                exact = np.array_equal(tokens[:len(expected)], expected)
+                out["token_audit"] = dict(ids=tokens.tolist(), mask=mask.tolist(),
+                    decoded=tokenizer.decode(tokens[mask].tolist()), length=int(mask.sum()),
+                    untruncated_length=len(full), limit=len(tokens), truncated=len(full)>len(tokens),
+                    exact_encoding=bool(exact), discrete_state_input=False)
             if feature_prompt is not None:
                 start = time.perf_counter()
                 feature_raw = dict(raw, prompt=str(feature_prompt))
