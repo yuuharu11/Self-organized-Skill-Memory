@@ -82,6 +82,11 @@ def confirmation(root,decision):
 def physical(root,summary):
     manifest=json.loads((root/"manifest.json").read_text());source=Path(manifest["source_root"])
     selection=summary["classification"]["physical_selection"]
+    frozen_target=root/"PHYSICAL_TARGET_FROZEN.json"
+    if frozen_target.exists():
+        expected=json.loads(frozen_target.read_text())["states"]
+        if [(row["case"],row["step"]) for row in selection] != [(row["case"],row["step"]) for row in expected]:
+            raise ValueError("physical target changed after original-trace selection was frozen")
     c,_=setup(root);groups=[];prepared=[]
     for info in selection:
         case=info["case"];task,init=case_ids(case);step=info["step"]

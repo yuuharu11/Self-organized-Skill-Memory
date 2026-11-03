@@ -66,11 +66,14 @@ def failure_classification(root):
                         teacher_reference=reference,evidence=numbers));break
     priority={"contact_stall":0,"contact_missing":1,"oscillation_or_reversal":2}
     eligible=[label for label,values in candidates.items() if len(values)>=2]
-    eligible.sort(key=lambda label:(-len(candidates[label]),priority[label]))
+    # Contact + command + negligible physical response is the most direct
+    # physical intervention target. Mere absence of contact can also reflect
+    # another goal being selected, so prefer replicated contact stall first.
+    eligible.sort(key=lambda label:(priority[label],-len(candidates[label])))
     chosen=eligible[0] if eligible else None
     selection=sorted(candidates[chosen],key=lambda row:row["case"])[:4] if chosen else []
     result=dict(cases=cases,chosen_physical_phenomenon=chosen,physical_selection=selection,
-                rule="terminal 50-control phenotype; earliest matching window at/after300 with observed prior target contact; no outcome-based repair search")
+                rule="replicated contact stall before contact absence or oscillation; terminal 50-control phenotype; earliest matching window at/after300 with observed prior target contact; original traces only, no repair-outcome search")
     write(root/"classification.json",result)
     return result
 
