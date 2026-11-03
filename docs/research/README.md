@@ -2,7 +2,7 @@
 
 環境構築・データ処理の手順とは別に、進行中の研究の方針・判定基準・調査をまとめたもの。
 
-現在の実測は[SkillNetのスキル利用と指示介入](reviews/skillnet_interventions_2026-11-03.md)から読む。
+現在の実測は[元のSkillNetの失敗を救済する半日診断の結果](reviews/rescue_diagnosis_results_2026-11-03.md)から読む。前段の[スキル利用と指示介入](reviews/skillnet_interventions_2026-11-03.md)も参照する。
 別環境で動かす場合は[再現ガイド](../reproduction.md)を参照する。
 再現ガイドには公開コードの対象範囲と必要な入力資産を、
 [スクリプト一覧](../../skill_moe/skillnet/examples/emergent/light/intermediate/README.md) には実験ごとの入口を記載しています。
@@ -12,9 +12,9 @@ Git に含まれないファイルや未コミットの新しい実験を、こ�
 
 ## 現在の方針（2026-11-03）
 
-- [元のSkillNetの失敗を救済する半日診断](rescue_diagnosis_2026-11-03.md) — **実施中**。元失敗8例の再生分類、指示4条件の最大48分岐、条件付きで未使用状態確認または物理修正の比較。
+- [元のSkillNetの失敗を救済する半日診断：結果](reviews/rescue_diagnosis_results_2026-11-03.md) — **最新**。全60走行完了。Cは元指示に4救済・3悪化、物理診断は3条件とも0/4。[実施設定](rescue_diagnosis_2026-11-03.md)。
 
-- [指示更新の5条件90走行：結果と採否](reviews/effect_gated_results_2026-11-03.md) — **最新結果**。提案は元方策を上回らず、今回は不採用。[スライド用の主張](reviews/slide_handoff_2026-11-03.md)。
+- [指示更新の5条件90走行：結果と採否](reviews/effect_gated_results_2026-11-03.md) — 前段の結果。提案は元方策を上回らず、今回は不採用。[スライド用の主張](reviews/slide_handoff_2026-11-03.md)。
 
 - [介入効果に基づく指示更新](effect_gated_instructions_2026-11-03.md) — 完了した半日実験の事前設定。提案・5条件・親軌跡単位の分割・停止時刻を結果を見る前に固定。
 

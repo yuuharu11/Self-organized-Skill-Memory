@@ -163,9 +163,13 @@ def summarize(root):
             last10_target_contact_steps=sum(row["target_contact"] for row in records[10:]),
             achieved_after_teacher=last["truth"]["raw_goals"]))
     payload["teacher_execution_checks"]=teacher_checks
+    selected_file=root/"PHYSICAL_SELECTION.json"
+    selected_states=json.loads(selected_file.read_text())["states"] if selected_file.exists() else []
+    physical_planned=2*sum(2+int(row["teacher_available"]) for row in selected_states)
+    payload["planned_episodes"]=dict(main=48,physical=physical_planned,confirmation=24 if decision["passes"] else 0)
     write(root/"analysis/summary.json",payload)
     lines=["# SkillNetの元の失敗を救済する半日診断", "", adoption, "",
-        f"完了：主比較 {counts['main']}/48、物理診断 {counts['physical']}/24、未使用状態確認 {counts['confirmation']}/24。後二つは条件分岐で、両方を実施する計画ではない。", "",
+        f"完了：主比較 {counts['main']}/48、選定した{len(selected_states)}状態の物理診断 {counts['physical']}/{physical_planned}（計画上限24）。未使用状態確認は{counts['confirmation']}走行。後二つは条件分岐で、両方を実施する計画ではない。", "",
         "## 元方策の8失敗：再生による観測分類", "", "接触解析は画像・自己状態の再現が一致した例のみ。末尾50制御ステップの現象と達成状態の崩れを分類し、原因は断定しない。", "",
         "| 例 | 元方策/正解切替の群 | 再現一致 | 観測現象 | 末尾接触step/50 | 正規化変動幅 |", "|---|---|---|---|---:|---:|"]
     for row in classification["cases"]:
