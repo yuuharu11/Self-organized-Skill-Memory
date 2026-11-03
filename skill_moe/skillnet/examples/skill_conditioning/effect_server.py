@@ -4,6 +4,7 @@ Feature extraction never adds an auxiliary output to the action sampling JIT.
 The caller supplies the original task prompt for monitoring after any update.
 """
 import argparse
+import json
 import logging
 import os
 import time
@@ -26,12 +27,31 @@ from openpi.training import checkpoints, config_moe_skill
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT,
+                        help="Full params directory; defaults to the original public checkpoint")
+    parser.add_argument("--weight-audit-file", type=Path,
+                        help="Optional expected parameter digests, checked after checkpoint reload")
     args = parser.parse_args()
     torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "1")))
-    model, _ = load_model(DEFAULT_CHECKPOINT)
+    model, _ = load_model(args.checkpoint)
+    if args.weight_audit_file:
+        import flax.nnx as nnx
+        from smoke import parameter_digest
+        from openpi.models.pi0_config_anchor_flow import action_expert_trainable_filter
+        expected = json.loads(args.weight_audit_file.read_text())
+        trainable = action_expert_trainable_filter()
+        actual_frozen = parameter_digest(model, nnx.All(nnx.Param, nnx.Not(trainable)))
+        actual_trainable = parameter_digest(model, trainable)
+        if actual_frozen != expected.get("frozen_after", expected["frozen_before"]):
+            raise ValueError("reloaded frozen parameter digest mismatch")
+        if actual_trainable != expected.get("trainable_after", expected.get("trainable_before")):
+            raise ValueError("reloaded action expert digest mismatch")
+        audit = dict(checkpoint=args.checkpoint, frozen=actual_frozen, trainable=actual_trainable,
+                     matches_training=True)
+        args.weight_audit_file.with_name(f"server_load_audit_{args.port}.json").write_text(json.dumps(audit, indent=2))
     train = config_moe_skill.get_config("pi05_libero_moe_skill_4_90")
     data = train.data.create(train.assets_dirs, train.model)
-    norm = checkpoints.load_norm_stats(Path(DEFAULT_CHECKPOINT).parent / "assets", data.asset_id)
+    norm = checkpoints.load_norm_stats(Path(args.checkpoint).parent / "assets", data.asset_id)
     base = S2WebsocketPolicy(model, input_transforms=_transforms_for_server(data, norm, inputs=True),
                              output_transforms=_transforms_for_server(data, norm, inputs=False),
                              memory_dir="", normalization_hash="", seed=7)
@@ -80,7 +100,7 @@ def main():
     print("MODEL_READY", args.port, flush=True)
     WebsocketPolicyServer(Public(), host="127.0.0.1", port=args.port,
                           metadata={"model": "frozen public n10; separate prefix monitoring",
-                                    "checkpoint": DEFAULT_CHECKPOINT}).serve_forever()
+                                    "checkpoint": args.checkpoint}).serve_forever()
 
 
 if __name__ == "__main__":
