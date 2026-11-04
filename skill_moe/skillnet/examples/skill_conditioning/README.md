@@ -1,5 +1,16 @@
 # スキル条件の診断と改善：外部から参照するための手順
 
+**2026-11-02更新：現在は方式の追加実装を保留し、SkillNetの失敗原因を診断する。[最新の停止記録と診断](../../../../docs/research/reviews/diagnosis_2026-11-02.md)を参照。下のT0・改善案は過去の検討手順であり、現在の実行指示ではない。**
+
+固定した結果ログだけを再集計する場合は、リポジトリルートから以下を実行する。標準Pythonだけで動き、環境・重み・GPUは不要。途中結果の共通組を使い、タスク間の不確実性と公式目標の履歴を報告する。
+
+```bash
+python skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnostics.py \
+  docs/research/reviews/evidence/skillnet_prompt_2026-11-02.jsonl
+```
+
+`--exclude-tasks 5 7`はtask06・08を全条件から除く探索的な感度分析（IDは0始まり）。`--output`には未作成のJSONファイルを指定できる。元ログや既存出力は変更しない。canonicalな最終記録が重複するログや、初期状態・評価予算が食い違う対応組はエラーにする。
+
 このリポジトリの外（自分の環境の SkillNet）で作業する人向けの入口です。
 検討の本文は [docs/research/skill_conditioning_fixes.md](../../../../docs/research/skill_conditioning_fixes.md) にあります。
 このページでは、それを読んで内容を確かめ、最初の実験（T0）を始めるまでの手順を説明します。

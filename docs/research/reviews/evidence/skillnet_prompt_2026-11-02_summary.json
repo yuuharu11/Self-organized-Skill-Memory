@@ -1,0 +1,717 @@
+{
+  "common_pairs": 60,
+  "ignored_statuses": {},
+  "pairs_per_task": {
+    "0": 7,
+    "1": 7,
+    "2": 7,
+    "3": 7,
+    "4": 7,
+    "5": 7,
+    "6": 6,
+    "7": 6,
+    "8": 6
+  },
+  "conditions": {
+    "L0": {
+      "available": 60,
+      "successes": 28,
+      "stage_observations": {
+        "all_goals_ever_achieved_but_final_failure": 2,
+        "failed_with_goal_lost_at_end": 4,
+        "failures": 32,
+        "no_goal_ever_achieved": 4,
+        "some_goals_ever_achieved": 26,
+        "successes": 28
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 5
+        },
+        "1": {
+          "trials": 7,
+          "successes": 5
+        },
+        "2": {
+          "trials": 7,
+          "successes": 3
+        },
+        "3": {
+          "trials": 7,
+          "successes": 6
+        },
+        "4": {
+          "trials": 7,
+          "successes": 0
+        },
+        "5": {
+          "trials": 7,
+          "successes": 3
+        },
+        "6": {
+          "trials": 6,
+          "successes": 0
+        },
+        "7": {
+          "trials": 6,
+          "successes": 3
+        },
+        "8": {
+          "trials": 6,
+          "successes": 3
+        }
+      }
+    },
+    "L1": {
+      "available": 60,
+      "successes": 16,
+      "stage_observations": {
+        "all_goals_ever_achieved_but_final_failure": 2,
+        "failed_with_goal_lost_at_end": 9,
+        "failures": 44,
+        "no_goal_ever_achieved": 8,
+        "some_goals_ever_achieved": 34,
+        "successes": 16
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 3
+        },
+        "1": {
+          "trials": 7,
+          "successes": 6
+        },
+        "2": {
+          "trials": 7,
+          "successes": 4
+        },
+        "3": {
+          "trials": 7,
+          "successes": 0
+        },
+        "4": {
+          "trials": 7,
+          "successes": 2
+        },
+        "5": {
+          "trials": 7,
+          "successes": 0
+        },
+        "6": {
+          "trials": 6,
+          "successes": 1
+        },
+        "7": {
+          "trials": 6,
+          "successes": 0
+        },
+        "8": {
+          "trials": 6,
+          "successes": 0
+        }
+      }
+    },
+    "L2": {
+      "available": 60,
+      "successes": 17,
+      "stage_observations": {
+        "failed_with_goal_lost_at_end": 13,
+        "failures": 43,
+        "no_goal_ever_achieved": 9,
+        "some_goals_ever_achieved": 34,
+        "successes": 17
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 6
+        },
+        "1": {
+          "trials": 7,
+          "successes": 1
+        },
+        "2": {
+          "trials": 7,
+          "successes": 5
+        },
+        "3": {
+          "trials": 7,
+          "successes": 0
+        },
+        "4": {
+          "trials": 7,
+          "successes": 0
+        },
+        "5": {
+          "trials": 7,
+          "successes": 0
+        },
+        "6": {
+          "trials": 6,
+          "successes": 1
+        },
+        "7": {
+          "trials": 6,
+          "successes": 1
+        },
+        "8": {
+          "trials": 6,
+          "successes": 3
+        }
+      }
+    },
+    "L3": {
+      "available": 60,
+      "successes": 3,
+      "stage_observations": {
+        "all_goals_ever_achieved_but_final_failure": 1,
+        "failed_with_goal_lost_at_end": 22,
+        "failures": 57,
+        "no_goal_ever_achieved": 13,
+        "some_goals_ever_achieved": 43,
+        "successes": 3
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 1
+        },
+        "1": {
+          "trials": 7,
+          "successes": 0
+        },
+        "2": {
+          "trials": 7,
+          "successes": 2
+        },
+        "3": {
+          "trials": 7,
+          "successes": 0
+        },
+        "4": {
+          "trials": 7,
+          "successes": 0
+        },
+        "5": {
+          "trials": 7,
+          "successes": 0
+        },
+        "6": {
+          "trials": 6,
+          "successes": 0
+        },
+        "7": {
+          "trials": 6,
+          "successes": 0
+        },
+        "8": {
+          "trials": 6,
+          "successes": 0
+        }
+      }
+    },
+    "L4": {
+      "available": 60,
+      "successes": 26,
+      "stage_observations": {
+        "failed_with_goal_lost_at_end": 2,
+        "failures": 34,
+        "no_goal_ever_achieved": 7,
+        "some_goals_ever_achieved": 27,
+        "successes": 26
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 4
+        },
+        "1": {
+          "trials": 7,
+          "successes": 2
+        },
+        "2": {
+          "trials": 7,
+          "successes": 3
+        },
+        "3": {
+          "trials": 7,
+          "successes": 7
+        },
+        "4": {
+          "trials": 7,
+          "successes": 3
+        },
+        "5": {
+          "trials": 7,
+          "successes": 0
+        },
+        "6": {
+          "trials": 6,
+          "successes": 3
+        },
+        "7": {
+          "trials": 6,
+          "successes": 1
+        },
+        "8": {
+          "trials": 6,
+          "successes": 3
+        }
+      }
+    },
+    "L3-shuffled": {
+      "available": 60,
+      "successes": 4,
+      "stage_observations": {
+        "all_goals_ever_achieved_but_final_failure": 1,
+        "failed_with_goal_lost_at_end": 22,
+        "failures": 56,
+        "no_goal_ever_achieved": 14,
+        "some_goals_ever_achieved": 41,
+        "successes": 4
+      },
+      "by_task": {
+        "0": {
+          "trials": 7,
+          "successes": 1
+        },
+        "1": {
+          "trials": 7,
+          "successes": 0
+        },
+        "2": {
+          "trials": 7,
+          "successes": 3
+        },
+        "3": {
+          "trials": 7,
+          "successes": 0
+        },
+        "4": {
+          "trials": 7,
+          "successes": 0
+        },
+        "5": {
+          "trials": 7,
+          "successes": 0
+        },
+        "6": {
+          "trials": 6,
+          "successes": 0
+        },
+        "7": {
+          "trials": 6,
+          "successes": 0
+        },
+        "8": {
+          "trials": 6,
+          "successes": 0
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "L0 - L1": {
+      "pairs": 60,
+      "both_success": 8,
+      "a_only": 20,
+      "b_only": 8,
+      "both_failure": 24,
+      "pair_weighted_delta": 0.2,
+      "task_equal_delta": 0.20370370370370372,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.07936507936507936,
+        0.47354497354497355
+      ],
+      "exact_mcnemar_p_exploratory": 0.03569813817739487,
+      "task_deltas": {
+        "0": 0.2857142857142857,
+        "1": -0.14285714285714285,
+        "2": -0.14285714285714285,
+        "3": 0.8571428571428571,
+        "4": -0.2857142857142857,
+        "5": 0.42857142857142855,
+        "6": -0.16666666666666666,
+        "7": 0.5,
+        "8": 0.5
+      }
+    },
+    "L0 - L2": {
+      "pairs": 60,
+      "both_success": 9,
+      "a_only": 19,
+      "b_only": 8,
+      "both_failure": 24,
+      "pair_weighted_delta": 0.18333333333333332,
+      "task_equal_delta": 0.17724867724867724,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.08201058201058202,
+        0.45238095238095233
+      ],
+      "exact_mcnemar_p_exploratory": 0.052238985896110535,
+      "task_deltas": {
+        "0": -0.14285714285714285,
+        "1": 0.5714285714285714,
+        "2": -0.2857142857142857,
+        "3": 0.8571428571428571,
+        "4": 0.0,
+        "5": 0.42857142857142855,
+        "6": -0.16666666666666666,
+        "7": 0.3333333333333333,
+        "8": 0.0
+      }
+    },
+    "L0 - L3": {
+      "pairs": 60,
+      "both_success": 0,
+      "a_only": 28,
+      "b_only": 3,
+      "both_failure": 29,
+      "pair_weighted_delta": 0.4166666666666667,
+      "task_equal_delta": 0.4126984126984127,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.19047619047619047,
+        0.6349206349206349
+      ],
+      "exact_mcnemar_p_exploratory": 4.649162292480469e-06,
+      "task_deltas": {
+        "0": 0.5714285714285714,
+        "1": 0.7142857142857143,
+        "2": 0.14285714285714285,
+        "3": 0.8571428571428571,
+        "4": 0.0,
+        "5": 0.42857142857142855,
+        "6": 0.0,
+        "7": 0.5,
+        "8": 0.5
+      }
+    },
+    "L0 - L4": {
+      "pairs": 60,
+      "both_success": 14,
+      "a_only": 14,
+      "b_only": 12,
+      "both_failure": 20,
+      "pair_weighted_delta": 0.03333333333333333,
+      "task_equal_delta": 0.029100529100529095,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.23544973544973546,
+        0.2777777777777778
+      ],
+      "exact_mcnemar_p_exploratory": 0.8450189828872681,
+      "task_deltas": {
+        "0": 0.14285714285714285,
+        "1": 0.42857142857142855,
+        "2": 0.0,
+        "3": -0.14285714285714285,
+        "4": -0.42857142857142855,
+        "5": 0.42857142857142855,
+        "6": -0.5,
+        "7": 0.3333333333333333,
+        "8": 0.0
+      }
+    },
+    "L0 - L3-shuffled": {
+      "pairs": 60,
+      "both_success": 1,
+      "a_only": 27,
+      "b_only": 3,
+      "both_failure": 29,
+      "pair_weighted_delta": 0.4,
+      "task_equal_delta": 0.3968253968253968,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.15873015873015872,
+        0.6243386243386243
+      ],
+      "exact_mcnemar_p_exploratory": 8.430331945419312e-06,
+      "task_deltas": {
+        "0": 0.5714285714285714,
+        "1": 0.7142857142857143,
+        "2": 0.0,
+        "3": 0.8571428571428571,
+        "4": 0.0,
+        "5": 0.42857142857142855,
+        "6": 0.0,
+        "7": 0.5,
+        "8": 0.5
+      }
+    },
+    "L1 - L2": {
+      "pairs": 60,
+      "both_success": 8,
+      "a_only": 8,
+      "b_only": 9,
+      "both_failure": 35,
+      "pair_weighted_delta": -0.016666666666666666,
+      "task_equal_delta": -0.026455026455026447,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.2619047619047619,
+        0.23280423280423282
+      ],
+      "exact_mcnemar_p_exploratory": 1.0,
+      "task_deltas": {
+        "0": -0.42857142857142855,
+        "1": 0.7142857142857143,
+        "2": -0.14285714285714285,
+        "3": 0.0,
+        "4": 0.2857142857142857,
+        "5": 0.0,
+        "6": 0.0,
+        "7": -0.16666666666666666,
+        "8": -0.5
+      }
+    },
+    "L1 - L3": {
+      "pairs": 60,
+      "both_success": 1,
+      "a_only": 15,
+      "b_only": 2,
+      "both_failure": 42,
+      "pair_weighted_delta": 0.21666666666666667,
+      "task_equal_delta": 0.20899470899470896,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.03439153439153439,
+        0.42857142857142855
+      ],
+      "exact_mcnemar_p_exploratory": 0.002349853515625,
+      "task_deltas": {
+        "0": 0.2857142857142857,
+        "1": 0.8571428571428571,
+        "2": 0.2857142857142857,
+        "3": 0.0,
+        "4": 0.2857142857142857,
+        "5": 0.0,
+        "6": 0.16666666666666666,
+        "7": 0.0,
+        "8": 0.0
+      }
+    },
+    "L1 - L4": {
+      "pairs": 60,
+      "both_success": 10,
+      "a_only": 6,
+      "b_only": 16,
+      "both_failure": 28,
+      "pair_weighted_delta": -0.16666666666666666,
+      "task_equal_delta": -0.1746031746031746,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.462962962962963,
+        0.10846560846560846
+      ],
+      "exact_mcnemar_p_exploratory": 0.052478790283203125,
+      "task_deltas": {
+        "0": -0.14285714285714285,
+        "1": 0.5714285714285714,
+        "2": 0.14285714285714285,
+        "3": -1.0,
+        "4": -0.14285714285714285,
+        "5": 0.0,
+        "6": -0.3333333333333333,
+        "7": -0.16666666666666666,
+        "8": -0.5
+      }
+    },
+    "L1 - L3-shuffled": {
+      "pairs": 60,
+      "both_success": 3,
+      "a_only": 13,
+      "b_only": 1,
+      "both_failure": 43,
+      "pair_weighted_delta": 0.2,
+      "task_equal_delta": 0.1931216931216931,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.031746031746031744,
+        0.4074074074074074
+      ],
+      "exact_mcnemar_p_exploratory": 0.0018310546875,
+      "task_deltas": {
+        "0": 0.2857142857142857,
+        "1": 0.8571428571428571,
+        "2": 0.14285714285714285,
+        "3": 0.0,
+        "4": 0.2857142857142857,
+        "5": 0.0,
+        "6": 0.16666666666666666,
+        "7": 0.0,
+        "8": 0.0
+      }
+    },
+    "L2 - L3": {
+      "pairs": 60,
+      "both_success": 3,
+      "a_only": 14,
+      "b_only": 0,
+      "both_failure": 43,
+      "pair_weighted_delta": 0.23333333333333334,
+      "task_equal_delta": 0.2354497354497355,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.07142857142857142,
+        0.4338624338624338
+      ],
+      "exact_mcnemar_p_exploratory": 0.0001220703125,
+      "task_deltas": {
+        "0": 0.7142857142857143,
+        "1": 0.14285714285714285,
+        "2": 0.42857142857142855,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.16666666666666666,
+        "7": 0.16666666666666666,
+        "8": 0.5
+      }
+    },
+    "L2 - L4": {
+      "pairs": 60,
+      "both_success": 10,
+      "a_only": 7,
+      "b_only": 16,
+      "both_failure": 27,
+      "pair_weighted_delta": -0.15,
+      "task_equal_delta": -0.14814814814814814,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.4312169312169312,
+        0.1111111111111111
+      ],
+      "exact_mcnemar_p_exploratory": 0.0931396484375,
+      "task_deltas": {
+        "0": 0.2857142857142857,
+        "1": -0.14285714285714285,
+        "2": 0.2857142857142857,
+        "3": -1.0,
+        "4": -0.42857142857142855,
+        "5": 0.0,
+        "6": -0.3333333333333333,
+        "7": 0.0,
+        "8": 0.0
+      }
+    },
+    "L2 - L3-shuffled": {
+      "pairs": 60,
+      "both_success": 4,
+      "a_only": 13,
+      "b_only": 0,
+      "both_failure": 43,
+      "pair_weighted_delta": 0.21666666666666667,
+      "task_equal_delta": 0.2195767195767196,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.06349206349206349,
+        0.41269841269841273
+      ],
+      "exact_mcnemar_p_exploratory": 0.000244140625,
+      "task_deltas": {
+        "0": 0.7142857142857143,
+        "1": 0.14285714285714285,
+        "2": 0.2857142857142857,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.16666666666666666,
+        "7": 0.16666666666666666,
+        "8": 0.5
+      }
+    },
+    "L3 - L4": {
+      "pairs": 60,
+      "both_success": 2,
+      "a_only": 1,
+      "b_only": 24,
+      "both_failure": 33,
+      "pair_weighted_delta": -0.38333333333333336,
+      "task_equal_delta": -0.38359788359788355,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.6031746031746033,
+        -0.18253968253968253
+      ],
+      "exact_mcnemar_p_exploratory": 1.5497207641601562e-06,
+      "task_deltas": {
+        "0": -0.42857142857142855,
+        "1": -0.2857142857142857,
+        "2": -0.14285714285714285,
+        "3": -1.0,
+        "4": -0.42857142857142855,
+        "5": 0.0,
+        "6": -0.5,
+        "7": -0.16666666666666666,
+        "8": -0.5
+      }
+    },
+    "L3 - L3-shuffled": {
+      "pairs": 60,
+      "both_success": 2,
+      "a_only": 1,
+      "b_only": 2,
+      "both_failure": 55,
+      "pair_weighted_delta": -0.016666666666666666,
+      "task_equal_delta": -0.015873015873015872,
+      "task_equal_hierarchical_bootstrap_95": [
+        -0.07936507936507936,
+        0.047619047619047616
+      ],
+      "exact_mcnemar_p_exploratory": 1.0,
+      "task_deltas": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": -0.14285714285714285,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0
+      }
+    },
+    "L4 - L3-shuffled": {
+      "pairs": 60,
+      "both_success": 3,
+      "a_only": 23,
+      "b_only": 1,
+      "both_failure": 33,
+      "pair_weighted_delta": 0.36666666666666664,
+      "task_equal_delta": 0.3677248677248677,
+      "task_equal_hierarchical_bootstrap_95": [
+        0.15873015873015872,
+        0.5925925925925926
+      ],
+      "exact_mcnemar_p_exploratory": 2.9802322387695312e-06,
+      "task_deltas": {
+        "0": 0.42857142857142855,
+        "1": 0.2857142857142857,
+        "2": 0.0,
+        "3": 1.0,
+        "4": 0.42857142857142855,
+        "5": 0.0,
+        "6": 0.5,
+        "7": 0.16666666666666666,
+        "8": 0.5
+      }
+    }
+  },
+  "uncertainty": {
+    "method": "resample tasks, then paired initial states within each sampled task",
+    "resamples": 5000,
+    "seed": 20261102,
+    "scope": "exploratory; few tasks; no training-seed uncertainty or final-test claim"
+  },
+  "source": {
+    "file": "skillnet_prompt_2026-11-02.jsonl",
+    "sha256": "ec1fbdffe5df4703488c2e619fdecbfbc3b5fa1d90ee3e2bff23f07d7ec0d757",
+    "rows": 360
+  },
+  "provenance": {
+    "snapshot_utc": "2026-11-02T13:30:55Z",
+    "raw_source": "abstract-prompt-20261101/results-cap800.jsonl",
+    "raw_sha256": "d9f9d25bc79e76fe1e1de8caeaa168da0494e9cc99dc0e82dd1505c41ebc2c3b",
+    "projection": "Removed paths, prompts, images, geometry and actions; retained canonical result identity, pairing metadata and stage observations",
+    "status": "interim frozen evidence; live evaluator continues; not a final test"
+  },
+  "router_check": {
+    "backend": "cpu",
+    "scope": "synthetic actual MoEFeedForward module; no released weights, no policy rollout",
+    "permuted_masked_skill_embeddings_max_output_difference": 2.9802322387695312e-08,
+    "permuted_routes_identical": true,
+    "changed_skill_content_max_output_difference": 1.067320704460144
+  }
+}
