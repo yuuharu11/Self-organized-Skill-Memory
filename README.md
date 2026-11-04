@@ -4,8 +4,8 @@
 Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへの汎化を高める研究のコードと研究ノートです。
 [SkillNet](https://github.com/VIPL-VSU/SkillNet)（ICML 2026）の公開コードをベースにしています。
 
-> 2026-11-02現在、検索・混合方式の追加改良、Aの新規学習、DMPの追加実験は保留しています。
-> 次は公開SkillNetの失敗原因を診断します。[最新の判断・DMP停止記録・途中結果](docs/research/reviews/diagnosis_2026-11-02.md)を参照してください。
+> 現在地（2026-11-04）：スキルメモリ・指示更新・成功行動の蒸留のどれも、公開SkillNetの成功を保ったまま失敗を減らすには至っていません。
+> 研究の流れごとの結論は[研究ノートの入口](docs/research/README.md)にまとめています。
 > オフラインの保留タスク評価と、基盤方策にとって未見の組み合わせの閉ループ評価は区別しています。
 
 ## 初めて読む方・再現する方へ
@@ -15,9 +15,9 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 
 | 確認したいこと | 読む場所 |
 | --- | --- |
-| この研究の仮説と測定結果 | [研究ノートの入口](docs/research/README.md)、[これまでの結果](docs/research/skill_memory_findings.md) |
-| 現在の方針とSkillNetの弱点候補 | [停止記録と失敗診断](docs/research/reviews/diagnosis_2026-11-02.md)、[夜間のオフライン結果](docs/research/reviews/overnight_2026-11-02.md) |
-| 10月30日時点の結果と停止した測定 | [実験結果のまとめ](docs/research/reviews/experiment_results_2026-10-30.md)、[引き継ぎ記録](docs/research/reviews/handoff_2026-10-30.md) |
+| この研究の仮説・経緯・現在地 | [研究ノートの入口](docs/research/README.md)（研究の流れごとの結論と時系列） |
+| 直近の実験全体の結論と次の一手 | [SkillNetの失敗診断と介入：結論](docs/research/05_skillnet_diagnosis/conclusions.md) |
+| スキルメモリが新しいタスクで効かなかった経緯 | [開始点デノイズの報告](docs/research/03_anchor_flow/report.md)、[発表用のメモリ検証](docs/research/06_memory_evidence/readiness.md) |
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 各研究スクリプトの役割 | [軽量実験の一覧](skill_moe/skillnet/examples/emergent/light/README.md)、[中間行動実験の一覧](skill_moe/skillnet/examples/emergent/light/intermediate/README.md) |
 | S2の較正・検索・オフライン診断 | [S2スクリプトの一覧](skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md) |
@@ -42,7 +42,7 @@ w_k(o) = softmax_k( cos(E(o), κ_k) / τ )       観測 o の埋め込みでメ�
 x_{t0} = (1 − t0)·Dec(b') + t0·ε               取り出した運動の型 b' から t0 でデノイズを開始
 ```
 
-詳細は [docs/research/anchor_flow_skill_memory.md](docs/research/anchor_flow_skill_memory.md)。
+詳細は [docs/research/03_anchor_flow/design.md](docs/research/03_anchor_flow/design.md)。
 
 ## リポジトリ構成
 

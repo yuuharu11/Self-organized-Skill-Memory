@@ -17,7 +17,7 @@ Each entry point supports `--help`; loading help does not launch training or eva
 | Evaluate | `run_case.py`, `eval_series_a.py`, `run_series_a.py` | Paired trial execution and task-condition matrices |
 | Calibrate | `calibrate_s2.py`, `confidence_calibration.py` | Episode-held-out calibration of confidence, start time, and step count |
 | Inspect keys | `key_check.py`, `key_check_extension.py` | Key pooling, centering, rankings, and action-draft diagnostics |
-| Compare anchors | `anchor_v2_offline.py`, `offline_retrieval.py` | Paired frozen-policy comparison of centered-key drafts; retrieval shared with normal module imports |
+| Compare anchors | `anchor_v2_offline.py` | Paired frozen-policy comparison of centered-key drafts |
 | Learn keys | `train_retrieval_key.py`, `retrieval_key_validation_curve.py`, `sweep_retrieval_epsilon.py` | Train a small key projection, inspect validation curves, and replay unit-formation thresholds |
 | Longer motion | `overnight_prep.py`, `seg_skill_offline.py` | Oracle controls, gripper segmentation, and phase-aligned trajectory reuse |
 | Adapt drafts | `scene_adapter.py` | Experimental small scene adapters evaluated offline |
@@ -29,6 +29,26 @@ python skill_moe/skillnet/examples/memory_pilot/anchor_flow/anchor_v2_offline.py
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/train_retrieval_key.py --help
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/retrieval_key_validation_curve.py --help
 ```
+
+## Shared implementation
+
+The offline entry points use these shared modules directly:
+
+| Module | Responsibility |
+| --- | --- |
+| `offline_common.py` | Required NPZ fields and loading, key normalization, row MSE/endpoint error, episode bootstrap, and the offline denoising schedule |
+| `offline_retrieval.py` | Centered-key retrieval, task/episode query sampling, behavior neighbors, cosine ranking, and unit recall |
+| `../../research_paths.py` | Checkout/state roots and historical S2 asset defaults |
+
+`key_check.py` and `train_retrieval_key.py` keep their existing helper names as
+import aliases for older consumers. New code should import the shared modules
+instead of importing an experiment entry point. Script names, CLI options,
+asset defaults, seeded sampling, and result formats remain available.
+
+The key-pooling diagnostic's distance-based weights and the anchor comparison's
+cosine-based weights are separate experimental conditions. Their original
+formulas remain separate. The offline denoising schedule also retains its
+original contract; serving calibration validates `t0` separately.
 
 ## Required assets
 
@@ -74,6 +94,6 @@ notes. The corrected implementation is available for new experiments; those
 old trained weights are not repaired by changing the source.
 
 For the recorded October 30 results and the stopped, incomplete closed-loop
-measurement, see the [results review](../../../../../docs/research/reviews/experiment_results_2026-10-30.md).
+measurement, see the [results review](../../../../../docs/research/03_anchor_flow/offline_results.md).
 The proposed scene-adapter and Optimus-R implementations have separate scopes;
 shipping their source does not establish improved success rates.

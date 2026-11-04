@@ -1,0 +1,3669 @@
+{
+  "created_utc": "2026-11-03T08:38:43.046264+00:00",
+  "resources": {
+    "cpu_threads": 1,
+    "gpu": false,
+    "priority": "nice19",
+    "environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1",
+      "CUDA_VISIBLE_DEVICES": ""
+    }
+  },
+  "source_hashes": {
+    "results.json": "71ee993a578192606ddb78dc9e8f1831e0cbba7d7a97e59c69c7ad221997f066",
+    "per_row.npz": "dc8a066e52d7e7b16304f7f403a4dbb99e3712ff37e69a9cea36146a2227470a"
+  },
+  "cache_manifest_sha256": "3c5cf85a33bc886ed502146163055fea6305bf98071d8c4a623f6ed0d704f2c1",
+  "cohorts": {
+    "A_D1_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.08256268685651055,
+          "seed_sd": 0.0005014500773360352,
+          "per_seed_row_mean": [
+            0.08293623930253004,
+            0.08199277083184225,
+            0.08275905043515938
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.08200515224398959,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.05821949473505308,
+          "seed_sd": 0.003223759040286333,
+          "per_seed_row_mean": [
+            0.05476249238389572,
+            0.05875239003581465,
+            0.06114360178544888
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.05772132667690549,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.05271763064510018,
+          "seed_sd": 0.0024863223843015424,
+          "per_seed_row_mean": [
+            0.05001096497395428,
+            0.05324194616652394,
+            0.05489998079482233
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.05215784269843143,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.05576160591323307,
+          "seed_sd": 0.0024364621454935056,
+          "per_seed_row_mean": [
+            0.05320242035135103,
+            0.056029134105665186,
+            0.058053263282682996
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.054525710002448796,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.18672664112049833,
+          "seed_sd": 0.02832841532191437,
+          "per_seed_row_mean": [
+            0.18513319017386692,
+            0.21581815056915807,
+            0.15922858261847012
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.185459575386317,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.029512925897063558,
+          "seed_sd": 0.0021406143731219998,
+          "per_seed_row_mean": [
+            0.029139441607283458,
+            0.02758363117829029,
+            0.03181570490561692
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.029386892813729085,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.09617616254254414,
+          "seed_sd": 0.002280041147314951,
+          "per_seed_row_mean": [
+            0.0955416755662078,
+            0.09870624523433601,
+            0.09428056682708862
+          ],
+          "windows_per_seed": [
+            2205,
+            2219,
+            2238
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.09634835557194356,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.02984505621141038,
+        "seed_sd": 0.002704554398256801,
+        "per_seed_row_mean": [
+          -0.032925274328575754,
+          -0.02875082466531832,
+          -0.027859069640337054
+        ],
+        "windows_per_seed": [
+          2205,
+          2219,
+          2238
+        ],
+        "episodes_per_seed": [
+          100,
+          100,
+          100
+        ],
+        "tasks_per_seed": [
+          20,
+          20,
+          20
+        ],
+        "task_episode_equal_mean": -0.029847309545558167,
+        "ci95": null,
+        "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+      },
+      "strict_top1_mean": 0.47984068345545566
+    },
+    "A_D3_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.28047038933307783,
+          "seed_sd": 0.005298734676932435,
+          "per_seed_row_mean": [
+            0.27435454941338466,
+            0.2833735005914833,
+            0.2836831179943655
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2696880253186523,
+          "ci95": [
+            0.19553408891361154,
+            0.35643947077239085
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.2343377820340303,
+          "seed_sd": 0.0018087870670023055,
+          "per_seed_row_mean": [
+            0.2363931518803085,
+            0.23298869121484606,
+            0.23363150300693636
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2271171765907805,
+          "ci95": [
+            0.16304866882145969,
+            0.305084051354491
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.22283830836785157,
+          "seed_sd": 0.010475106360636829,
+          "per_seed_row_mean": [
+            0.21976229775009512,
+            0.21424559443887498,
+            0.23450703291458458
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.21544927321053634,
+          "ci95": [
+            0.15642602581395276,
+            0.28285538438967783
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.25595377307029177,
+          "seed_sd": 0.011001042975315576,
+          "per_seed_row_mean": [
+            0.26629022617456904,
+            0.24439091990966005,
+            0.2571801731266462
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2451357710438878,
+          "ci95": [
+            0.17444929304957385,
+            0.31926651777842974
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.23980943338052785,
+          "seed_sd": 0.00577807414971999,
+          "per_seed_row_mean": [
+            0.23317774620886922,
+            0.24249149086473748,
+            0.24375906306797682
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.23591642816492725,
+          "ci95": [
+            0.20107229467124127,
+            0.27983065117089667
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.13033774006628449,
+          "seed_sd": 0.00928932025231914,
+          "per_seed_row_mean": [
+            0.12904557056031363,
+            0.12176215500160531,
+            0.14020549463693446
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.12580861824545075,
+          "ci95": [
+            0.09107410420396306,
+            0.16278289934260848
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.31299651985128707,
+          "seed_sd": 0.010099450169817666,
+          "per_seed_row_mean": [
+            0.3055380931618839,
+            0.30896185547788096,
+            0.32448961091409634
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.3021313919842344,
+          "ci95": [
+            0.22438600678935458,
+            0.3908895665024588
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.05763208096522626,
+        "seed_sd": 0.010317422772631472,
+        "per_seed_row_mean": [
+          -0.054592251663289536,
+          -0.0691279061526083,
+          -0.049176085079780926
+        ],
+        "windows_per_seed": [
+          8437,
+          8437,
+          8437
+        ],
+        "episodes_per_seed": [
+          428,
+          428,
+          428
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.05423875210811595,
+        "ci95": [
+          -0.08195210371913189,
+          -0.02462356460428258
+        ],
+        "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+      },
+      "strict_top1_mean": 0.0407727865354984
+    },
+    "A_D2_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.28047038933307783,
+          "seed_sd": 0.005298734676932435,
+          "per_seed_row_mean": [
+            0.27435454941338466,
+            0.2833735005914833,
+            0.2836831179943655
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2696880253186523,
+          "ci95": [
+            0.19553408891361154,
+            0.35643947077239085
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.14195448835361058,
+          "seed_sd": 0.002316045093587205,
+          "per_seed_row_mean": [
+            0.14109875925222612,
+            0.1401880738303671,
+            0.14457663197823853
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.14166281220859295,
+          "ci95": [
+            0.12357497972552288,
+            0.1604898801821117
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.13841167719386607,
+          "seed_sd": 0.0049010226737519836,
+          "per_seed_row_mean": [
+            0.13650450344800488,
+            0.13475093426974552,
+            0.14397959386384787
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.13788954290224026,
+          "ci95": [
+            0.11888696062819656,
+            0.15756846686378326
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.08092807906423972,
+          "seed_sd": 0.002793928487253106,
+          "per_seed_row_mean": [
+            0.07823845858906332,
+            0.08381577382975551,
+            0.08073000477390033
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.07821513118494546,
+          "ci95": [
+            0.07045390299434855,
+            0.08721048081807027
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.2541267105354404,
+          "seed_sd": 0.0039026796639641493,
+          "per_seed_row_mean": [
+            0.2553934839483374,
+            0.2572386372203922,
+            0.24974801043759162
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2538438065216209,
+          "ci95": [
+            0.23256114873092604,
+            0.2778322072357484
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.09041809760402257,
+          "seed_sd": 0.006556515538219541,
+          "per_seed_row_mean": [
+            0.08665893191947016,
+            0.08660651175964248,
+            0.09798884913295505
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.08752587141974605,
+          "ci95": [
+            0.06509803715391516,
+            0.11070185055338463
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.31299651985128707,
+          "seed_sd": 0.010099450169817666,
+          "per_seed_row_mean": [
+            0.3055380931618839,
+            0.30896185547788096,
+            0.32448961091409634
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.3021313919842344,
+          "ci95": [
+            0.22438600678935458,
+            0.3908895665024588
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.14205871213921173,
+        "seed_sd": 0.005759512273123413,
+        "per_seed_row_mean": [
+          -0.13785004596537978,
+          -0.1486225663217378,
+          -0.13970352413051765
+        ],
+        "windows_per_seed": [
+          8437,
+          8437,
+          8437
+        ],
+        "episodes_per_seed": [
+          428,
+          428,
+          428
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.13179848241641204,
+        "ci95": [
+          -0.1962996089912607,
+          -0.06929372976992511
+        ],
+        "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+      },
+      "strict_top1_mean": 0.22302556200861287
+    },
+    "B_D1_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.08446976531065546,
+          "seed_sd": 0.002678552894138775,
+          "per_seed_row_mean": [
+            0.08137709549135969,
+            0.0860506059924591,
+            0.08598159444814754
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.08337519279043566,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.05730970014134443,
+          "seed_sd": 0.005133269762169566,
+          "per_seed_row_mean": [
+            0.05149441775647542,
+            0.059223698269404906,
+            0.061210984398152944
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.05516892718041009,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.052405971062652906,
+          "seed_sd": 0.0037586081057345328,
+          "per_seed_row_mean": [
+            0.048159754554251324,
+            0.05375166763998824,
+            0.05530649099371915
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.0501507634417521,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.05302940590302388,
+          "seed_sd": 0.0034071328418752724,
+          "per_seed_row_mean": [
+            0.04928958450811876,
+            0.05595707656986577,
+            0.05384155663108711
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.050311792466959604,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.21317944896674976,
+          "seed_sd": 0.00905745219764669,
+          "per_seed_row_mean": [
+            0.22306658521526085,
+            0.2111889881746425,
+            0.20528277351034588
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.21292445784110278,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.02673055357257001,
+          "seed_sd": 0.002712430792672864,
+          "per_seed_row_mean": [
+            0.023646770796377323,
+            0.02779811000835636,
+            0.02874677991297635
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.026244573261267477,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.094421611765922,
+          "seed_sd": 0.004445977209374894,
+          "per_seed_row_mean": [
+            0.0895694357881381,
+            0.09539545853630245,
+            0.09829994097332541
+          ],
+          "windows_per_seed": [
+            2261,
+            2332,
+            2294
+          ],
+          "episodes_per_seed": [
+            100,
+            100,
+            100
+          ],
+          "tasks_per_seed": [
+            20,
+            20,
+            20
+          ],
+          "task_episode_equal_mean": 0.09335328904486319,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.03206379424800254,
+        "seed_sd": 0.0012873276261253018,
+        "per_seed_row_mean": [
+          -0.03321734093710836,
+          -0.03229893835247087,
+          -0.030675103454428393
+        ],
+        "windows_per_seed": [
+          2261,
+          2332,
+          2294
+        ],
+        "episodes_per_seed": [
+          100,
+          100,
+          100
+        ],
+        "tasks_per_seed": [
+          20,
+          20,
+          20
+        ],
+        "task_episode_equal_mean": -0.033224429348683575,
+        "ci95": null,
+        "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+      },
+      "strict_top1_mean": 0.49329475688086855
+    },
+    "B_D1_goal_only": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.09698081450453287,
+          "seed_sd": 0.004853632886299235,
+          "per_seed_row_mean": [
+            0.09444294065508911,
+            0.09392226377032405,
+            0.10257723908818546
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.09513895984923597,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.061479572781162485,
+          "seed_sd": 0.004676197067748327,
+          "per_seed_row_mean": [
+            0.058066793447874736,
+            0.05956221826076293,
+            0.0668097066348498
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.05904107753828467,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.055155716491786584,
+          "seed_sd": 0.004160220301210289,
+          "per_seed_row_mean": [
+            0.05324391864839008,
+            0.05229504565661014,
+            0.059928185170359534
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.05276730083487293,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.05095843250091891,
+          "seed_sd": 0.0034744378496294175,
+          "per_seed_row_mean": [
+            0.048279057435059454,
+            0.049712113399426466,
+            0.054884126668270805
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.04859051018316635,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.21487812513937152,
+          "seed_sd": 0.02434237465597184,
+          "per_seed_row_mean": [
+            0.24297787063007464,
+            0.20023291097098492,
+            0.20142359381705494
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.21536591880218467,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.030491973390521666,
+          "seed_sd": 0.0030720289049688807,
+          "per_seed_row_mean": [
+            0.02774280626776847,
+            0.02992518586646819,
+            0.03380792803732835
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.029609971996930193,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.11371406427548525,
+          "seed_sd": 0.00801606555260467,
+          "per_seed_row_mean": [
+            0.10823768095151913,
+            0.10998973118235944,
+            0.12291478069257714
+          ],
+          "windows_per_seed": [
+            1014,
+            1043,
+            1057
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.11059311518691987,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.04182509801274628,
+        "seed_sd": 0.0007449936084641147,
+        "per_seed_row_mean": [
+          -0.041199022006699025,
+          -0.0416272181137139,
+          -0.042649053917825926
+        ],
+        "windows_per_seed": [
+          1014,
+          1043,
+          1057
+        ],
+        "episodes_per_seed": [
+          50,
+          50,
+          50
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.04237165901436304,
+        "ci95": null,
+        "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+      },
+      "strict_top1_mean": null
+    },
+    "B_D1_object_only": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.07407821337692266,
+          "seed_sd": 0.004880570495288813,
+          "per_seed_row_mean": [
+            0.07075258306471845,
+            0.07968121959811222,
+            0.07180083746793729
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.07161142573163538,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.053842271482241,
+          "seed_sd": 0.006780009295678102,
+          "per_seed_row_mean": [
+            0.04615008018544181,
+            0.058949783334582236,
+            0.056426950926698964
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.05129677682253551,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.05010439108018968,
+          "seed_sd": 0.005559290286380237,
+          "per_seed_row_mean": [
+            0.04402555857072551,
+            0.05493029970256648,
+            0.05135731496727704
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.04753422604863126,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.05469073550369157,
+          "seed_sd": 0.005653973815972198,
+          "per_seed_row_mean": [
+            0.050111296177791684,
+            0.06101021589241673,
+            0.05295069444086629
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.05203307475075288,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.21183674316424553,
+          "seed_sd": 0.007167341368872675,
+          "per_seed_row_mean": [
+            0.20687569234387257,
+            0.2200541460671288,
+            0.20858039108173518
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2104829968800209,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.023605048917290677,
+          "seed_sd": 0.002966088149723689,
+          "per_seed_row_mean": [
+            0.020316073147627827,
+            0.026076977254275182,
+            0.024422096349969023
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.022879174525604767,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.07841421688642047,
+          "seed_sd": 0.00470467918008397,
+          "per_seed_row_mean": [
+            0.0743893230410103,
+            0.08358643885450459,
+            0.07726688876374653
+          ],
+          "windows_per_seed": [
+            1247,
+            1289,
+            1237
+          ],
+          "episodes_per_seed": [
+            50,
+            50,
+            50
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.07611346290280652,
+          "ci95": null,
+          "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.023973822296732977,
+        "seed_sd": 0.0032130219161428703,
+        "per_seed_row_mean": [
+          -0.02672702449399294,
+          -0.024750919895545745,
+          -0.020443522500660248
+        ],
+        "windows_per_seed": [
+          1247,
+          1289,
+          1237
+        ],
+        "episodes_per_seed": [
+          50,
+          50,
+          50
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.02407719968300412,
+        "ci95": null,
+        "ci_scope": "no pooled CI: held-out episodes vary across model seeds"
+      },
+      "strict_top1_mean": null
+    },
+    "B_D3_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.23504642958925737,
+          "seed_sd": 0.044416996084982015,
+          "per_seed_row_mean": [
+            0.19449012212558356,
+            0.2281352658435025,
+            0.282513900798686
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.23182603188910528,
+          "ci95": [
+            0.2046551020497964,
+            0.2583740236624829
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.1813149196727041,
+          "seed_sd": 0.029247100024895813,
+          "per_seed_row_mean": [
+            0.15950648866159847,
+            0.16988783175701339,
+            0.21455043859950051
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.17681461254528635,
+          "ci95": [
+            0.14911855760500914,
+            0.20373524840286542
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.16664583501606153,
+          "seed_sd": 0.008496205463670093,
+          "per_seed_row_mean": [
+            0.15799683638661147,
+            0.1669601442714844,
+            0.1749805243900887
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.1619823237467933,
+          "ci95": [
+            0.1360773533907288,
+            0.187615669929389
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.19245257271058946,
+          "seed_sd": 0.021298910710150602,
+          "per_seed_row_mean": [
+            0.16892074262221987,
+            0.1980270963959563,
+            0.2104098791135922
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.18712539116976515,
+          "ci95": [
+            0.16283347403172413,
+            0.21162167252091257
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.23992539705591753,
+          "seed_sd": 0.030123655388877804,
+          "per_seed_row_mean": [
+            0.2325656785443555,
+            0.27304690235197276,
+            0.2141636102714243
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2389997359757728,
+          "ci95": [
+            0.22721731455110408,
+            0.25154371693291694
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.08221149165212181,
+          "seed_sd": 0.003901807530682748,
+          "per_seed_row_mean": [
+            0.08511613525955684,
+            0.0777764888158712,
+            0.08374185088093739
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.08071269171139402,
+          "ci95": [
+            0.0710898889178806,
+            0.09001792949325249
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.2399281896759072,
+          "seed_sd": 0.011878477558349252,
+          "per_seed_row_mean": [
+            0.22833548020712235,
+            0.2520731698113976,
+            0.23937591900920163
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2359431021831583,
+          "ci95": [
+            0.2080837309836891,
+            0.2629247996909593
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.06840059457319582,
+        "seed_sd": 0.03606701007368373,
+        "per_seed_row_mean": [
+          -0.03649328573897209,
+          -0.061175121572018085,
+          -0.1075333764085973
+        ],
+        "windows_per_seed": [
+          8601,
+          8601,
+          8601
+        ],
+        "episodes_per_seed": [
+          432,
+          432,
+          432
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.06984370814231196,
+        "ci95": [
+          -0.08044328956537639,
+          -0.058994051626024606
+        ],
+        "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+      },
+      "strict_top1_mean": 0.08809053210866953
+    },
+    "B_D2_all": {
+      "methods": {
+        "N:noise:n10": {
+          "row_mean_seed_average": 0.23504642958925737,
+          "seed_sd": 0.044416996084982015,
+          "per_seed_row_mean": [
+            0.19449012212558356,
+            0.2281352658435025,
+            0.282513900798686
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.23182603188910528,
+          "ci95": [
+            0.2046551020497964,
+            0.2583740236624829
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:unit:cal_sim": {
+          "row_mean_seed_average": 0.1307842635878562,
+          "seed_sd": 0.008097185099288818,
+          "per_seed_row_mean": [
+            0.12846595600286148,
+            0.12409908860166494,
+            0.1397877461590421
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.12864507093339358,
+          "ci95": [
+            0.11517900291762555,
+            0.14111630851927368
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:unit:cal_sim": {
+          "row_mean_seed_average": 0.12324644676652752,
+          "seed_sd": 0.002031790911050574,
+          "per_seed_row_mean": [
+            0.12349343379332951,
+            0.12110245273031754,
+            0.1251434537759355
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.12100942868669846,
+          "ci95": [
+            0.1082090992905359,
+            0.13318457075228055
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "N:raw:cal_sim": {
+          "row_mean_seed_average": 0.07905375182144835,
+          "seed_sd": 0.00014419718921532005,
+          "per_seed_row_mean": [
+            0.07921946759491297,
+            0.07895687461959855,
+            0.07898491324983349
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.07714791250327692,
+          "ci95": [
+            0.06996092751138014,
+            0.08565460562249307
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:shuf:cal_sim": {
+          "row_mean_seed_average": 0.26830869976070054,
+          "seed_sd": 0.013990898641154647,
+          "per_seed_row_mean": [
+            0.2824768883600284,
+            0.26794711010197736,
+            0.25450210082009583
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2683890929294933,
+          "ci95": [
+            0.25860395896496297,
+            0.2781121080034398
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:gold_unit:cal_sim": {
+          "row_mean_seed_average": 0.05443146025340534,
+          "seed_sd": 0.0022637884334654845,
+          "per_seed_row_mean": [
+            0.05183057628468904,
+            0.05595837521064997,
+            0.055505429264877
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.05301793551126558,
+          "ci95": [
+            0.04617502821779188,
+            0.0608856160257981
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        },
+        "A:noise:n10": {
+          "row_mean_seed_average": 0.2399281896759072,
+          "seed_sd": 0.011878477558349252,
+          "per_seed_row_mean": [
+            0.22833548020712235,
+            0.2520731698113976,
+            0.23937591900920163
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2359431021831583,
+          "ci95": [
+            0.2080837309836891,
+            0.2629247996909593
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+        }
+      },
+      "memory_minus_normal": {
+        "row_mean_seed_average": -0.11179998282272985,
+        "seed_sd": 0.04338376398908618,
+        "per_seed_row_mean": [
+          -0.07099668833225405,
+          -0.10703281311318495,
+          -0.15737044702275052
+        ],
+        "windows_per_seed": [
+          8601,
+          8601,
+          8601
+        ],
+        "episodes_per_seed": [
+          432,
+          432,
+          432
+        ],
+        "tasks_per_seed": [
+          10,
+          10,
+          10
+        ],
+        "task_episode_equal_mean": -0.11081660320240679,
+        "ci95": [
+          -0.12827933489277535,
+          -0.09446167861918865
+        ],
+        "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+      },
+      "strict_top1_mean": 0.19393093826299268
+    }
+  },
+  "routing": {
+    "A": {
+      "methods": {
+        "constant": {
+          "row_mean_seed_average": 0.22283830836785157,
+          "seed_sd": 0.010475106360636829,
+          "per_seed_row_mean": [
+            0.21976229775009512,
+            0.21424559443887498,
+            0.23450703291458458
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.21544927321053634,
+          "ci95": [
+            0.16193479144953726,
+            0.29371536168068574
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.05763208096522626,
+            "seed_sd": 0.010317422772631472,
+            "per_seed_row_mean": [
+              -0.054592251663289536,
+              -0.0691279061526083,
+              -0.049176085079780926
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.05423875210811595,
+            "ci95": [
+              -0.08192994925682354,
+              -0.02728401937817106
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 1.0
+        },
+        "threshold": {
+          "row_mean_seed_average": 0.22861576970195083,
+          "seed_sd": 0.010917039702107266,
+          "per_seed_row_mean": [
+            0.22305457728597117,
+            0.22159909026608307,
+            0.24119364155379816
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.22020568943311494,
+          "ci95": [
+            0.16505200569799314,
+            0.2974918642455331
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.05185461963112701,
+            "seed_sd": 0.009654423552218204,
+            "per_seed_row_mean": [
+              -0.05129997212741349,
+              -0.061774410325400216,
+              -0.04248947644056734
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.04948233588553736,
+            "ci95": [
+              -0.07599548396940906,
+              -0.025690911837044136
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0057774613340992416,
+            "seed_sd": 0.002177907495290538,
+            "per_seed_row_mean": [
+              0.003292279535876047,
+              0.007353495827208088,
+              0.0066866086392135884
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.004756416222578608,
+            "ci95": [
+              1.7888411395113012e-05,
+              0.014480703793488535
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0057774613340992416,
+            "seed_sd": 0.002177907495290538,
+            "per_seed_row_mean": [
+              0.003292279535876047,
+              0.007353495827208088,
+              0.0066866086392135884
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.004756416222578608,
+            "ci95": [
+              1.7888411395113012e-05,
+              0.014480703793488535
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.9060487535063806
+        },
+        "logistic": {
+          "row_mean_seed_average": 0.2260206170650707,
+          "seed_sd": 0.012539389913580957,
+          "per_seed_row_mean": [
+            0.2228173689233002,
+            0.2153935576249848,
+            0.23985092464692717
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.21821685181652045,
+          "ci95": [
+            0.16420343972252968,
+            0.296298811481576
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.054449772268007096,
+            "seed_sd": 0.01233453874552357,
+            "per_seed_row_mean": [
+              -0.05153718049008445,
+              -0.06797994296649851,
+              -0.043832193347438334
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.05147117350213186,
+            "ci95": [
+              -0.0787871288563483,
+              -0.02566458869000108
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.003182308697219161,
+            "seed_sd": 0.002100856047403232,
+            "per_seed_row_mean": [
+              0.003055071173205087,
+              0.0011479631861098022,
+              0.005343891732342594
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0027675786059841037,
+            "ci95": [
+              9.046706570329129e-05,
+              0.0075381389892862
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.003182308697219161,
+            "seed_sd": 0.002100856047403232,
+            "per_seed_row_mean": [
+              0.003055071173205087,
+              0.0011479631861098022,
+              0.005343891732342594
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0027675786059841037,
+            "ci95": [
+              9.046706570329129e-05,
+              0.0075381389892862
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.9034807000908697
+        },
+        "normal": {
+          "row_mean_seed_average": 0.28047038933307783,
+          "seed_sd": 0.005298734676932435,
+          "per_seed_row_mean": [
+            0.27435454941338466,
+            0.2833735005914833,
+            0.2836831179943655
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.2696880253186523,
+          "ci95": [
+            0.2027350301616707,
+            0.36356231212006956
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.05763208096522626,
+            "seed_sd": 0.010317422772631472,
+            "per_seed_row_mean": [
+              0.054592251663289536,
+              0.0691279061526083,
+              0.049176085079780926
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.05423875210811595,
+            "ci95": [
+              0.027284019378171057,
+              0.08192994925682354
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.05763208096522626,
+            "seed_sd": 0.010317422772631472,
+            "per_seed_row_mean": [
+              0.054592251663289536,
+              0.0691279061526083,
+              0.049176085079780926
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.05423875210811595,
+            "ci95": [
+              0.027284019378171057,
+              0.08192994925682354
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.0
+        },
+        "memory": {
+          "row_mean_seed_average": 0.22283830836785157,
+          "seed_sd": 0.010475106360636829,
+          "per_seed_row_mean": [
+            0.21976229775009512,
+            0.21424559443887498,
+            0.23450703291458458
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.21544927321053634,
+          "ci95": [
+            0.16193479144953726,
+            0.29371536168068574
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.05763208096522626,
+            "seed_sd": 0.010317422772631472,
+            "per_seed_row_mean": [
+              -0.054592251663289536,
+              -0.0691279061526083,
+              -0.049176085079780926
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.05423875210811595,
+            "ci95": [
+              -0.08192994925682354,
+              -0.02728401937817106
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 1.0
+        },
+        "oracle": {
+          "row_mean_seed_average": 0.20591475407276771,
+          "seed_sd": 0.01134941783116497,
+          "per_seed_row_mean": [
+            0.20156998682492955,
+            0.19737959207325143,
+            0.21879468332012217
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.19945520534353933,
+          "ci95": [
+            0.14781198594635533,
+            0.2741365425360635
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.0745556352603101,
+            "seed_sd": 0.01066361947706147,
+            "per_seed_row_mean": [
+              -0.0727845625884551,
+              -0.08599390851823187,
+              -0.06488843467424334
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.07023281997511296,
+            "ci95": [
+              -0.09595028396407781,
+              -0.04616365790721878
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": -0.016923554295083843,
+            "seed_sd": 0.0012409819575175945,
+            "per_seed_row_mean": [
+              -0.01819231092516557,
+              -0.01686600236562356,
+              -0.015712349594462407
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.01599406786699701,
+            "ci95": [
+              -0.024947022538040858,
+              -0.008562127010136743
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": -0.016923554295083843,
+            "seed_sd": 0.0012409819575175945,
+            "per_seed_row_mean": [
+              -0.01819231092516557,
+              -0.01686600236562356,
+              -0.015712349594462407
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.01599406786699701,
+            "ci95": [
+              -0.024947022538040858,
+              -0.008562127010136743
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.726956659160049
+        },
+        "random50_expected": {
+          "row_mean_seed_average": 0.2516543488504647,
+          "seed_sd": 0.006503069894617956,
+          "per_seed_row_mean": [
+            0.24705842358173988,
+            0.24880954751517914,
+            0.259095075454475
+          ],
+          "windows_per_seed": [
+            8437,
+            8437,
+            8437
+          ],
+          "episodes_per_seed": [
+            428,
+            428,
+            428
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.24256864926459434,
+          "ci95": [
+            0.18441778866475236,
+            0.32629704157504436
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.02881604048261313,
+            "seed_sd": 0.005158711386315736,
+            "per_seed_row_mean": [
+              -0.027296125831644768,
+              -0.03456395307630415,
+              -0.024588042539890463
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.027119376054057974,
+            "ci95": [
+              -0.04096497462841177,
+              -0.01364200968908553
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.02881604048261313,
+            "seed_sd": 0.005158711386315736,
+            "per_seed_row_mean": [
+              0.027296125831644768,
+              0.03456395307630415,
+              0.024588042539890463
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.027119376054057974,
+            "ci95": [
+              0.013642009689085528,
+              0.04096497462841177
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.02881604048261313,
+            "seed_sd": 0.005158711386315736,
+            "per_seed_row_mean": [
+              0.027296125831644768,
+              0.03456395307630415,
+              0.024588042539890463
+            ],
+            "windows_per_seed": [
+              8437,
+              8437,
+              8437
+            ],
+            "episodes_per_seed": [
+              428,
+              428,
+              428
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.027119376054057974,
+            "ci95": [
+              0.013642009689085528,
+              0.04096497462841177
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.5
+        }
+      },
+      "confidence": [
+        {
+          "seed": 0,
+          "rho_sim_vs_memory_minus_normal": -0.3568591131750603,
+          "rho_entropy_conf_vs_memory_minus_normal": -0.2323952312536646
+        },
+        {
+          "seed": 1,
+          "rho_sim_vs_memory_minus_normal": -0.17484863925917035,
+          "rho_entropy_conf_vs_memory_minus_normal": 0.06366225859676142
+        },
+        {
+          "seed": 2,
+          "rho_sim_vs_memory_minus_normal": -0.25292231009489347,
+          "rho_entropy_conf_vs_memory_minus_normal": -0.11445955867272473
+        }
+      ]
+    },
+    "B": {
+      "methods": {
+        "constant": {
+          "row_mean_seed_average": 0.16664583501606153,
+          "seed_sd": 0.008496205463670093,
+          "per_seed_row_mean": [
+            0.15799683638661147,
+            0.1669601442714844,
+            0.1749805243900887
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.1619823237467933,
+          "ci95": [
+            0.13765670179610073,
+            0.18589638474734685
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.06840059457319582,
+            "seed_sd": 0.03606701007368373,
+            "per_seed_row_mean": [
+              -0.03649328573897209,
+              -0.061175121572018085,
+              -0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.06984370814231196,
+            "ci95": [
+              -0.07980506388518037,
+              -0.05881779364168117
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 1.0
+        },
+        "threshold": {
+          "row_mean_seed_average": 0.16684902664849308,
+          "seed_sd": 0.008187622081417736,
+          "per_seed_row_mean": [
+            0.15860641128390615,
+            0.1669601442714844,
+            0.1749805243900887
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.16214989212110367,
+          "ci95": [
+            0.13765670179610073,
+            0.1863391666693556
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.06819740294076426,
+            "seed_sd": 0.03633734952743865,
+            "per_seed_row_mean": [
+              -0.03588371084167741,
+              -0.061175121572018085,
+              -0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.0696761397680016,
+            "ci95": [
+              -0.07971598631621579,
+              -0.05862334198142741
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0002031916324315605,
+            "seed_sd": 0.0003519382310443228,
+            "per_seed_row_mean": [
+              0.0006095748972946815,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0001675683743103699,
+            "ci95": [
+              0.0,
+              0.0005517408704790775
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0002031916324315605,
+            "seed_sd": 0.0003519382310443228,
+            "per_seed_row_mean": [
+              0.0006095748972946815,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0001675683743103699,
+            "ci95": [
+              0.0,
+              0.0005517408704790775
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.9962019920164322
+        },
+        "logistic": {
+          "row_mean_seed_average": 0.16670642921678913,
+          "seed_sd": 0.008405731402262634,
+          "per_seed_row_mean": [
+            0.15817497243158152,
+            0.16696379082869714,
+            0.1749805243900887
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.16201554181315658,
+          "ci95": [
+            0.13775378401358013,
+            0.18598779390891193
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.06834000037246823,
+            "seed_sd": 0.036146227617075956,
+            "per_seed_row_mean": [
+              -0.03631514969400203,
+              -0.06117147501480536,
+              -0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.06981049007594865,
+            "ci95": [
+              -0.07989909196876714,
+              -0.058777061828470395
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 6.059420072759339e-05,
+            "seed_sd": 0.00010181055056238724,
+            "per_seed_row_mean": [
+              0.00017813604497005878,
+              3.6465572127213715e-06,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 3.3218066363318086e-05,
+            "ci95": [
+              -0.00019281644015787212,
+              0.00029874237524999477
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 6.059420072759339e-05,
+            "seed_sd": 0.00010181055056238724,
+            "per_seed_row_mean": [
+              0.00017813604497005878,
+              3.6465572127213715e-06,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 3.3218066363318086e-05,
+            "ci95": [
+              -0.00019281644015787212,
+              0.00029874237524999477
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.9937991706390731
+        },
+        "normal": {
+          "row_mean_seed_average": 0.23504642958925737,
+          "seed_sd": 0.044416996084982015,
+          "per_seed_row_mean": [
+            0.19449012212558356,
+            0.2281352658435025,
+            0.282513900798686
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.23182603188910528,
+          "ci95": [
+            0.2075864778086473,
+            0.2577942850171608
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.06840059457319582,
+            "seed_sd": 0.03606701007368373,
+            "per_seed_row_mean": [
+              0.03649328573897209,
+              0.061175121572018085,
+              0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.06984370814231196,
+            "ci95": [
+              0.05881779364168117,
+              0.07980506388518037
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.06840059457319582,
+            "seed_sd": 0.03606701007368373,
+            "per_seed_row_mean": [
+              0.03649328573897209,
+              0.061175121572018085,
+              0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.06984370814231196,
+            "ci95": [
+              0.05881779364168117,
+              0.07980506388518037
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.0
+        },
+        "memory": {
+          "row_mean_seed_average": 0.16664583501606153,
+          "seed_sd": 0.008496205463670093,
+          "per_seed_row_mean": [
+            0.15799683638661147,
+            0.1669601442714844,
+            0.1749805243900887
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.1619823237467933,
+          "ci95": [
+            0.13765670179610073,
+            0.18589638474734685
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.06840059457319582,
+            "seed_sd": 0.03606701007368373,
+            "per_seed_row_mean": [
+              -0.03649328573897209,
+              -0.061175121572018085,
+              -0.1075333764085973
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.06984370814231196,
+            "ci95": [
+              -0.07980506388518037,
+              -0.05881779364168117
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.0,
+            "seed_sd": 0.0,
+            "per_seed_row_mean": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 1.0
+        },
+        "oracle": {
+          "row_mean_seed_average": 0.15482937212516143,
+          "seed_sd": 0.013874883751599686,
+          "per_seed_row_mean": [
+            0.14353210806462005,
+            0.1506397488385477,
+            0.17031625947231657
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.1504378830642798,
+          "ci95": [
+            0.1280966966432208,
+            0.1733635350677159
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.08021705746409591,
+            "seed_sd": 0.03071039032240585,
+            "per_seed_row_mean": [
+              -0.0509580140609635,
+              -0.07749551700495479,
+              -0.11219764132636943
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.08138814882482547,
+            "ci95": [
+              -0.09175504284673107,
+              -0.07151474898647728
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": -0.011816462890900083,
+            "seed_sd": 0.00626309244636966,
+            "per_seed_row_mean": [
+              -0.014464728321991414,
+              -0.016320395432936702,
+              -0.00466426491777213
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.011544440682513497,
+            "ci95": [
+              -0.014639163372799299,
+              -0.008703652968284232
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": -0.011816462890900083,
+            "seed_sd": 0.00626309244636966,
+            "per_seed_row_mean": [
+              -0.014464728321991414,
+              -0.016320395432936702,
+              -0.00466426491777213
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.011544440682513497,
+            "ci95": [
+              -0.014639163372799299,
+              -0.008703652968284232
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.8082781071968376
+        },
+        "random50_expected": {
+          "row_mean_seed_average": 0.20084613230265944,
+          "seed_sd": 0.026406821473500024,
+          "per_seed_row_mean": [
+            0.1762434792560975,
+            0.19754770505749344,
+            0.22874721259438735
+          ],
+          "windows_per_seed": [
+            8601,
+            8601,
+            8601
+          ],
+          "episodes_per_seed": [
+            432,
+            432,
+            432
+          ],
+          "tasks_per_seed": [
+            10,
+            10,
+            10
+          ],
+          "task_episode_equal_mean": 0.19690417781794928,
+          "ci95": [
+            0.1731183026641713,
+            0.22099204842645578
+          ],
+          "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations",
+          "minus_normal": {
+            "row_mean_seed_average": -0.03420029728659791,
+            "seed_sd": 0.018033505036841865,
+            "per_seed_row_mean": [
+              -0.018246642869486046,
+              -0.030587560786009042,
+              -0.05376668820429865
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": -0.03492185407115598,
+            "ci95": [
+              -0.039902531942590184,
+              -0.029408896820840583
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_memory": {
+            "row_mean_seed_average": 0.03420029728659791,
+            "seed_sd": 0.018033505036841865,
+            "per_seed_row_mean": [
+              0.018246642869486046,
+              0.030587560786009042,
+              0.05376668820429865
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.03492185407115598,
+            "ci95": [
+              0.029408896820840583,
+              0.039902531942590184
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "minus_constant": {
+            "row_mean_seed_average": 0.03420029728659791,
+            "seed_sd": 0.018033505036841865,
+            "per_seed_row_mean": [
+              0.018246642869486046,
+              0.030587560786009042,
+              0.05376668820429865
+            ],
+            "windows_per_seed": [
+              8601,
+              8601,
+              8601
+            ],
+            "episodes_per_seed": [
+              432,
+              432,
+              432
+            ],
+            "tasks_per_seed": [
+              10,
+              10,
+              10
+            ],
+            "task_episode_equal_mean": 0.03492185407115598,
+            "ci95": [
+              0.029408896820840583,
+              0.039902531942590184
+            ],
+            "ci_scope": "task/episode bootstrap after averaging 3 seeds on shared observations"
+          },
+          "memory_choice_rate": 0.5
+        }
+      },
+      "confidence": [
+        {
+          "seed": 0,
+          "rho_sim_vs_memory_minus_normal": -0.15671955514940403,
+          "rho_entropy_conf_vs_memory_minus_normal": -0.16124783544875618
+        },
+        {
+          "seed": 1,
+          "rho_sim_vs_memory_minus_normal": -0.08411233671291361,
+          "rho_entropy_conf_vs_memory_minus_normal": -0.04454491764902403
+        },
+        {
+          "seed": 2,
+          "rho_sim_vs_memory_minus_normal": 0.049843960862866694,
+          "rho_entropy_conf_vs_memory_minus_normal": 0.09977499264985408
+        }
+      ]
+    }
+  },
+  "fixed_budget_contents": {
+    "A_D1": {
+      "unit": 0.06163363655408224,
+      "raw": 0.05814766759673754,
+      "unit_seed_sd": 0.0020702669764443354,
+      "raw_seed_sd": 0.0020142242538443685
+    },
+    "A_D3": {
+      "unit": 0.23259219527244568,
+      "raw": 0.2528686473766963,
+      "unit_seed_sd": 0.0068291743520178865,
+      "raw_seed_sd": 0.0073419323213349584
+    },
+    "A_D2": {
+      "unit": 0.15389815966288248,
+      "raw": 0.09926437586545944,
+      "unit_seed_sd": 0.005018385720214881,
+      "raw_seed_sd": 0.0032135435401624527
+    },
+    "B_D1": {
+      "unit": 0.06061910341183344,
+      "raw": 0.05605754628777504,
+      "unit_seed_sd": 0.004145318546435755,
+      "raw_seed_sd": 0.003400379989973281
+    },
+    "B_D3": {
+      "unit": 0.1773690233627955,
+      "raw": 0.19064169625441232,
+      "unit_seed_sd": 0.019807585877100277,
+      "raw_seed_sd": 0.020972687067467195
+    },
+    "B_D2": {
+      "unit": 0.13668768604596457,
+      "raw": 0.09369170914093654,
+      "unit_seed_sd": 0.011293000779909409,
+      "raw_seed_sd": 0.005199858485439126
+    }
+  },
+  "notes": {
+    "bootstrap_draws": 1000,
+    "source_condition": "instruction"
+  },
+  "elapsed_seconds": 12.378312307409942,
+  "source_unchanged": true,
+  "code_sha256": "bef686bc23f376a480c98b82aeb503a3cef1e84328a784f825963b7de66b2b9b"
+}

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">SkillNetの公開LIBERO版：スキル情報を用いた行動生成</title>
+<desc id="desc">画像、指示、ロボット状態をVLMで特徴化し、行動生成器へ渡す。注釈由来のタスク全体のスキル一覧を埋め込み、行動生成器内のMoEルーティングに使う。行動生成器はノイズを反復更新して行動列を出力する。行動の一部を実行し、次の観測で再計画する。</desc>
+<rect x="54" y="48" width="7" height="62" rx="3" fill="#2764B0" stroke="#2764B0" stroke-width="0"/>
+<text x="82" y="46" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="42" fill="#182C46">SkillNet：スキル情報を行動生成に取り入れるVLA</text>
+<text x="82" y="112" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="23" fill="#60738A">公開LIBERO版の推論構造を簡略化  ／  ベース方策：π0.5</text>
+<rect x="55" y="228" width="287" height="80" rx="14" fill="#F3F7FC" stroke="#DAE4F1" stroke-width="2"/>
+<text x="75" y="240" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="26" fill="#2764B0">カメラ画像</text>
+<text x="75" y="276" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="18" fill="#60738A">外部・手先の視点</text>
+<rect x="55" y="326" width="287" height="80" rx="14" fill="#F3F7FC" stroke="#DAE4F1" stroke-width="2"/>
+<text x="75" y="338" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="26" fill="#2764B0">言語指示</text>
+<text x="75" y="374" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="18" fill="#60738A">「物を収納して扉を閉める」</text>
+<rect x="55" y="424" width="287" height="80" rx="14" fill="#F3F7FC" stroke="#DAE4F1" stroke-width="2"/>
+<text x="75" y="436" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="26" fill="#2764B0">ロボット状態</text>
+<text x="75" y="472" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="18" fill="#60738A">手先姿勢・グリッパーなど</text>
+<polyline points="342,367 394,367" fill="none" stroke="#2764B0" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="394,367 384.0950818741206,371.78462087522354 384.0950818741206,362.21537912477646" fill="#2764B0"/>
+<rect x="396" y="278" width="282" height="178" rx="18" fill="#EAF2FE" stroke="#9CBBE8" stroke-width="2"/>
+<text x="537" y="306" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="27" fill="#2764B0">視覚・言語モデル</text>
+<text x="537" y="347" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="37" fill="#2764B0">VLM</text>
+<text x="537" y="404" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="19" fill="#60738A">画像・指示・状態を特徴化</text>
+<polyline points="678,367 751,367" fill="none" stroke="#2764B0" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="751,367 741.0950818741205,371.78462087522354 741.0950818741205,362.21537912477646" fill="#2764B0"/>
+<text x="714" y="316" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#2764B0">特徴</text>
+<rect x="753" y="226" width="459" height="420" rx="22" fill="#F7FAFD" stroke="#94A8BF" stroke-width="2"/>
+<text x="982" y="248" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="31" fill="#182C46">行動生成器</text>
+<text x="982" y="294" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#60738A">観測特徴と生成途中の行動を処理</text>
+<rect x="778" y="344" width="409" height="210" rx="16" fill="#F3EDFA" stroke="#B5A0CF" stroke-width="2"/>
+<text x="982" y="361" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="27" fill="#7654A8">Skill-conditioned MoE</text>
+<text x="982" y="403" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="22" fill="#7654A8">スキルを参照してルーティング</text>
+<rect x="796" y="449" width="88" height="43" rx="9" fill="#FFFFFF" stroke="#D2C6E2" stroke-width="2"/>
+<text x="840" y="460" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#7654A8">E1</text>
+<rect x="890" y="449" width="88" height="43" rx="9" fill="#7654A8" stroke="#7654A8" stroke-width="2"/>
+<text x="934" y="460" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#FFFFFF">E2</text>
+<rect x="984" y="449" width="88" height="43" rx="9" fill="#FFFFFF" stroke="#D2C6E2" stroke-width="2"/>
+<text x="1028" y="460" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#7654A8">E3</text>
+<rect x="1078" y="449" width="88" height="43" rx="9" fill="#FFFFFF" stroke="#D2C6E2" stroke-width="2"/>
+<text x="1122" y="460" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#7654A8">E4</text>
+<text x="982" y="509" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#7654A8">4 expertから1つ選択 ＋ 共有expert</text>
+<text x="982" y="577" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="25" fill="#182C46">Flow matching</text>
+<text x="982" y="613" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#60738A">ノイズを反復更新 → 行動列</text>
+<rect x="866" y="165" width="230" height="45" rx="12" fill="#F4F6F8" stroke="#D4DDE6" stroke-width="2"/>
+<text x="981" y="174" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="22" fill="#60738A">初期ノイズ</text>
+<polyline points="982,210 982,226" fill="none" stroke="#9AAABD" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="982,226 977.2153791247765,216.09508187412055 986.7846208752235,216.09508187412055" fill="#9AAABD"/>
+<rect x="55" y="555" width="287" height="137" rx="16" fill="#F5EFFB" stroke="#CEBFE0" stroke-width="2"/>
+<text x="75" y="571" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="23" fill="#7654A8">タスク全体のスキル一覧</text>
+<text x="75" y="611" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="21" fill="#7654A8">注釈から得たID ＋ mask</text>
+<text x="75" y="653" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="18" fill="#60738A">推論中は同じ一覧を入力</text>
+<polyline points="342,622 395,622" fill="none" stroke="#7654A8" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="395,622 385.0950818741206,626.7846208752235 385.0950818741206,617.2153791247765" fill="#7654A8"/>
+<rect x="397" y="571" width="281" height="103" rx="16" fill="#F5EFFB" stroke="#CEBFE0" stroke-width="2"/>
+<text x="537" y="589" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="27" fill="#7654A8">スキル埋め込み</text>
+<text x="537" y="632" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="19" fill="#60738A">IDを学習可能なベクトルへ</text>
+<polyline points="678,622 719,622 719,431 778,431" fill="none" stroke="#7654A8" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="778,431 768.0950818741205,435.78462087522354 768.0950818741205,426.21537912477646" fill="#7654A8"/>
+<polyline points="1212,367 1271,367" fill="none" stroke="#167A73" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1271,367 1261.0950818741205,371.78462087522354 1261.0950818741205,362.21537912477646" fill="#167A73"/>
+<rect x="1274" y="286" width="271" height="222" rx="20" fill="#EAF6F3" stroke="#9DCBC2" stroke-width="2"/>
+<text x="1409" y="309" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="29" fill="#167A73">行動チャンク</text>
+<text x="1409" y="358" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="22" fill="#167A73">数ステップ先までの</text>
+<text x="1409" y="394" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="21" fill="#167A73">手先移動・回転・開閉</text>
+<rect x="1300" y="444" width="219" height="43" rx="10" fill="#FFFFFF" stroke="#BEDBD4" stroke-width="2"/>
+<text x="1409" y="455" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="19" fill="#167A73">先頭の一部を実行</text>
+<polyline points="1409,508 1409,734 199,734 199,511" fill="none" stroke="#91A4B5" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="199,511 203.78462087522354,520.9049181258795 194.21537912477646,520.9049181258795" fill="#91A4B5"/>
+<rect x="605" y="711" width="399" height="44" rx="0" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="0"/>
+<text x="804" y="719" dominant-baseline="text-before-edge" text-anchor="middle" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="20" fill="#60738A">実行後に再観測し、行動を生成し直す</text>
+<rect x="55" y="781" width="1490" height="70" rx="14" fill="#EEF3F8" stroke="#EEF3F8" stroke-width="0"/>
+<text x="80" y="799" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="25" fill="#2764B0">要点</text>
+<text x="168" y="801" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="25" fill="#182C46">スキル情報は、行動生成器の内部で「どの計算経路を使うか」に作用する。</text>
+<text x="57" y="870" dominant-baseline="text-before-edge" text-anchor="start" font-family="Noto Sans CJK JP,Noto Sans JP,Yu Gothic,Meiryo,sans-serif" font-size="14" fill="#60738A">Source: SkillNet public implementation (LIBERO) / simplified schematic; E1–E4 are neural experts.</text>
+</svg>

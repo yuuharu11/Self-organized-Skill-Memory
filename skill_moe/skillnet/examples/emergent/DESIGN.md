@@ -1,7 +1,7 @@
 # Emergent z training configs
 
-This implementation follows [the emergent-skill plan](../../../../docs/research/emergent_skill_plan.md)
-and [verification protocol, §§1 and 5](../../../../docs/research/emergent_skill_verification.md).
+This implementation follows [the emergent-skill plan](../../../../docs/research/02_emergent_skills/plan.md)
+and [verification protocol, §§1 and 5](../../../../docs/research/02_emergent_skills/verification.md).
 
 ## Registered configs
 

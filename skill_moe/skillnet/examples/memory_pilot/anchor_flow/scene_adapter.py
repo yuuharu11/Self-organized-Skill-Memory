@@ -23,11 +23,25 @@ for p in (str(HERE), str(EXAMPLES)):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-from key_check import (DEFAULT_CHECKPOINT, DEFAULT_HELDOUT, DEFAULT_ROWS,
-                       ROW_FIELDS, _read_npz)
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from memory_pilot.anchor_flow.offline_common import (
+    ROW_FIELDS,
+    cluster_bootstrap,
+    denoising_steps,
+    normalize_keys as _norm,
+    read_npz as _read_npz,
+    row_errors,
+)
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
 from memory import load_memory
-from train_retrieval_key import _sample_task_queries
+from memory_pilot.anchor_flow.offline_retrieval import (
+    sample_task_queries as _sample_task_queries,
+)
 
 DEFAULT_MEMORY = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-calibrated-resume-20261028T215014Z/memory/initial_libero90.pkl')
 DEFAULT_OUT = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot')
@@ -39,14 +53,8 @@ MM_SCALE = np.asarray([0.0111, 0.0122, 0.0110], np.float32)
 
 
 def _offline_helpers():
-    """Reuse the offline sampler metrics through normal module imports."""
-    from anchor_v2_offline import cluster_bootstrap, denoising_steps, row_errors
+    """Compatibility accessor for the shared offline metrics."""
     return denoising_steps, row_errors, cluster_bootstrap
-
-
-def _norm(x):
-    x = np.asarray(x, np.float32)
-    return x / np.maximum(np.linalg.norm(x, axis=-1, keepdims=True), 1e-8)
 
 
 def _retrieval(query_keys, query_eps, query_init, candidate_ids, keys, episodes, initials):
@@ -578,7 +586,7 @@ def main():
              "oracle_trained": task_data["oracle_raw"], "oracle_raw": task_data["oracle_raw"]})):
         eval_models = {k: model_sets[name][k] for k in model_sets[name]}
         results[name] = _denoise_condition(name, query, anch, eval_models, None, args.checkpoint,
-            _offline_helpers()[1], _offline_helpers()[2], _offline_helpers()[0], seeds=args.seeds,
+            row_errors, cluster_bootstrap, denoising_steps, seeds=args.seeds,
             batch_size=args.eval_batch_size, gpu_fraction=args.gpu_fraction)
 
     metadata = {

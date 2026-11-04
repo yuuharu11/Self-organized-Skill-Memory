@@ -1,7 +1,7 @@
 # スキル潜在 z の評価入力形式（schema v1）
 
 `examples/emergent/eval/` の評価・メモリ部品が読む形式。モデルには依存しない。
-既存の記録形式（[docs/research/memory_pilot_gates.md](../../../../../docs/research/memory_pilot_gates.md)「保存形式」、
+既存の記録形式（[docs/research/01_memory_gates/gates.md](../../../../../docs/research/01_memory_gates/gates.md)「保存形式」、
 [g2_retrieval/SCHEMA.md](../../memory_pilot/g2_retrieval/SCHEMA.md)）の**拡張**であり、既存キーの意味は変えない。
 したがって z の記録は、そのまま G2 の `load_run` で読める記録でもある。
 

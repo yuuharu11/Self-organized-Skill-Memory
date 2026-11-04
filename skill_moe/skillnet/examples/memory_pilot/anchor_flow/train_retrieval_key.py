@@ -22,8 +22,28 @@ for path in (str(HERE), str(EXAMPLES)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from key_check import DEFAULT_CHECKPOINT, DEFAULT_HELDOUT, DEFAULT_MEMORY, DEFAULT_ROWS, ROW_FIELDS, _read_npz
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from memory_pilot.anchor_flow.offline_common import (
+    ROW_FIELDS,
+    cluster_bootstrap,
+    denoising_steps,
+    normalize_keys as _normalize,
+    read_npz as _read_npz,
+    row_errors,
+)
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_MEMORY as DEFAULT_MEMORY,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
+from memory_pilot.anchor_flow.offline_retrieval import (
+    behavior_neighbors as _behavior_neighbors,
+    macro_recall as _macro_recall,
+    sample_task_queries as _sample_task_queries,
+    topk_cosine as _topk_cosine,
+)
 from memory import load_memory
 
 DEFAULT_QUERY_KEYS = str(Path(DEFAULT_HELDOUT).with_name("query-keys.npy"))
@@ -35,65 +55,12 @@ ENDPOINT_SCALE_M = np.asarray([0.0111, 0.0122, 0.0110], np.float32)
 
 
 def _load_offline_helpers():
-    """Reuse the offline sampler metrics through normal module imports."""
-    from anchor_v2_offline import cluster_bootstrap, denoising_steps, row_errors
+    """Compatibility accessor for the shared offline metrics."""
     return denoising_steps, row_errors, cluster_bootstrap
-
-
-def _normalize(x):
-    x = np.asarray(x, np.float32)
-    return x / np.maximum(np.linalg.norm(x, axis=-1, keepdims=True), 1e-8)
 
 
 def _source_task(source_file):
     return str(source_file)
-
-
-def _sample_task_queries(source_files, episode_ids, seed, n_tasks=10, episodes_per_task=2, rows_per_episode=8):
-    rng = np.random.default_rng(seed)
-    tasks = sorted(set(map(str, source_files)))
-    selected_tasks = sorted(rng.choice(tasks, size=min(n_tasks, len(tasks)), replace=False).tolist())
-    selected_rows, selected_episode_ids = [], []
-    task_reports = {}
-    source_files = np.asarray(source_files).astype(str)
-    episode_ids = np.asarray(episode_ids).astype(str)
-    for task in selected_tasks:
-        task_rows = np.flatnonzero(source_files == task)
-        eps = sorted(set(episode_ids[task_rows]))
-        chosen_eps = sorted(rng.choice(eps, size=min(episodes_per_task, len(eps)), replace=False).tolist())
-        task_reports[task] = chosen_eps
-        for episode in chosen_eps:
-            rows = task_rows[episode_ids[task_rows] == episode]
-            if len(rows) > rows_per_episode:
-                take = np.linspace(0, len(rows) - 1, rows_per_episode).round().astype(int)
-                rows = rows[take]
-            selected_rows.extend(map(int, rows))
-            selected_episode_ids.extend([episode] * len(rows))
-    return np.asarray(selected_rows, np.int64), selected_tasks, task_reports
-
-
-def _behavior_neighbors(bases, episodes, initials, *, k=8, query_k=48, workers=8):
-    from scipy.spatial import cKDTree
-
-    tree = cKDTree(np.asarray(bases, np.float32))
-    distances, indices = tree.query(bases, k=min(query_k, len(bases)), workers=workers)
-    if indices.ndim == 1:
-        indices, distances = indices[:, None], distances[:, None]
-    positives = np.empty((len(bases), k), np.int64)
-    for row in range(len(bases)):
-        candidates = [int(j) for j in indices[row]
-                      if int(j) != row and episodes[int(j)] != episodes[row]
-                      and initials[int(j)] != initials[row]]
-        if len(candidates) < k:
-            # Keep the closest available different-demo examples; self/init are always excluded.
-            candidates = [int(j) for j in np.argsort(np.linalg.norm(bases - bases[row], axis=1))
-                          if int(j) != row and episodes[int(j)] != episodes[row]
-                          and initials[int(j)] != initials[row]]
-        if not candidates:
-            raise ValueError(f"no different-demo positive for row {row}")
-        fill = (candidates * ((k + len(candidates) - 1) // len(candidates)))[:k]
-        positives[row] = fill
-    return positives
 
 
 def _fit_projector(keys, states, bases, episodes, initials, *, seed, steps=600, batch_size=256,
@@ -196,20 +163,6 @@ def _project_queries(model_path, mem_keys, mem_state, q_keys, q_state, *, seed):
     return mem_out, query_out, key_mean
 
 
-def _topk_cosine(memory_keys, query_keys, mem_eps, mem_initials, q_eps, q_initials, *, k=5):
-    memory_keys = _normalize(memory_keys)
-    query_keys = _normalize(query_keys)
-    ids = np.empty((len(query_keys), k), np.int64)
-    sims = np.empty((len(query_keys), k), np.float32)
-    for i, query in enumerate(query_keys):
-        scores = memory_keys @ query
-        eligible = (mem_eps != q_eps[i]) & (mem_initials != q_initials[i])
-        scores[~eligible] = -np.inf
-        selected = np.argsort(-scores, kind="stable")[:k]
-        ids[i], sims[i] = selected, scores[selected]
-    return ids, sims
-
-
 def _topk_distance(memory_values, query_values, mem_eps, mem_initials, q_eps, q_initials, *, k=5):
     ids = np.empty((len(query_values), k), np.int64)
     distances = np.empty((len(query_values), k), np.float32)
@@ -234,25 +187,6 @@ def _weights_from_distance(distances):
     weights = np.zeros_like(distances, np.float32)
     weights[:, 0] = 1.0
     return weights
-
-
-def _macro_recall(true_unit, candidate_units, majority_unit):
-    true_unit = np.asarray(true_unit, np.int64)
-    candidate_units = np.asarray(candidate_units, np.int64)
-    classes = np.unique(true_unit[true_unit >= 0])
-    hit1 = candidate_units[:, 0] == true_unit
-    hit5 = np.any(candidate_units == true_unit[:, None], axis=1)
-    per1, per5 = {}, {}
-    for unit in classes:
-        mask = true_unit == unit
-        per1[str(int(unit))] = float(hit1[mask].mean())
-        per5[str(int(unit))] = float(hit5[mask].mean())
-    majority_macro = float(np.mean(classes == int(majority_unit))) if len(classes) else 0.0
-    return {"hit1": float(hit1.mean()), "hit5": float(hit5.mean()),
-            "macro_recall1": float(np.mean(list(per1.values()))) if per1 else 0.0,
-            "macro_recall5": float(np.mean(list(per5.values()))) if per5 else 0.0,
-            "per_unit_recall1": per1, "per_unit_recall5": per5,
-            "majority_macro_recall1_and_5": majority_macro}
 
 
 def _functional_target_units(memory, bases, active_unit_ids, active_unit_centers):
@@ -484,7 +418,6 @@ def main():
     else:
         out.mkdir(parents=True, exist_ok=False)
     start_time = time.perf_counter()
-    _, row_errors, cluster_bootstrap = _load_offline_helpers()
 
     import torch
     torch.set_num_threads(8)
@@ -606,11 +539,11 @@ def main():
     all_ids = np.arange(len(memory.memory), dtype=np.int64)
     all_fit = _evaluate_condition("heldout_known_tasks", all_query, memory, all_ids, all_arrays,
                                   all_query, model, config, out, seeds=args.seeds, batch_size=args.eval_batch_size,
-                                  row_errors=row_errors, denoising_steps=_load_offline_helpers()[0],
+                                  row_errors=row_errors, denoising_steps=denoising_steps,
                                   cluster_bootstrap=cluster_bootstrap)
     task_result = _evaluate_condition("heldout_10_tasks", task_query, memory, task_memory_ids, all_arrays,
                                       task_query, model, config, out, seeds=args.seeds, batch_size=args.eval_batch_size,
-                                      row_errors=row_errors, denoising_steps=_load_offline_helpers()[0],
+                                      row_errors=row_errors, denoising_steps=denoising_steps,
                                       cluster_bootstrap=cluster_bootstrap, task_holdout=True)
     result = {
         "heldout_known_tasks": all_fit,

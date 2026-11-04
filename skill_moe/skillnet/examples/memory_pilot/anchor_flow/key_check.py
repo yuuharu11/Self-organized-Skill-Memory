@@ -17,28 +17,21 @@ EXAMPLES = HERE.parents[1]
 if str(EXAMPLES) not in sys.path:
     sys.path.insert(0, str(EXAMPLES))
 
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
-DEFAULT_HELDOUT = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-calibrated-resume-20261028T215014Z/calibration/fit-v2/heldout-observations.npz')
-DEFAULT_ROWS = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-train-20261028T072152Z/libero90_rows.npz')
-DEFAULT_MEMORY = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-calibrated-resume-20261028T215014Z/memory/initial_libero90.pkl')
-DEFAULT_CHECKPOINT = str(RESEARCH_STATE_DIR / 'checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params')
-ROW_FIELDS = (
-    "state", "actions", "episode_id", "init_state_id", "image_base", "image_left_wrist",
-    "tokenized_prompt", "tokenized_prompt_mask", "source_file", "frame",
+from memory_pilot.anchor_flow.offline_common import (
+    ROW_FIELDS,
+    normalize_keys as _normalize,
+    quantile_summary as _quantile_summary,
+    read_npz as _read_npz,
+    retrieval_metrics as _retrieval_metrics,
 )
-
-
-def _read_npz(path, fields):
-    with np.load(path, allow_pickle=True) as archive:
-        missing = set(fields) - set(archive.files)
-        if missing:
-            raise ValueError(f"{path} is missing fields: {sorted(missing)}")
-        return {name: archive[name] for name in fields}
-
-
-def _normalize(x):
-    x = np.asarray(x, np.float32)
-    return x / np.maximum(np.linalg.norm(x, axis=-1, keepdims=True), 1e-8)
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_MEMORY as DEFAULT_MEMORY,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
 
 
 def _whitener(memory_full_keys, query_full_keys, *, shrinkage=0.1, variance_fraction=0.95):
@@ -69,44 +62,6 @@ def _whitener(memory_full_keys, query_full_keys, *, shrinkage=0.1, variance_frac
         "sample_rank": int(rank), "variance_fraction": float(cumulative[rank - 1]),
         "shrinkage": shrinkage, "ridge": ridge,
     }
-
-
-def _retrieval_metrics(query_keys, memory_keys, entries, query_episode, query_init, oracle_units, majority_unit,
-                       *, temperature):
-    memory_keys = _normalize(memory_keys)
-    query_keys = _normalize(query_keys)
-    entry_episode = np.asarray([str(row["meta"]["episode_id"]) for row in entries])
-    entry_init = np.asarray([str(row["meta"]["init_state_id"]) for row in entries])
-    entry_units = [row.get("unit_id") for row in entries]
-    top_indices, top_sims, top_weights = [], [], []
-    top1_correct, top5_correct = [], []
-    for i, query in enumerate(query_keys):
-        similarities = memory_keys @ query
-        eligible = (entry_episode != str(query_episode[i])) & (entry_init != str(query_init[i]))
-        similarities[~eligible] = -np.inf
-        order = np.argsort(-similarities, kind="stable")[:min(5, int(eligible.sum()))]
-        sims = similarities[order]
-        distances = np.sqrt(np.maximum(2.0 - 2.0 * sims, 0.0))
-        logits = -distances / max(float(temperature), 1e-8)
-        weights = np.exp(logits - logits.max())
-        weights /= weights.sum()
-        target = oracle_units[i]
-        units = [None if entry_units[j] is None else int(entry_units[j]) for j in order]
-        top_indices.append(order)
-        top_sims.append(sims)
-        top_weights.append(weights.astype(np.float32))
-        top1_correct.append(target is not None and units[0] == int(target))
-        top5_correct.append(target is not None and int(target) in units)
-    return {
-        "top_indices": top_indices, "top_sims": top_sims, "top_weights": top_weights,
-        "top1_correct": np.asarray(top1_correct, bool), "top5_correct": np.asarray(top5_correct, bool),
-        "majority_correct": np.asarray([u is not None and int(u) == majority_unit for u in oracle_units], bool),
-    }
-
-
-def _quantile_summary(values):
-    x = np.asarray(values, np.float64)
-    return {f"q{p}": float(np.quantile(x, p / 100)) for p in (10, 25, 50, 75, 90)}
 
 
 def main():

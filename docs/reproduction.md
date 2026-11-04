@@ -198,7 +198,7 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 - S1 のサブタスク条件と予測テキストを使う場合の生成器・出力。S2 の LIBERO-90 メモリ・正規化統計・行分割。
 - 実際のコマンド、seed、試行数、タスクごとの初期状態番号、対照条件、集計前の行単位・試行単位の結果。
 
-10月30日の[結果・レビュー](research/reviews/experiment_results_2026-10-30.md)と、
+10月30日の[結果・レビュー](research/03_anchor_flow/offline_results.md)と、
 較正・検索キー・区間スキル・場面適応・Optimus-R Stage AのコードとテストもGitで管理しています。
 [S2のスクリプト一覧と必要資産](../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)、
 [軽量実験の一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)、
