@@ -1,20 +1,18 @@
 # スキル条件の診断と改善：外部から参照するための手順
 
-**2026-11-03の実測：** [スキル利用と指示介入](../../../../docs/research/reviews/skillnet_interventions_2026-11-03.md)、[収集プロトコル](../../../../docs/research/skillnet_diagnostic_protocol_2026-11-03.md)を参照。新しい収集器は`diagnostic_server.py`、`collect_interventions.py`、`collect_released_interventions.py`。`analyze_interventions.py`は既存出力を再集計して図・表を生成する。計測付き経路と未変更の公開経路を分けて扱う。
-
-**2026-11-02更新：現在は方式の追加実装を保留し、SkillNetの失敗原因を診断する。[最新の停止記録と診断](../../../../docs/research/reviews/diagnosis_2026-11-02.md)を参照。下のT0・改善案は過去の検討手順であり、現在の実行指示ではない。**
+**現在の結果と経緯は[SkillNetの失敗診断と介入](../../../../docs/research/05_skillnet_diagnosis/README.md)を参照。** 2026-11-03の収集器は`diagnostic_server.py`、`collect_interventions.py`、`collect_released_interventions.py`。`analyze_interventions.py`は既存出力を再集計して図・表を生成する。計測付き経路と未変更の公開経路を分けて扱う。下のT0・改善案は2026-10-30時点の検討手順であり、現在の実行指示ではない。
 
 固定した結果ログだけを再集計する場合は、リポジトリルートから以下を実行する。標準Pythonだけで動き、環境・重み・GPUは不要。途中結果の共通組を使い、タスク間の不確実性と公式目標の履歴を報告する。
 
 ```bash
 python skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnostics.py \
-  docs/research/reviews/evidence/skillnet_prompt_2026-11-02.jsonl
+  docs/research/05_skillnet_diagnosis/evidence/skillnet_prompt.jsonl
 ```
 
 `--exclude-tasks 5 7`はtask06・08を全条件から除く探索的な感度分析（IDは0始まり）。`--output`には未作成のJSONファイルを指定できる。元ログや既存出力は変更しない。canonicalな最終記録が重複するログや、初期状態・評価予算が食い違う対応組はエラーにする。
 
 このリポジトリの外（自分の環境の SkillNet）で作業する人向けの入口です。
-検討の本文は [docs/research/skill_conditioning_fixes.md](../../../../docs/research/skill_conditioning_fixes.md) にあります。
+検討の本文は [docs/research/05_skillnet_diagnosis/conditioning_fixes.md](../../../../docs/research/05_skillnet_diagnosis/conditioning_fixes.md) にあります。
 このページでは、それを読んで内容を確かめ、最初の実験（T0）を始めるまでの手順を説明します。
 
 - このリポジトリ：<https://github.com/yuuharu11/Self-organized-Skill-Memory>（公開）
@@ -24,7 +22,7 @@ python skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnost
 
 ## 1. 読む順番
 
-1. [skill_conditioning_fixes.md](../../../../docs/research/skill_conditioning_fixes.md)：検討の本文
+1. [skill_conditioning_fixes.md](../../../../docs/research/05_skillnet_diagnosis/conditioning_fixes.md)：検討の本文
    - §1：確認した事実
    - §2：外部の案の検証
    - §3：順位
@@ -35,7 +33,7 @@ python skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnost
    - AtomicVLA（CVPR 2026）：[CVF](https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_AtomicVLA_Unlocking_the_Potential_of_Atomic_Skill_Learning_in_Robots_CVPR_2026_paper.html)、[arXiv 2603.07648](https://arxiv.org/abs/2603.07648)
    - SkillMemo：[arXiv 2608.05970](https://arxiv.org/abs/2608.05970)
    - Optimus-R：[arXiv 2609.39794](https://arxiv.org/abs/2609.39794)
-3. 公表されている成功率の比較条件：[baselines_success_rates.md](../../../../docs/research/baselines_success_rates.md) の §2
+3. 公表されている成功率の比較条件：[baselines_success_rates.md](../../../../docs/research/surveys/baselines_success_rates.md) の §2
 
 本文の中には、`.skillnet-state/` や日付つきの run 名など、このリポジトリを作業した環境にしかない記録への言及があります。これらは外からは見られません。その代わり、必要な結果は下の §2 の手順で確かめ直せます。
 

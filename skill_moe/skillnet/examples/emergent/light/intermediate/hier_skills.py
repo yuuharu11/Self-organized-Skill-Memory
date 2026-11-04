@@ -897,7 +897,7 @@ def run(*, output_root=str(RESEARCH_STATE_DIR / 'outputs/memory-pilot'), cache_d
             partial = {"seeds": list(seeds), "splits": list(splits), "smoke": smoke, "runs": runs}
             (out / "results.partial.json").write_text(json.dumps(partial, ensure_ascii=False,
                                                                     default=_json_default))
-    payload = {"spec": "/work/docs/research/anchor_flow_skill_memory.md §S3",
+    payload = {"spec": "/work/docs/research/03_anchor_flow/design.md §S3",
                "seeds": list(seeds), "splits": list(splits), "smoke": bool(smoke),
                "subtask_source": "instruction", "data_rows": len(rows["a"]),
                "stride_seconds": float(stride_seconds), "cache_stride_frames": int(cache_manifest["stride"]),

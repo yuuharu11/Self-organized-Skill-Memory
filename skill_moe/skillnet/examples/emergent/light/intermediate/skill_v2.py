@@ -1850,7 +1850,7 @@ def run(*, output_root=str(RESEARCH_STATE_DIR / 'outputs/memory-pilot'), cache_d
                 r["previous_v2_d3_mse"] = previous.get((r["split"], int(r["seed"])), float("nan"))
                 r["previous_v2_d3_row_selection_accuracy"] = previous_row_accuracy.get(
                     (r["split"], int(r["seed"])), float("nan"))
-    payload = {"spec": "/work/docs/research/architecture_v2.md §0, §2, §4",
+    payload = {"spec": "/work/docs/research/03_anchor_flow/architecture_v2.md §0, §2, §4",
                "seeds": list(seeds), "splits": list(splits), "smoke": bool(smoke),
                "subtask_source": "instruction", "stride_seconds": stride_seconds,
                "cache_stride": int(manifest["stride"]), "dataset_fps": int(info["fps"]),

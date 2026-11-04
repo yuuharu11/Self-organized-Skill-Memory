@@ -646,7 +646,7 @@ def run(*, output_root=DEFAULT_OUTPUT_ROOT, cache_dir=DEFAULT_CACHE, dataset_dir
             records.extend(recs)
             timings.append({"split": split, "seed": seed, "seconds": seconds})
             log(f"done split={split} seed={seed} in {seconds / 60:.1f} min")
-            payload = {"spec": "roundtrip test; /work/docs/research/anchor_flow_skill_memory.md §2, §4 S1",
+            payload = {"spec": "roundtrip test; /work/docs/research/03_anchor_flow/design.md §2, §4 S1",
                        "seeds": list(seeds), "splits": list(splits), "sources": list(sources),
                        "smoke": bool(smoke), "t0_grid": list(T0S), "samples": SAMPLES,
                        "flow_steps": 10, "source_mix_mixed_F": list(SOURCE_MIX),

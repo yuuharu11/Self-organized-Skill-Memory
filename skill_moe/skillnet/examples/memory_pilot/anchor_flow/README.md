@@ -74,6 +74,6 @@ notes. The corrected implementation is available for new experiments; those
 old trained weights are not repaired by changing the source.
 
 For the recorded October 30 results and the stopped, incomplete closed-loop
-measurement, see the [results review](../../../../../docs/research/reviews/experiment_results_2026-10-30.md).
+measurement, see the [results review](../../../../../docs/research/03_anchor_flow/offline_results.md).
 The proposed scene-adapter and Optimus-R implementations have separate scopes;
 shipping their source does not establish improved success rates.

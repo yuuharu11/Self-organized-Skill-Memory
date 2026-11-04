@@ -1,0 +1,166 @@
+# R0／R1／R2：関係・履歴を揃えた運動記憶の診断
+
+2026-11-01。**次は、特権状態を使った小規模診断を行う。選択と表現を有力候補とし、原因はまだ確定しない。** オラクルの低誤差は正解情報を与えた条件の結果で、汎化の証拠ではない。
+
+採用する構成は、**固定10ステップの運動単位→top-5のsoftmaxブレンド→S-all型bridge**。R2で変えるのは、同じ運動の保存・復元座標だけ。単位の再分割、可変長、候補数の適応、積分回数の適応、探索、通常方策へのゲートは入れない。R0は対照であり、提案手法の実行経路ではない。
+
+前提：[レビューへの回答](review_answer.md)、[監査](/work/.skillnet-state/outputs/memory-pilot/research-audit-20261031T161442Z/report.md)、[既存S-all設計](/work/.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/DESIGN.md)・[結果](/work/.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/report.md)。以下は実験計画であり、今回、学習・評価・コード編集は行っていない。
+
+## 1. データと復元
+
+**分割を先に固定する。** 実演のあるLIBERO-90の89タスクを、`sha256("R012-20261101-v1|" + 正式task名)`の昇順に並べ、先頭69をTrain、次10をDev、末尾10をDiagとする。task名は分割にだけ使い、単位形成・検索・損失へtask IDやsubtask labelを渡さない。全リストと今日の小集合は[分割manifest](/work/.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/proposed_split_final.json)。
+
+- **Train**：メモリ、運動単位、追加学習、特徴の標準化に使用。実演・初期状態単位で二分し、学習queryは反対foldのメモリを検索する。query自身の未来チャンクを再取得しない。
+- **Dev**：整合性確認と、実験を完走させてよいかの判定だけ。メモリへの追加・勾配更新はしない。Diagを見る前に設定を凍結する。
+- **Diag**：オフラインと閉ループの診断用保留集合。これもLIBERO-90内であり、公式テストではない。LIBERO-Skillの軌跡・物体状態は一切読んで学習・選択・閾値決定に使わない。
+- 同じ初期物理状態からの実演は同じfoldにまとめる。episode境界をまたぐ履歴・チャンクを作らない。正規化や単位形成をDev／Diagでfitしない。公開checkpoint付属の正規化は全条件共通の既存事前情報として固定し、新しい関係特徴の統計だけTrainでfitする。
+
+**公開SkillNetの既習を消したことにはしない。** 本実験は89タスクを既習と扱う公開SkillNet-90から、R0/R1/R2を同じ初期値で作る。Diagは「追加学習・メモリに保留」であり、方策に未見のタスクではない。以前のS-all追加学習済み重みも、今回の分割を満たさないため初期値には使わない。厳密な未見task汎化は、この診断後に設定を固定した別評価で測る。監査では配布元89タスクの実演を確認したが、公開重みの過去runの全episode来歴までは証明されていない。
+
+### HDF5 statesから現在までの物理状態を復元する手順
+
+```text
+各demoについて、対応するBDDL・robot/controller設定・MuJoCoモデルを用意する。
+model_file XMLがあればasset pathを補正して読み、なければBDDLから再構築して対応を検証する。
+states[t]をsim.set_state_from_flattenedへ渡し、sim.forward()を呼ぶ。
+body_xpos / body_xmat、EEFのsite pose、gripper qposを読む。行動を再生して状態を推測しない。
+```
+
+`states`はMuJoCoの平坦化状態であり、RLDSの8次元`observation/state`とは別物。[LIBERO create_dataset.py](https://github.com/Lifelong-Robot-Learning/LIBERO/blob/8f1084e3132a39270c3a13ebe37270a43ece2a01/scripts/create_dataset.py)のXML復元・`set_state_from_flattened`・`forward`、[env_wrapper.py](https://github.com/Lifelong-Robot-Learning/LIBERO/blob/8f1084e3132a39270c3a13ebe37270a43ece2a01/libero/libero/envs/env_wrapper.py)を使う。加工済みHDF5にはXML等がない場合があるので、**state配列長が一致するだけでモデル一致と判断しない**。
+
+最初にTrainの2 demoで、復元EEF・gripperと保存`robot_states`／`obs`を照合する（目安：位置1 mm、回転1°、gripper 1 mm以内）。state・action・画像が同じ**行動前**時刻か確認し、不一致を行番号の推測で埋めない。初行には加工時の特殊処理があるため別途確認する。controllerの尺度、gripper符号、姿勢表記も固定する。失敗したら学習へ進まず、復元・対応表を直す。
+
+各行を`(task, HDF5 demo ID, t)`で識別する。監査で件数が異なった4,006件のslice indexと3,959件のRLDSを、episode番号だけで結合しない。既存画像・特徴cacheの再利用も、HDF5との対応を検証できた行に限る。
+
+配布元HDF5の全89件は約**226.5 GB**ある。全量downloadを今日の前提にしない。HTTP Range＋HDF5の部分読みで、選んだdemoのstates/actionsと必要な画像だけを取り出す。3.69 GBの1ファイルについて8 byteのRange取得が206で返ることは確認済みだが、全metadataの部分読出し速度・XML復元は未検証。[取得確認](/work/.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/range_probe.json)
+
+## 2. 3条件に与える同一入力
+
+各query時刻`t`に、**`t, t−5, t−10, t−15`の4スナップショット**を使う。冒頭の不足履歴は初期状態で埋め、valid maskを付ける。訓練と閉ループで同じ処理をする。
+
+| 共通特徴Φ_t | 内容 |
+| --- | --- |
+| 手先・手 | EEFの位置・姿勢、gripper幅、直前までに実行した行動、過去差分の並進・角速度 |
+| 物体・可動部 | 物体root、drawerやdoor等の可動linkの現在pose。fixture rootだけで開閉状態を代用しない。物理的なjoint位置も記録する |
+| 関係 | EEFから各対象への相対位置・回転・距離、対象間の相対位置・高さ差・距離、その履歴差分 |
+| 同定とmask | 現在モデルのasset/body名、存在mask。scene番号・task ID・BDDLの目標述語は入れない。可変個数の実体は固定長32枠へpadし、超過は準備時に検出して共通仕様を直す |
+| 指示・通常入力 | 全体の自然言語指示、現在画像、現在robot state。R0にもR1/R2と全く同じものを渡す |
+
+**未来の物体pose、正解チャンク、完了時刻、成功報酬、正解subtask／phaseは入力・検索スコアに使わない。** 公開SkillNetのskill/object annotation入力は全条件で同じ固定maskにし、人手のplanを追加学習へ渡さない。ラベルなしという主張は、ここで新しく形成する運動単位についてであり、基盤の過去の有ラベル学習を消す主張ではない。
+
+## 3. メモリと正準化：R1/R2の検索結果を揃える
+
+1. **単位形成**：Trainだけで現行M6のラベルなし運動符号化・単位形成をやり直し、固定10ステップの単位とmembershipを凍結する。task／subtask分類損失は使わない。R1/R2で同じunit ID・メンバー・代表sampleを使い、R2では再clusterしない。各単位の代表は運動符号の中心に最も近い実チャンク（medoid）とする。今回は「意味的スキルの創発を証明した」とまでは呼ばない。
+2. **訓練queryとの分離**：共通単位ごとに、queryと反対のepisode foldから代表とkeyを作る。両foldで独立実演の支持が得られる単位集合を準備時に固定する。最終bankはTrainのみから作る。候補単位数Mは実行中に変えず、M<5なら準備不成立として止める。
+3. **因果的key**：保存経験の開始時点のΦと全体指示／画像特徴からkeyを作る。Trainの平均・尺度で標準化し、固定projectionとL2正規化を使う。検索器の追加学習は今回はしない。R1/R2のkey・index・スコアを共通化する。
+4. **取り出し**：cosineの上位**5単位**に`w_j=softmax(score_j / 0.05)`。低確信でも通常方策へ逃がさない。R1/R2で同一queryのindex・重みが一致することを検査する。
+
+**R1**は現在と同じ10×7のactionチャンク表現を保存する。今回の対照ではunitごとの実medoidを用い、旧Vのcodecや検索設定の完全再現とは区別する。**R2**は同じmedoidを以下の物体座標で保存する。データ・代表運動・検索・候補数は変えず、座標表現だけを変える。
+
+### ラベルなしで選ぶ参照物体と変換
+
+参照候補は非robotの物体rootと可動jointを持つlink。床・支持tableは除く。4時点でのEEFとの平均距離が最小のbodyを`j_t`とする（同距離はbody名順）。**正解の対象物体を教師として与えない**。この規則と選んだ参照poseはR0/R1にも与える。これは座標系の選択であり、方策の経路を切り替えるゲートではない。
+
+```text
+保存時：参照pose T_o(t) をチャンク全体で固定する。
+実action列uから、controller尺度を使って名目的なEE pose列P_hを積分する。
+  p_h = p_(h−1) + S_p u_h,pos
+  R_h = Exp(S_r u_h,rot) R_(h−1)       （world左作用を確認する）
+R2の値 L_h = inverse(T_o(t)) P_h と、元のgripper列を保存する。
+
+query時：現在までの状態で参照pose T'_o(t)を選ぶ。
+各検索単位のP'_h = T'_o(t) L_h を復元し、query現在のEE poseを起点に差分actionへ戻す。
+最初の差分はquery EEからP'_0へ、以降は直前の名目的poseから次poseへ変換する。
+```
+
+これは**実際の未来EEF軌道の予測ではなく、controller commandから作る名目的な運動**である。変換にqueryの未来stateを使わない。sourceと同じ参照・EEFから復元すると元actionへ戻るround-tripを先に検証する。正規化済みactionをそのまま位置として足さず、物理尺度へ戻して処理する。長さ・振幅の正規化は加えない。
+
+単位ごとに復元してから、R1/R2共通のaction空間で`A_R=Σ_j w_j Decode_R(value_j, 現在state)`を作る（dec-each）。回転は小さい差分回転のlog座標でブレンドし、絶対Euler角を平均しない。draftの範囲制限も全条件で共通にし、R2の制限発生率を記録する。
+
+最近傍bodyが把持中の物体になり、配置先を表さない可能性は残る。**参照の正しさを保証するオラクルではない**。今回はsource/targetの役割選択、物体対の探索、参照の切替最適化を追加しない。R2が負けたときは、まずこの規則と座標の整合を調べる。
+
+## 4. 生成と公平な学習予算
+
+**主診断は既存S-all型を使う。** 別の小生成器へ同時に替えると、生成学習の成立をもう一度調べる必要があるため、最初のR012では変更しない。
+
+```text
+R0: A_0 = 0                         # メモリなし対照
+R1: A_1 = 共通検索からのraw chunkブレンド
+R2: A_2 = 同じ検索からの正準化chunkをquery座標へ復元してブレンド
+
+全行・全条件：
+  B_R = 0.6 A_R + 0.4 ε
+  X_s = (1−s) a* + s B_R,  s∼Uniform(0,1)
+  model_time = 0.4 s,  velocity_target = (B_R−a*) / 0.4
+```
+
+R0も同じbridge・同じGaussian幅の対照で、以前の③と同一ではない。R1/R2は**常にスキルから始め、スキルを条件に生成して場面へ合わせる**。通常ノイズ経路の混入学習やfallbackはしない。S-matchのように正解との差で学習行を選別せず、全行を使う。
+
+- 全条件、公開SkillNet-90から独立に初期化。VLM固定、同じaction expert範囲を更新。**1,000 updates、batch32、同じbatch順・乱数・optimizer設定**。action expert LRは`1e−5`、新規関係MLPは`1e−4`を固定し、Diagで調整しない。
+- Φは共通の2 hidden層・幅256のMLPで180次元へ写す。現行S-allのpadding条件経路を拡張し、各denoisingで**7:14にA_R、14:32にΦの投影を10×18にreshapeして上書き**する。R0も同じMLP・同じ入力を持つ。損失は有効action **0:7のみ**に計算し、条件として上書きしたpadding次元を予測目標にしない。
+- **H=10、replan=5、Euler 2回、t0=.4**を固定。追加関係MLPを含むtrainable parameter数、更新回数、訓練行数を一致させる。メモリ構築は共通準備として別途時間を計上する。
+- 現行MoEのbalance項は全条件で同じ係数にする。新しい信頼度ゲート・通常方策への分岐は作らない。
+- paddingのΦが実際にaction expertへ届くこと、train/serveのdraft一致、参照変換のround-tripを確認する。構造上メモリ経路があっても生成器が無視する可能性はあるので、固定weightでのshuffle介入をオフラインに加える。
+
+## 5. 評価：閉ループを主、オフラインを機構診断にする
+
+**主指標は特権状態の閉ループ成功率の対応差**。`R2−R1`を正準化の効果、`R1−R0`と`R2−R0`を記憶の必要性の比較にする。通常画像入力だけの公式成功率とは別表にする。
+
+| オフラインで保存するもの | 用途 |
+| --- | --- |
+| draft Aと生成後のactive 10×7誤差 | 検索した運動の適合と、生成による修正を分ける。P1を主にし、3本のnoiseを別々にも報告する |
+| 並進command、回転、gripperの別誤差 | gripだけの改善を「運動表現が良い」と誇張しない。回転はSO(3)角度、名目的な位置はmmも併記 |
+| gripper符号誤り、切替時刻、余分／欠落切替 | 全行に加え、評価時だけ切替あり／なしで層別。未来gripperを選択や訓練行の選別に使わない |
+| 同じquery参照座標での名目軌道誤差 | 正準化の整合性診断。剛体変換は距離を保つため、world誤差と独立した改善の証拠として二重計上しない |
+| index/weight一致、参照body、draft制限率、shuffle時の変化 | R2が検索変更で勝っていないか、生成がmemoryを使うかを調べる |
+
+オフラインは同じDiagの**最大1,000 query**を先に固定し、episode単位の対応bootstrapを使う。重複窓を独立試行としてCIを狭めない。MSEの順位が良くても閉ループ優位とはしない。
+
+閉ループは各stepの`body_xpos/body_xmat`・EEF・gripperをlive simulatorから取り、**実際にその条件が辿った履歴**を更新する。他条件やexpertの未来履歴を流用しない。共通初期状態とnoise seedで3条件を組にする。成功以外に完了steps、問い合わせ数、reference切替数、エラー／timeoutを保存する。通信timeoutは欠損として同じ条件で再試行し、成功・失敗によって結果を選ばない。環境の1,600-step horizonは通常の失敗として数える。
+
+未完了を含む全割当てと欠損数も残し、途中報告は完了三つ組に限ることを明示する。4環境が1 GPUの待ち行列を共有する場合、episodeのwall timeoutは少なくとも約100分（`4×320×2.8秒`＋余裕）を取り、以前の40分打切りをそのまま流用しない。
+
+**今日のscreenは4 Diag task×5初期状態＝20組の三つ組、計60 rollout**。学習seedは事前指定の0だけ。noiseを3本試すことは学習seedを3本にすることの代わりではない。時間が余ってもtaskや設定を成績で選び直さない。
+
+不一致率`.35〜.53`なら10ポイント差には約**275〜415組**が必要、というレビューの目安を採用する。20組では小差の検定はできない（正規近似の80% powerの目安は約37〜46ポイント）。**このscreenの非有意は同等の証明ではない。** 強い方向があれば、次の固定計画で40組、必要なら275〜415組へ増やす。taskを4個しか使わないため、初期状態を増やしてもtask分布への一般化は証明しない。
+
+## 6. 判定と次の一手
+
+| 結果 | ここまで言えること／次 |
+| --- | --- |
+| R1>R0、R2も同程度 | 関係・履歴を利用できる条件で現行チャンク記憶が役立つ可能性。見た目以外の選択情報不足という仮説を支持するが、選択だけが原因とは確定しない。次は同じkeyを画像から推定する |
+| R2>R1かつR2>R0、R1はR0を超えない | 同じ検索結果でも座標表現の変更が有望。正準化を本体へ採用する候補とし、支持が増えてからcanonical空間での単位再形成を調べる |
+| R0だけ良好、memory側が超えない | 現情報でメモリの必要性は未証明。「関係・履歴自体が有用」という因果主張は、同じsplit・予算の情報なし対照がある場合だけ行う。旧③との比較だけでは断定しない |
+| 特権状態でもR1/R2が改善しない | 座標・reference・キー整合、memoryの運動coverage、生成の追従性を再確認する。source Dev内でも全条件が崩れるなら生成学習／入力実装の不成立であり、メモリ原理を棄却しない |
+| オフラインだけR2が良い | 正準化を成功扱いせず、閉ループの分布ずれ・gripper・接触を調べる |
+| R2のshuffle介入が効かない | memoryを無視している疑い。スキルからの生成という要件の実証が不足。通常方策へ逃がすゲートを足して救済しない |
+
+screenで次段階へ進める**運用上の目安**は、入力・変換検査を通過し、R2がR1とR0に対して閉ループで少なくとも+15ポイントの方向を示し、オフラインの並進・回転が悪化せず、gripper符号誤りの悪化も2ポイント以内であること。これは有意差判定でも採択基準でもなく、追試へ計算資源を割くための仮基準。基準未達でもCIが広ければ結論は保留する。
+
+## 7. 今日の範囲とコスト
+
+全69タスクの準備を待たず、**固定したTrainの先頭8＋Train内のdrawer-opening 2 task、Dev 2 task、Diag 4 task**で始める。Trainは各8 demo、Dev各4、Diagオフライン各5。選定はmanifestで凍結し、task名を単位のラベルにしない。screenはこの小集合の結論であり、69-task学習済みとは書かない。
+
+| 作業 | H100級1枚での計画見積もり・限界 |
+| --- | --- |
+| 部分取得・state復元・照合、共通メモリ作成 | wall 2〜4 hを仮予約。原則CPU処理。Rangeのmetadata読みとモデル再構築は未計測で、ここが最初の不確定要素 |
+| 3条件×1,000 updates、学習seed0 | GPU約**1.7〜3.3 h**：2〜4秒/updateという未実測仮定。既存S-all logは別GPUで約1.2〜1.3秒/updateだった。H100への倍率は保証しない |
+| オフライン1,000 query、3 noise | batched実行で約0.5〜1.5 hを仮予約。新しいΦ入力込みで計測し直す |
+| 閉ループ60 rollout | 1問い合わせ1.4〜2.8秒、既存⑤の平均約225 query/rolloutなら**5.25〜10.5 h**。全て320 queryに達すると**7.5〜14.9 h**。CPU並列だけでGPU照会時間が消えるとは見積もらない |
+
+準備・初回検証を除く単純合計でも通常約**10〜20 h**、horizonまで進む場合は約25 hに届く。**今日中に確実に約束するのは設計の固定と成立性診断であり、閉ループ60件の完了ではない。** 2〜4 hで復元成立を確認できれば3条件の学習・オフラインを行い、残時間で三つ組を順に実行する。締切時は完了三つ組数を明記し、途中結果から方向を確定しない。速度を10 queryで実測して、残りの完了予定を更新する。
+
+CPUは36コア程度あっても共通ルールの合計32以下を優先し、例えばpolicy 8 thread＋sim/replay 4 process×6 thread。`taskset -c 8-47`、OMP/MKL/OPENBLASおよびtorchのthread数を揃え、長時間処理は`nice -n 10`。GPU serverはまず1個、待ち行列を制限し、24-way起動のtimeoutを再現しない。学習・評価を同時にGPUへ載せない。XLA preallocationを無効のまま保つ。全runは新しいoutputへ保存する。
+
+## 8. 新規性と、この診断で主張しないこと
+
+| 先行研究 | R2／本案との重複と差 |
+| --- | --- |
+| [BehaviorVLA v2](https://arxiv.org/html/2605.22671v2#S3.SS4)、2026-05-31、§3.2–3.4／付録B | global表現とretrievalにtask labelを使い、phaseは自己教師。priorはnoisy embeddingへの加算で、開始点はGaussian。本案の追加単位はsubtask/task labelで形成せず、取り出した運動を開始点にも使う。基盤SkillNetの既習とは別に述べる |
+| [Rectified Flow](https://arxiv.org/html/2209.03003v1#S2.SS1)、§2.1／[BRIDGeR](https://arxiv.org/html/2402.16075v4#S4)、§IV | 下書きからtargetへ直線補間し、端点差を速度教師にするbridgeは既存。S-allの数式・スキルを開始点にするだけの主張は新規性にならない |
+| [TP-GMM：Calinon 2016](https://calinon.ch/paper4018.htm)、[本文](https://calinon.ch/papers/Calinon-JIST2015.pdf) §3,5 | 物体等の参照座標で運動を保存し、新配置で復元する発想は古くからある。今回のR2はこの系列の診断版で、物体基準化そのものを新規とはしない |
+| [SPOT、ICRA 2025](https://nvlabs.github.io/object_centric_diffusion/) | 対象物体を基準にしたSE(3)物体軌道と、それを行動へ具体化する生成を使う。R2の空間的抽象と近い。ラベルなしの運動単位bankを同じ検索で比較した実験とは異なる |
+| **[FOCI Policy v1](https://arxiv.org/html/2609.08743v1#S3)**、2026-09-08、§3.1–3.3／付録B | **特に近い。** 物体間の相対SE(3)運動、gripper-objectの特殊形、運動学信号からの自動区間抽出を使う。R2に相当する核心は既にある。本診断は固定H・因果的な近傍reference・同一検索のmemory表現比較で、FOCIはtask-relevantなsource/targetの相対軌道を予測し、motion planningも組み合わせる |
+| [STACK、著者ICRA 2026ページ](https://icra-stack.github.io/#method) | VLMで区間・意味記述・関連実体を抽出し、実体基準のdiffusion samplerとeffect modelを学び探索する。人手境界なしのobject-centric skillも既存。今回はVLMのsubtaskラベル、effect model、探索を使わない |
+
+したがって、**R012は新規性の実証ではなく、次の投資先を選ぶ診断**である。残る研究候補は、ラベルなし運動単位の共有、全パラメータ固定での経験追加、因果的な選択、未見compositionへの転用を、物体基準の既存手法よりどこまで改善できるか。R2が良ければ、まず近いobject-centric手法との比較を設計し、その後に公式入力へ特権情報を置き換える。オラクルとの差や小規模screenだけで「選択が唯一の壁」「新規性が確立」「RSSに十分」とは結論しない。

@@ -1200,7 +1200,7 @@ def run(*, output_root=DEFAULT_OUTPUT_ROOT, cache_dir=DEFAULT_CACHE,
                   flush=True)
     elapsed = time.perf_counter() - start
     summary = {
-        "spec": "/work/docs/research/anchor_flow_skill_memory.md §2, §4 S1",
+        "spec": "/work/docs/research/03_anchor_flow/design.md §2, §4 S1",
         "seed_list": list(seeds), "splits": list(splits), "horizon": HORIZON,
         "subtask_source": subtask_source,
         "predicted_subtask_files": {

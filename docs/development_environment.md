@@ -80,4 +80,4 @@ python env/download_checkpoint.py 40
 ```
 
 検証記録は [environment_validation.md](environment_validation.md)、
-研究案は [skill_representation_review.md](research/skill_representation_review.md) を参照してください。
+研究案は [skill_representation_review.md](research/02_emergent_skills/representation_survey.md) を参照してください。

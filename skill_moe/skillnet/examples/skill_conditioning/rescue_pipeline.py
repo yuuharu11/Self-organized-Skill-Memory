@@ -95,7 +95,7 @@ def main(root):
             phase(root,name,groups,manifest)
     write(root/"PIPELINE_FINISHED.json",dict(time=datetime.now(timezone.utc).isoformat()))
     report=summarize(root)
-    target=Path("/work/docs/research/reviews/rescue_diagnosis_results_2026-11-03.md")
+    target=Path("/work/docs/research/05_skillnet_diagnosis/rescue/results.md")
     target.write_text((root/"analysis/report.md").read_text()+"\nローカル詳細：`"+str(root)+"`。\n")
     print(json.dumps(dict(finished=True,counts=report["counts"],adoption=report["adoption"]),ensure_ascii=False),flush=True)
 

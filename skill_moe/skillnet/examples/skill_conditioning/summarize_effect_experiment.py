@@ -149,7 +149,7 @@ def summarize(root):
         lines += ["", f"指示を一度も変えなかった対応走行の全画像・状態・行動一致：{sum(x['identical_full_trajectory'] for x in replay_checks)}/{len(replay_checks)}。一致しない場合は介入以外の実行差の監査が必要。"]
     lines += ["", "## 判断の範囲", "", "学習・検証とテストの初期状態を分離し、各保存点・全分岐を親軌跡単位で管理する。task06・09はコントローラの学習・検証から除外。人手の分解・テンプレートは共有しており、自動計画の研究とは呼ばない。oracleは特権的な参考条件。", "",
         "単一の学習設定・評価ノイズseed、9タスク・18初期状態の探索的な結果。途中の分母差を混ぜて優位を主張しない。効果予測が単純な達成確認を上回らなければ、その追加価値を支持しない。図の生成は優先しない。", "",
-        "言語介入の改善予測自体は既存研究（Learning What to Say to Your VLA）にある。この構成だけで論文の新規性が立ったとは言わない。関連研究との重なりはリポジトリのrelated_instruction_intervention_2026-11-03.md参照。", "",
+        "言語介入の改善予測自体は既存研究（Learning What to Say to Your VLA）にある。この構成だけで論文の新規性が立ったとは言わない。関連研究との重なりは同じフォルダのrelated_work.md参照。", "",
         "親軌跡完了: "+str(summary["parents_complete"])+"、分岐arm完了: "+str(summary["paired_arms_complete"])+"。",
         "\n入力・制御予算・split・閾値・期限は親ディレクトリのmanifest.json、モデル適合データはmodels/*_report.json、個別成否と切替はepisodes.csvに保存。"]
     (analysis/"report.md").write_text("\n".join(lines)+"\n")
