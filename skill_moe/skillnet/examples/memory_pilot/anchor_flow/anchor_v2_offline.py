@@ -29,40 +29,25 @@ for _p in (str(HERE), str(EXAMPLES)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from key_check import DEFAULT_CHECKPOINT, DEFAULT_HELDOUT, DEFAULT_MEMORY, ROW_FIELDS, _read_npz
+from memory_pilot.anchor_flow.offline_common import (
+    ENDPOINT_SCALES_M,
+    ROW_FIELDS,
+    cluster_bootstrap,
+    denoising_steps,
+    read_npz as _read_npz,
+    row_errors,
+)
+from research_paths import (
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_MEMORY as DEFAULT_MEMORY,
+)
 from offline_retrieval import center_normalize, topk_centered, softmax_weights
 
 DEFAULT_QUERY_KEYS = str(Path(DEFAULT_HELDOUT).with_name("query-keys.npy"))
-ENDPOINT_SCALES_M = np.asarray([0.0111, 0.0122, 0.0110], np.float32)  # key_check_extension
 TAUS = (0.001, 0.01, 0.03, 0.05, 0.1)
 T0S = (0.2, 0.4, 0.6, 0.8)
 ANCHORS = ("A", "Ap", "R")
-
-
-def denoising_steps(t0):
-    return max(2, round(10 * float(t0)))
-
-
-def row_errors(pred, target):
-    """Per-row normalized MSE (7 active dims) and endpoint mm (key_check_extension)."""
-    err = np.asarray(pred, np.float32)[..., :7] - np.asarray(target, np.float32)[..., :7]
-    mse = np.mean(np.square(err), axis=(-2, -1))
-    mm = np.linalg.norm(np.sum(err[..., :3] * ENDPOINT_SCALES_M, axis=-2), axis=-1) * 1000.0
-    return mse, mm
-
-
-def cluster_bootstrap(values, clusters, *, reps=4000, seed=0):
-    """Mean and 95% percentile CI, resampling episodes with replacement."""
-    v = np.asarray(values, np.float64)
-    c = np.asarray(clusters).astype(str)
-    uniq, inv = np.unique(c, return_inverse=True)
-    sums = np.bincount(inv, weights=v, minlength=len(uniq))
-    cnts = np.bincount(inv, minlength=len(uniq)).astype(np.float64)
-    rng = np.random.default_rng(seed)
-    draws = rng.integers(0, len(uniq), size=(reps, len(uniq)))
-    boot = sums[draws].sum(1) / cnts[draws].sum(1)
-    lo, hi = np.quantile(boot, [0.025, 0.975])
-    return float(v.mean()), float(lo), float(hi)
 
 
 def main():

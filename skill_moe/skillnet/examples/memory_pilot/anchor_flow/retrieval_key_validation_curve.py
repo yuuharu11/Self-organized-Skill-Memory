@@ -15,10 +15,21 @@ for path in (str(HERE), str(HERE.parents[1])):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from key_check import DEFAULT_HELDOUT, DEFAULT_ROWS, _read_npz
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
+from memory_pilot.anchor_flow.offline_common import (
+    normalize_keys as _normalize,
+    read_npz as _read_npz,
+)
 from memory import load_memory
-from train_retrieval_key import _behavior_neighbors, _normalize, _sample_task_queries
+from memory_pilot.anchor_flow.offline_retrieval import (
+    behavior_neighbors as _behavior_neighbors,
+    sample_task_queries as _sample_task_queries,
+)
 
 MEMORY_PATH = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-calibrated-resume-20261028T215014Z/memory/initial_libero90.pkl')
 OUT = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/key-projection-20261029T174550Z/training_validation.json'))

@@ -18,10 +18,22 @@ for path in (str(HERE), str(HERE.parents[1])):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from key_check import DEFAULT_HELDOUT, DEFAULT_ROWS, _read_npz
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
+from memory_pilot.anchor_flow.offline_common import (
+    normalize_keys as _normalize,
+    read_npz as _read_npz,
+)
 from memory import load_memory
-from train_retrieval_key import _macro_recall, _normalize, _sample_task_queries, _topk_cosine
+from memory_pilot.anchor_flow.offline_retrieval import (
+    macro_recall as _macro_recall,
+    sample_task_queries as _sample_task_queries,
+    topk_cosine as _topk_cosine,
+)
 
 KAPPAS = (0.05, 0.1, 0.2)
 SEED = 20261030

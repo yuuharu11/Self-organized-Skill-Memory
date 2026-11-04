@@ -24,8 +24,20 @@ for p in (HERE, EXAMPLES):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-from key_check import _read_npz, ROW_FIELDS, DEFAULT_CHECKPOINT
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from memory_pilot.anchor_flow.offline_common import (
+    ENDPOINT_SCALES_M,
+    ROW_FIELDS,
+    cluster_bootstrap,
+    denoising_steps,
+    normalize_keys as _norm,
+    read_npz as _read_npz,
+    row_errors,
+)
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
 
 ROOT = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot'))
 DEFAULT_KNOWN = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-calibrated-20261028T173556Z/calibration/fit-v2/heldout-observations.npz'))
@@ -33,36 +45,6 @@ DEFAULT_ROWS = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-tra
 DEFAULT_MEMORY = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-s2-train-20261028T072152Z/memory/m6.pkl'))
 DEFAULT_TASK_RUN = Path(str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/key-projection-20261029T174550Z'))
 T0S = (0.2, 0.4, 0.6, 1.0)
-ENDPOINT_SCALES_M = np.asarray([0.0111, 0.0122, 0.0110], np.float32)
-
-
-def denoising_steps(t0):
-    return max(2, round(10 * float(t0)))
-
-
-def row_errors(pred, target):
-    err = np.asarray(pred, np.float32)[..., :7] - np.asarray(target, np.float32)[..., :7]
-    mse = np.mean(np.square(err), axis=(-2, -1))
-    mm = np.linalg.norm(np.sum(err[..., :3] * ENDPOINT_SCALES_M, axis=-2), axis=-1) * 1000
-    return mse, mm
-
-
-def cluster_bootstrap(values, clusters, *, reps=4000, seed=0):
-    v = np.asarray(values, np.float64)
-    c = np.asarray(clusters).astype(str)
-    uniq, inv = np.unique(c, return_inverse=True)
-    sums = np.bincount(inv, weights=v, minlength=len(uniq))
-    counts = np.bincount(inv, minlength=len(uniq)).astype(np.float64)
-    rng = np.random.default_rng(seed)
-    draws = rng.integers(0, len(uniq), size=(reps, len(uniq)))
-    boot = sums[draws].sum(1) / counts[draws].sum(1)
-    lo, hi = np.quantile(boot, [.025, .975])
-    return float(v.mean()), float(lo), float(hi)
-
-
-def _norm(x):
-    x = np.asarray(x, np.float32)
-    return x / np.maximum(np.linalg.norm(x, axis=-1, keepdims=True), 1e-8)
 
 
 def centered_keys(mem, query):

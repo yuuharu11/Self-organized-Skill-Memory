@@ -17,8 +17,19 @@ EXAMPLES = HERE.parents[1]
 if str(EXAMPLES) not in sys.path:
     sys.path.insert(0, str(EXAMPLES))
 
-from key_check import DEFAULT_CHECKPOINT, DEFAULT_HELDOUT, DEFAULT_MEMORY, DEFAULT_ROWS, ROW_FIELDS
-from key_check import _normalize, _read_npz, _retrieval_metrics, _quantile_summary
+from research_paths import (
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    S2_DEFAULT_HELDOUT as DEFAULT_HELDOUT,
+    S2_DEFAULT_MEMORY as DEFAULT_MEMORY,
+    S2_DEFAULT_ROWS as DEFAULT_ROWS,
+)
+from memory_pilot.anchor_flow.offline_common import (
+    ROW_FIELDS,
+    normalize_keys as _normalize,
+    quantile_summary as _quantile_summary,
+    read_npz as _read_npz,
+    retrieval_metrics as _retrieval_metrics,
+)
 
 
 def _summary_for(name, query_keys, memory_keys, entries, query_episode, query_init,

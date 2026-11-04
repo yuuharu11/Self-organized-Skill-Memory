@@ -20,8 +20,18 @@ EXAMPLES = HERE.parents[1]
 for p in (HERE, EXAMPLES):
     if str(p) not in os.sys.path: os.sys.path.insert(0, str(p))
 
-from key_check import DEFAULT_CHECKPOINT, ROW_FIELDS, _read_npz
-from research_paths import REPO_ROOT as RESEARCH_REPO_ROOT, STATE_DIR as RESEARCH_STATE_DIR
+from memory_pilot.anchor_flow.offline_common import (
+    ROW_FIELDS,
+    cluster_bootstrap,
+    denoising_steps,
+    read_npz as _read_npz,
+    row_errors,
+)
+from research_paths import (
+    REPO_ROOT as RESEARCH_REPO_ROOT,
+    S2_DEFAULT_CHECKPOINT as DEFAULT_CHECKPOINT,
+    STATE_DIR as RESEARCH_STATE_DIR,
+)
 from memory import load_memory
 
 DEFAULT_OLD_RUN = str(RESEARCH_STATE_DIR / 'outputs/memory-pilot/anchor-v2-offline-20261029T164700Z')
@@ -32,24 +42,8 @@ DEFAULT_RAW90 = Path(str(RESEARCH_REPO_ROOT / 'data/LIBERO/libero_90'))
 T0S = (0.2, 0.4, 0.6, 0.8, 1.0)
 
 
-def denoising_steps(t0):
-    return max(2, round(10 * float(t0)))
-
-
-def row_errors(pred, target):
-    err=np.asarray(pred,np.float32)[...,:7]-np.asarray(target,np.float32)[...,:7]
-    mse=np.mean(err**2,axis=(-2,-1))
-    mm=np.linalg.norm(np.sum(err[...,:3]*np.asarray([.0111,.0122,.0110],np.float32),axis=-2),axis=-1)*1000
-    return mse,mm
-
-
 def _bootstrap_delta(values, episodes, seed, reps=4000):
-    v=np.asarray(values,np.float64);ep=np.asarray(episodes).astype(str)
-    uniq,inv=np.unique(ep,return_inverse=True)
-    sums=np.bincount(inv,weights=v,minlength=len(uniq));counts=np.bincount(inv,minlength=len(uniq))
-    rng=np.random.default_rng(seed);draw=rng.integers(0,len(uniq),size=(reps,len(uniq)))
-    boot=sums[draw].sum(1)/counts[draw].sum(1)
-    return float(v.mean()),float(np.quantile(boot,.025)),float(np.quantile(boot,.975))
+    return cluster_bootstrap(values, episodes, seed=seed, reps=reps)
 
 
 def run_oracle(out: Path, held_path: str, memory_path: str, checkpoint: str, old_run: str,
