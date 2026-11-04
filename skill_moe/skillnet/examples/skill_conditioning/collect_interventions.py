@@ -15,7 +15,6 @@ from pathlib import Path
 import sys
 import time
 
-import imageio.v2 as imageio
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "memory_pilot/anchor_flow"))
@@ -157,6 +156,7 @@ class Collector:
         success = False
         q = start_step // 5
         step = start_step
+        import imageio.v2 as imageio
         with imageio.get_writer(str(directory / "video.mp4"), fps=4, codec="libx264", ffmpeg_params=["-threads", "1"]) as video:
             while step < start_step + cap:
                 self.check_budget()

@@ -18,8 +18,9 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
 REPO = HERE.parents[5]
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', REPO / '.skillnet-state')).expanduser()
+RUN = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
+OUT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/score-audit-01'
 TOP_K = 64
 
 

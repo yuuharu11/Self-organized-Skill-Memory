@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT=/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102/s3-train-v3c
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+OUT="${SKILLNET_STATE_DIR:-$REPO_ROOT/.skillnet-state}/outputs/memory-pilot/dmp-route-20261102/s3-train-v3c"
 LOG="$OUT/train_runner.log"
 THREADS=4
 MICROBATCH=8
@@ -42,9 +43,9 @@ run_condition() {
   [[ $ok -eq 1 ]]
 }
 
-cd /work
+cd "$REPO_ROOT"
 source env/activate.sh >/dev/null
-cd /work/skill_moe/skillnet
+cd "$REPO_ROOT/skill_moe/skillnet"
 run_condition G1-dmp
 run_condition G0
 printf 'utc=%s event=both_training_complete\n' "$(date -u +%FT%TZ)" >> "$LOG"

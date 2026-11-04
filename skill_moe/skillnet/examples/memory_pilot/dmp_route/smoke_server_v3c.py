@@ -13,8 +13,10 @@ import time
 
 import numpy as np
 
-ROOT = Path("/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102/s3-train-v3c")
-SERVE = Path("/work/skill_moe/skillnet/examples/memory_pilot/dmp_route/serve_s3.py")
+HERE = Path(__file__).resolve().parent
+STATE = Path(os.environ.get("SKILLNET_STATE_DIR", HERE.parents[4] / ".skillnet-state")).expanduser()
+ROOT = STATE / "outputs/memory-pilot/dmp-route-20261102/s3-train-v3c"
+SERVE = HERE / "serve_s3.py"
 
 
 def free_port():
@@ -39,7 +41,7 @@ def query_once(condition: str, checkpoint: Path, run_id: str):
            "--condition", condition, "--host", "127.0.0.1", "--port", str(port),
            "--prompt-level", "L0", "--bridge-t0", "0.4", "--denoise-steps", "2"]
     with log.open("w") as f:
-        proc = subprocess.Popen(cmd, cwd="/work/skill_moe/skillnet", env=env,
+        proc = subprocess.Popen(cmd, cwd=str(HERE.parents[2]), env=env,
                                 stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
         try:
             deadline = time.monotonic() + 600

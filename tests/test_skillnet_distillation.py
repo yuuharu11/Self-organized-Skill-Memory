@@ -40,6 +40,14 @@ def test_two_seed_teacher_parent_is_not_duplicated_in_parent_schedule(tmp_path):
     assert d.batch(11,'M1')[1]==d.batch(11,'M1')[1]
 
 
+def test_report_target_is_inside_the_current_checkout():
+    from distill_report import REPORT_TARGET
+    repo_root = Path(__file__).resolve().parents[1]
+    assert REPORT_TARGET == (repo_root
+        / 'docs/research/05_skillnet_diagnosis/distillation/results.md')
+    assert REPORT_TARGET.exists()
+
+
 def test_incomplete_pairs_are_excluded_and_harm_not_hidden_by_new_success():
     rows=[dict(job=dict(case='a',task=0,condition='S0'),success=True),dict(job=dict(case='a',task=0,condition='M1'),success=False),dict(job=dict(case='b',task=1,condition='S0'),success=False),dict(job=dict(case='b',task=1,condition='M1'),success=True),dict(job=dict(case='c',task=2,condition='M1'),success=True)]
     p=pair_counts(rows,'S0','M1')

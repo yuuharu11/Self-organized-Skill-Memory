@@ -9,7 +9,6 @@ from pathlib import Path
 import sys
 import time
 
-import imageio.v2 as imageio
 import numpy as np
 
 from collect_interventions import Collector, S2WebsocketClientPolicy, append, image_hash, policy_input, rpc, serial, episode_status
@@ -106,6 +105,7 @@ def run(root, job):
     started = time.monotonic()
     step = start_step
     decision = dict(probabilities=[0., 0., 0.], beliefs=["unknown", "unknown"], effect=None)
+    import imageio.v2 as imageio
     video = imageio.get_writer(str(directory / "video.mp4"), fps=2, codec="libx264", ffmpeg_params=["-threads", "1"])
     try:
         while step < 800:

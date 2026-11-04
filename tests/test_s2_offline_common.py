@@ -109,6 +109,13 @@ def test_macro_recall_weights_units_equally():
     assert metrics["hit5"] == metrics["macro_recall5"] == 1.
 
 
+def test_retrieval_metrics_rejects_query_with_no_eligible_memory():
+    entries = [dict(unit_id=0, meta=dict(episode_id="e0", init_state_id="i0"))]
+    with pytest.raises(ValueError, match="no eligible memory entries"):
+        retrieval_metrics([[1., 0.]], [[1., 0.]], entries, ["e0"], ["i0"], [0], 0,
+                          temperature=.5)
+
+
 def test_key_pooling_diagnostic_retains_distance_based_weights():
     entries = [dict(unit_id=i, meta=dict(episode_id=f"e{i}", init_state_id=f"i{i}"))
                for i in range(3)]

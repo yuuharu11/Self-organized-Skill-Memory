@@ -9,10 +9,13 @@ import sys
 
 import numpy as np
 
-ROOT = Path("/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102")
+import os
+STATE = Path(os.environ.get("SKILLNET_STATE_DIR",
+             Path(__file__).resolve().parents[5] / ".skillnet-state")).expanduser()
+ROOT = STATE / "outputs/memory-pilot/dmp-route-20261102"
 S1 = ROOT / "s1-v3c"
 FRAMES = ROOT / "s1-v3" / "frames.npz"
-PRIV = Path("/work/.skillnet-state/outputs/memory-pilot/privstate-20261101T003957Z")
+PRIV = STATE / "outputs/memory-pilot/privstate-20261101T003957Z"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from command_dmp import command_draft
 from s3_policy import DmpRoutePolicy

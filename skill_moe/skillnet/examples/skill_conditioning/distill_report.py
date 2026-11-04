@@ -5,6 +5,10 @@ from pathlib import Path
 from datetime import datetime,timezone
 
 
+REPORT_TARGET = (Path(__file__).resolve().parents[4]
+                 / 'docs/research/05_skillnet_diagnosis/distillation/results.md')
+
+
 def pair_counts(rows,left,right):
     pairs=[]
     for case in sorted({r['job']['case'] for r in rows}):
@@ -119,6 +123,5 @@ def summarize(root):
                 j=r['job'];writer.writerow(dict(phase=phase,case=j['case'],task=j['task']+1,init=j['init'],model=j['condition'],seed=j['seed'],**{k:r[k] for k in ['success','start_step','end_step','query_count','inference_s','wall_s']}))
     (analysis/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     (analysis/'report.md').write_text('\n'.join(report)+'\n')
-    target=Path('/work/docs/research/05_skillnet_diagnosis/distillation/results.md')
-    target.write_text('\n'.join(report)+f'\n\nローカル成果物：`{root}`。生データ・画像は外部公開しない。\n')
+    REPORT_TARGET.write_text('\n'.join(report)+f'\n\nローカル成果物：`{root}`。生データ・画像は外部公開しない。\n')
     return result

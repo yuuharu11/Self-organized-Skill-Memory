@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 import time
 
-import imageio.v2 as imageio
 import numpy as np
 
 from collect_interventions import S2WebsocketClientPolicy,append,episode_status,image_hash,policy_input,rpc
@@ -42,6 +41,7 @@ def run(root,job):
     success=False;done=False;query_count=0;teacher_steps=0;inference_s=0.
     started=time.monotonic()
     ever=[False,False];regressions=[0,0]
+    import imageio.v2 as imageio
     video=imageio.get_writer(str(directory/"video.mp4"),fps=4,codec="libx264",ffmpeg_params=["-threads","1"])
 
     def check_deadline():

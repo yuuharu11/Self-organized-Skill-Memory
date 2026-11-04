@@ -46,16 +46,18 @@ from train_utils import (
     low_memory_adamw,
 )
 
-ROUTE = Path("/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102")
+STATE = Path(os.environ.get("SKILLNET_STATE_DIR",
+             Path(__file__).resolve().parents[5] / ".skillnet-state")).expanduser()
+ROUTE = STATE / "outputs/memory-pilot/dmp-route-20261102"
 OUT = ROUTE / "s3-train-v3c"
 S1 = ROUTE / "s1-v3c"
 S1_FRAMES = ROUTE / "s1-v3" / "frames.npz"
-SPLIT = Path("/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/split.json")
-TRAIN_ROWS = Path("/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/train_features.npz")
-DEV_ROWS = Path("/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/development_features.npz")
-PRIV = Path("/work/.skillnet-state/outputs/memory-pilot/privstate-20261101T003957Z")
-STAGE_ROOT = Path("/work/.skillnet-state/data/lerobot/.stage-libero90-1ed1d7032e2f4d128d39fa8364da4102/emergent/libero_90_unsegmented")
-PUBLIC_PARAMS = Path("/work/.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params")
+SPLIT = STATE / "outputs/memory-pilot/r012-20261101T004734Z/split.json"
+TRAIN_ROWS = STATE / "outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/train_features.npz"
+DEV_ROWS = STATE / "outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/development_features.npz"
+PRIV = STATE / "outputs/memory-pilot/privstate-20261101T003957Z"
+STAGE_ROOT = STATE / "data/lerobot/.stage-libero90-1ed1d7032e2f4d128d39fa8364da4102/emergent/libero_90_unsegmented"
+PUBLIC_PARAMS = STATE / "checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params"
 PUBLIC_ASSETS = PUBLIC_PARAMS.parent / "assets"
 SEED = 690311
 STEPS = 1500

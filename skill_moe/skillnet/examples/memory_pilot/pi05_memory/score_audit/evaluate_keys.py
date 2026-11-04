@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-DEFAULT_OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', HERE.parents[5] / '.skillnet-state')).expanduser()
+ROOT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
+DEFAULT_OUT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/score-audit-01'
 
 
 def _rankdata(x: np.ndarray) -> np.ndarray:
@@ -137,8 +139,7 @@ def evaluate(out: Path, *, bootstraps=2000):
     oracle = np.load(out/'oracle_action_mse.npy', mmap_mode='r', allow_pickle=False)
     qtask=oracle_meta['query_task'];qep=oracle_meta['query_episode'];splits=oracle_meta['query_split']
     mtask=oracle_meta['memory_task'];mep=oracle_meta['memory_episode']
-    root=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-    manifest=json.loads((root/'data_manifest.json').read_text())
+    manifest=json.loads((ROOT/'data_manifest.json').read_text())
     task_names={int(k):v for k,v in manifest['tasks'].items()}
     results=[]
     for path in sorted((out/'keys').glob('*.npz')):

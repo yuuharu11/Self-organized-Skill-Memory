@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -11,8 +12,9 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', HERE.parents[5] / '.skillnet-state')).expanduser()
+ROOT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
+OUT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/score-audit-01'
 sys.path.insert(0, str(HERE.parent))
 import run  # noqa: E402
 

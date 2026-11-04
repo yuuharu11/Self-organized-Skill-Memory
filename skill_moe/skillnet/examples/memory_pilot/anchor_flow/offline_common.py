@@ -43,6 +43,8 @@ def retrieval_metrics(query_keys, memory_keys, entries, query_episode, query_ini
     for i, query in enumerate(query_keys):
         similarities = memory_keys @ query
         eligible = (entry_episode != str(query_episode[i])) & (entry_init != str(query_init[i]))
+        if not eligible.any():
+            raise ValueError("no eligible memory entries after episode/init exclusion")
         similarities[~eligible] = -np.inf
         order = np.argsort(-similarities, kind="stable")[:min(5, int(eligible.sum()))]
         sims = similarities[order]

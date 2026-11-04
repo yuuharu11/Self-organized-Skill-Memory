@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
 import sys
 
@@ -26,7 +27,8 @@ from openpi.models.pi0_dmp_route import (
 )
 
 HERE = Path(__file__).resolve().parent
-S1_DIR = Path("/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102/s1")
+STATE = Path(os.environ.get("SKILLNET_STATE_DIR", HERE.parents[4] / ".skillnet-state")).expanduser()
+S1_DIR = STATE / "outputs/memory-pilot/dmp-route-20261102/s1"
 sys.path.insert(0, str(HERE))
 
 
