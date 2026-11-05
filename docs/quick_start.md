@@ -259,14 +259,14 @@ python data_process/libero/convert_libero_90_to_lerobot.py \
   --slice-index data_process/libero/slice_indices/libero90_slice_index.json \
   --output-repo-id jsw19/libero_90_v1
 
-python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
+python data_process/libero/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
   --expected-tasks 40 \
   --expected-episodes 3862 \
   --expected-frames 273465 \
   --require-feature class \
   --require-feature all_classes
 
-python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_90_v1" \
+python data_process/libero/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_90_v1" \
   --expected-tasks 73 \
   --expected-episodes 7874 \
   --expected-frames 574571 \

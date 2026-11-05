@@ -175,7 +175,7 @@ python data_process/libero/convert_libero_90_to_lerobot.py \
 Check a converted dataset's metadata and parquet files before training:
 
 ```bash
-python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
+python data_process/libero/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
   --expected-tasks 40 \
   --expected-episodes 3862 \
   --expected-frames 273465 \
