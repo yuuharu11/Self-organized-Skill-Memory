@@ -23,6 +23,7 @@
 | [retrieval_correspondence/results.md](retrieval_correspondence/results.md) | 3,277 query のVLM・非VLM検索キー統合評価、検索なし基準、高予測誤差部分集合 |
 | [summary.md](summary.md) | 評価条件・オフライン検索／下書き診断・閉ループ結果の総括 |
 | [paired_breakdown/results.md](paired_breakdown/results.md) | 通常方策との対応付き救済・悪化、通常失敗試行一覧 |
+| [topk_long/plan.md](topk_long/plan.md) | LIBERO-10 Long限定・生行動Top-K候補の生成後診断計画と事前判定 |
 
 スクリプトは `examples/memory_pilot/pi05_memory/`。実行結果は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/`（Git 管理外）。
 - [修正 Expert の下書き依存性](draft_sensitivity/results.md)：同じノイズで下書きだけを変え、追加学習と下書き内容の効果をオフライン行動誤差で切り分ける。
@@ -32,3 +33,7 @@
 - [行動メモリ表現の診断](representation/results.md)：同じ行動oracle候補を固定し、raw・M1 bottleneck・EEF相対・状態差分をオフライン比較。
 - [b予測下書きのLong閉ループ](bprior_long/results.md)：写像b̂を直接下書きにする／b̂で検索する2条件、各100試行。
 - [信頼度適応のLong閉ループ](adaptive_long/results.md)：検索スコアで開始ノイズを変える条件と、通常π0.5への切り替え付き、各100試行。
+- [複数の運動メモリ](skill_memories/README.md)：raw行メモリとM6の可変数medoid単位をLong除外で構築し、Long Evalへの候補距離をCPU診断。
+- [可変長区間の追従診断](varlen/README.md)：区間開始での一度の検索と固定10-step毎の再検索をLong Evalで比較。
+- [Skill ExpertのLong閉ループ](skill_expert/results.md)：スキルbを復元した下書きから直すExpertと、写像b̂の信頼度でt0を変える条件、各100試行。
+- [局所キーの検索](local_key/README.md)：手先まわりのキーがLong以外の実演から未知タスクの動きを検索できるかのオフライン評価。
