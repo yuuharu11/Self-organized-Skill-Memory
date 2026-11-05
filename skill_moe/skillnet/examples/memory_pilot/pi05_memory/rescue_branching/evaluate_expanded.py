@@ -25,9 +25,13 @@ from evaluate_expanded_smoke import env_for, free_port, wait_ready
 from key_merge import KEY_ORDER
 from rollout_extended import capture
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT=_PI05_ROOT / 'rescue-branching-01'
 RUN=ROOT.parent/'run-01'
-CHECKPOINT=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+CHECKPOINT=_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 
 
 def append_jsonl(path, record):

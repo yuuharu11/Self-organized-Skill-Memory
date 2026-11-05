@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-SERVE = Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory/adaptive/serve.py')
+SERVE = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/adaptive/serve.py'
 SPEC = importlib.util.spec_from_file_location('adaptive_serve_for_test', SERVE)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)

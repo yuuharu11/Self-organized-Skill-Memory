@@ -33,7 +33,7 @@ path retains controller and solver history and passed the action-sequence
 reproduction check.
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \
 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.15 \
@@ -56,14 +56,14 @@ seed/hash for verification. Exp should inspect and approve that generated
 list, then run the controller from a detached tmux session:
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \
 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/make_trial_list.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/normal_failures.json
+  --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/normal_failures.json
 
 tmux new-session -d -s rescue-branching \
-  "cd /work && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.15 BRANCH_TORCH_MEM_FRACTION=0.20 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/evaluate.py --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/full --trials-json /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/normal_failures.json --workers 4 --timeout 600"
+  "cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.15 BRANCH_TORCH_MEM_FRACTION=0.20 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/evaluate.py --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/full --trials-json .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/normal_failures.json --workers 4 --timeout 600"
 ```
 
 The production controller records a baseline replay and three simulator
@@ -97,13 +97,13 @@ and launch from a detached tmux session. Do not point this command at the
 preflight-only `production/` directory; it is read-only evidence.
 
 ```bash
-cd /work && source env/activate.sh
+cd "$SKILLNET_REPO_ROOT" && source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \
   python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/make_trial_list.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/failure-trials-expanded-01.json
+  --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/failure-trials-expanded-01.json
 
 tmux new-session -d -s rescue-branching-expanded \
-  "cd /work && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.11 BRANCH_TORCH_MEM_FRACTION=0.15 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/evaluate_expanded.py --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/production-expanded-01 --trials-json /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/failure-trials-expanded-01.json --workers 4 --timeout 600"
+  "cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.11 BRANCH_TORCH_MEM_FRACTION=0.15 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/evaluate_expanded.py --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/production-expanded-01 --trials-json .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/failure-trials-expanded-01.json --workers 4 --timeout 600"
 ```
 
 The expanded path writes to the new `production-expanded-01/` tree, stores

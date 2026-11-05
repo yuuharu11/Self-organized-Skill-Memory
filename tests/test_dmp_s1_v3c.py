@@ -8,10 +8,10 @@ from pathlib import Path
 import numpy as np
 
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102')
+ROOT = Path(__file__).resolve().parents[1] / '.skillnet-state/outputs/memory-pilot/dmp-route-20261102'
 S1 = ROOT / 's1-v3'
 V3C = ROOT / 's1-v3c'
-PRIV = Path('/work/.skillnet-state/outputs/memory-pilot/privstate-20261101T003957Z')
+PRIV = Path(__file__).resolve().parents[1] / '.skillnet-state/outputs/memory-pilot/privstate-20261101T003957Z'
 
 
 def _load_module(name, path):

@@ -19,8 +19,9 @@ HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
 REPO = HERE.parents[5]
 STATE = Path(os.environ.get('SKILLNET_STATE_DIR', REPO / '.skillnet-state')).expanduser()
-RUN = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
-OUT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/score-audit-01'
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+RUN = PI05_ROOT / 'run-01'
+OUT = PI05_ROOT / 'score-audit-01'
 TOP_K = 64
 
 

@@ -43,15 +43,15 @@ it never shares hidden history across concurrent clients.
 
 ## Inference server after a trained S3 checkpoint exists
 
-From `/work/skill_moe/skillnet`:
+From `skill_moe/skillnet`:
 
 ```bash
-source /work/env/activate.sh
+source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \
 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.30 \
 python examples/memory_pilot/dmp_route/serve_s3.py \
   --checkpoint /path/to/s3/step/params --port <free-port> \
-  --prompt-level L0 --s1-dir /work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102/s1
+  --prompt-level L0 --s1-dir .skillnet-state/outputs/memory-pilot/dmp-route-20261102/s1
 ```
 
 The caller can override the default level per request with `dmp_prompt_level`

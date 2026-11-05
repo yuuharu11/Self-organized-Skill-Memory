@@ -27,7 +27,7 @@ The original paper's general setting reports batch 256 on 8×A800 and 30k steps,
 - Bank: `build_initial_bank.py` extracts Stage-A query/skill vectors and writes a fixed bank. It performs feature extraction on the GPU; the 128-cluster procedure itself uses CPU arrays.
 - `bank.py` contains the deterministic prototype builder and retrieval utilities.
 
-From `/work`, commands use the shared-resource envelope below. Pick a never-used output directory for each run. The `--steps 20 --batch-size 1` command is a short Stage-A smoke; production training is intentionally not launched in this task.
+From the repository root, commands use the shared-resource envelope below. Pick a never-used output directory for each run. The `--steps 20 --batch-size 1` command is a short Stage-A smoke; production training is intentionally not launched in this task.
 
 ```bash
 cd "$SKILLNET_REPO_ROOT" && source env/activate.sh

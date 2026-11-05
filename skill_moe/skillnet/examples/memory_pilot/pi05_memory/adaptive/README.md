@@ -35,14 +35,14 @@ workers/server). It compares every action chunk's SHA-256. It is a smoke only;
 the duplicate parallel trials are not counted as additional evaluation rows.
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 OMP_NUM_THREADS=3 MKL_NUM_THREADS=3 OPENBLAS_NUM_THREADS=3 \
 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.12 \
 ADAPTIVE_TORCH_MEM_FRACTION=0.20 \
 taskset -c 8-47 nice -n 10 python \
   skill_moe/skillnet/examples/memory_pilot/pi05_memory/adaptive/evaluate.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/smoke-run2 \
+  --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/smoke-run2 \
   --smoke --workers-per-server 4 --timeout 600
 ```
 
@@ -64,10 +64,10 @@ the server's Torch allocator at 20%; the combined allocator budget is below
 one technical retry, matched-baseline summaries, and clean server shutdown.
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 tmux new-session -d -s adaptive-long-full \
-  "cd /work && source env/activate.sh && OMP_NUM_THREADS=3 MKL_NUM_THREADS=3 OPENBLAS_NUM_THREADS=3 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.12 ADAPTIVE_TORCH_MEM_FRACTION=0.20 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/adaptive/evaluate.py --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/full --workers-per-server 4 --timeout 600"
+  "cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=3 MKL_NUM_THREADS=3 OPENBLAS_NUM_THREADS=3 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.12 ADAPTIVE_TORCH_MEM_FRACTION=0.20 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/adaptive/evaluate.py --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/full --workers-per-server 4 --timeout 600"
 ```
 
 Inspect with `tmux attach -t adaptive-long-full`. The chosen ports are written

@@ -11,9 +11,14 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+_PI05_CODE = Path(__file__).resolve().parents[1]
+ROOT=_PI05_ROOT
 RUN=ROOT/'run-01'; OUT=ROOT/'local-key-02'; NOISE=4101; T0S=(.4,.6)
-PI05=Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory')
+PI05=_PI05_CODE
 
 def _load_module(name,path):
     spec=importlib.util.spec_from_file_location(name,path);mod=importlib.util.module_from_spec(spec)

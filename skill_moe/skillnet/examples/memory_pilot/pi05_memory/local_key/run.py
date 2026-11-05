@@ -12,7 +12,11 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT=_PI05_ROOT
 RUN=ROOT/'run-01'; MEMORY=ROOT/'skill-memories-01'/'raw-rows-noLong'
 GAP=ROOT/'memory-gap-01'; TOPK=ROOT/'topk-long-01'/'production'
 OUT=ROOT/'local-key-02'; Q80=0.01549410422449
@@ -333,7 +337,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     dev_ids=val_no_long[np.isin(np.asarray(rows['episode'][val_no_long]),dev_eps)]
     _assert_no_long(np.r_[pool,row_train],dev_ids,rows)
     all_required=np.unique(np.r_[pool,row_train,dev_ids,long_ids])
-    norm=json.loads(next(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero/assets').rglob('norm_stats.json')).read_text())['norm_stats']
+    norm=json.loads(next(_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero/assets'.rglob('norm_stats.json')).read_text())['norm_stats']
     state_q01=np.asarray(norm['state']['q01'][:8],np.float32);state_q99=np.asarray(norm['state']['q99'][:8],np.float32)
     if skip_camera:raise NotImplementedError('camera projection is required for the final run')
     task_texts=json.loads((RUN/'data_manifest.json').read_text())['tasks']

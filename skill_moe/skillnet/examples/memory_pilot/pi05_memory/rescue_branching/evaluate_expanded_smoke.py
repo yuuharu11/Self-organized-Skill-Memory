@@ -26,10 +26,14 @@ from run import load_rows
 from rollout import build_env, observation_sha, request
 from run_case import S2WebsocketClientPolicy, episode_status
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT = _PI05_ROOT / 'rescue-branching-01'
 RUN = ROOT.parent/'run-01'
 PAIR = ROOT.parent/'paired-breakdown-01'/'normal_failures.jsonl'
-CHECKPOINT = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+CHECKPOINT = _STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 # resume-check-08 is the verified deterministic-replay snapshot. The root
 # trials/ checkpoint is retained as a first-attempt diagnostic only.
 TRIAL_ROOT = ROOT/'resume-check-08'/'trials'/'task06_init00'

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-PATH = Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory/varlen/run.py')
+PATH = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/varlen/run.py'
 SPEC = importlib.util.spec_from_file_location('pi05_varlen_test_module', PATH)
 varlen = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None

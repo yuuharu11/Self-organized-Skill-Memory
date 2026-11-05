@@ -22,6 +22,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[4]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO / '.skillnet-state'))
 sys.path.insert(0, str(HERE))
 
 
@@ -443,8 +444,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('stage',choices=['pipeline','prepare','extract','codec','retrieve','train'])
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--checkpoint',type=Path,default=REPO/'.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
-    parser.add_argument('--dataset',type=Path,default=REPO/'.skillnet-state/data/lerobot/emergent/libero_40_unsegmented')
+    parser.add_argument('--checkpoint',type=Path,default=STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')
+    parser.add_argument('--dataset',type=Path,default=STATE_DIR/'data/lerobot/emergent/libero_40_unsegmented')
     parser.add_argument('--seed',type=int,default=20261104)
     parser.add_argument('--feature-batch',type=int,default=4)
     parser.add_argument('--search-block',type=int,default=32)

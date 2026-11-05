@@ -4,10 +4,10 @@ This is the full-model counterpart to S1. S1's `examples/emergent/light/intermed
 
 ## Checkpoint, action convention, and data boundary
 
-- Initialize from `/work/.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params` (the requested checkpoint directory's concrete run/step path). This is the LIBERO-90 checkpoint. Never initialize S2 from a LIBERO-40 checkpoint.
+- Initialize from `.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params` (the requested checkpoint directory's concrete run/step path). This is the LIBERO-90 checkpoint. Never initialize S2 from a LIBERO-40 checkpoint.
 - Match the checkpoint config: π0.5, `gemma_2b` PaliGemma, four-expert `gemma_300m_moe_4` action expert, `action_horizon=10`, `action_dim=32`. LIBERO supplies 7 action channels; use the existing LIBERO input transform and checkpoint normalization, then pad the normalized action to 32 channels exactly as OpenPI does. The final 25 dimensions are the standard padded dimensions, not a second normalization space.
 - Fit M1 Enc/Prior/Dec and M6 solely on LIBERO-90 demonstrations in this same normalized `[10,32]` space. Freeze them after fitting. Store their action normalization and representation version with the memory; reject a LIBERO-40 or H=25 codec. The retrieval key is the L2-normalized mean pooled final hidden state over valid π0.5 VLM prefix tokens (image, query text, and π0.5's tokenized robot state). Every input cache must declare one `key_text_source`: `instruction_only` or `pi05_generated_subtask`; generated keys also name `key_text_generator=pi05` and the exact `key_text_generator_checkpoint` used to generate text. Annotation-derived `instruct2plan` text is rejected. Memory construction, task additions, fine-tuning, and closed-loop queries must use the same text source. **The primary evaluation uses `instruction_only`:** at every action query it uses `task.language`, with no ground-truth subtask or segment boundary. The runner also supports `pi05_generated_subtask`, generated at each query from the current observation by a separate frozen, plain `pi05_base` model; only that generated text enters the query key, never annotation-derived labels. A generated-subtask memory must be built with the same generator version and key source. The existing generator was trained on LIBERO-40 Split A/B, not LIBERO-90. Its weights can be mechanically reused as a secondary text source, but cross-suite held-out exact match was only 0.276 for goal and 0.228 for spatial; instruction-only remains the main S2 condition. A LIBERO-90-specific generator is not a prerequisite for this run and would require compatible per-frame labels plus a separate train run. The checkpoint's separate SkillNet action-expert conditioning path is preserved for checkpoint-compatible behavior and held identical across S2 controls. The rollout smoke passes the same task-level skill annotation as the standard evaluator in every condition; this annotation only enters the unchanged SkillNet routing path, never the memory key.
-- Available locally: LIBERO-90 RLDS TFRecords under `.skillnet-state/data/libero/libero90_rlds/libero_90_openvla_processed/1.0.0`; the 90 checkpoint and its `jsw19/libero_90_v1` normalization stats; LIBERO-10 demo HDF5 files under `/work/data/LIBERO/libero_10`. No converted, stable LIBERO-90 LeRobot directory was present during inspection (only staging directories); S2's `build_memory.py` therefore consumes an explicit normalized LIBERO-90 NPZ export. LIBERO-Skill `skill_obj_02`–`09` demonstration files/manifests were not found under `/work/data` or `.skillnet-state/data`; their memory-add portion cannot run until those demos are supplied. This is a data availability limitation, not an implicit substitute with LIBERO-40.
+- Available locally: LIBERO-90 RLDS TFRecords under `.skillnet-state/data/libero/libero90_rlds/libero_90_openvla_processed/1.0.0`; the 90 checkpoint and its `jsw19/libero_90_v1` normalization stats; LIBERO-10 demo HDF5 files under `data/LIBERO/libero_10`. No converted, stable LIBERO-90 LeRobot directory was present during inspection (only staging directories); S2's `build_memory.py` therefore consumes an explicit normalized LIBERO-90 NPZ export. LIBERO-Skill `skill_obj_02`–`09` demonstration files/manifests were not found under `data` or `.skillnet-state/data`; their memory-add portion cannot run until those demos are supplied. This is a data availability limitation, not an implicit substitute with LIBERO-40.
 
 ## Algorithm
 
@@ -43,35 +43,35 @@ For the S2-a/b gates, run only the required controls first: the 10 retention tas
 
 ## Commands
 
-From `/work` after `source env/activate.sh`:
+From the repository root after `source env/activate.sh`:
 
 ```bash
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/extract_prefix_keys.py \
   --input-npz /path/to/libero90_normalized_action_and_observation_rows.npz \
-  --output-npz /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/libero90_prefix_cache.npz
+  --output-npz .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/libero90_prefix_cache.npz
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/build_memory.py \
-  --libero90-npz /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/libero90_prefix_cache.npz \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl
+  --libero90-npz .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/libero90_prefix_cache.npz \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/add_task_memory.py \
-  --memory /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
+  --memory .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
   --task-npz /path/to/libero10_task_rows.npz \
-  --output-memory /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/after_task_00.pkl \
-  --report /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/add_task_00.json
+  --output-memory .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/after_task_00.pkl \
+  --report .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/add_task_00.json
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/prepare_sources.py \
   --libero90-npz /path/to/libero90_normalized_prefix_cache.npz \
-  --memory /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/train_cache.npz
+  --memory .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/train_cache.npz
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/train.py \
-  --libero90-cache /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/train_cache.npz \
-  --memory /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/finetune
+  --libero90-cache .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/train_cache.npz \
+  --memory .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/memory/m6.pkl \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/finetune
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/smoke.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/smoke
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/smoke
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/rollout_smoke.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/rollout-smoke \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/rollout-smoke \
   --task-id 0 --trials 2 --max-env-steps 5
 python skill_moe/skillnet/examples/memory_pilot/anchor_flow/eval_series_a.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a-plan
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a-plan
 ```
 
 The NPZ schemas are documented in each CLI's validation and `memory.py`; they are cache/export boundaries, not an invitation to mix in LIBERO-40 data. `smoke.py` loads the 90 checkpoint, checks the original-vs-`t0=1` output, checks anchored integration shapes and performs a few action-expert optimizer steps on synthetic tensors. `rollout_smoke.py` reuses the installed LIBERO suite, checkpoint normalization, and existing image/state transforms for two short task-0 episodes. Full series A and fine-tuning remain deferred.
@@ -79,20 +79,20 @@ The NPZ schemas are documented in each CLI's validation and `memory.py`; they ar
 
 ### Closed-loop runner commands
 
-From `/work` after `source env/activate.sh`, with a matching memory directory and fine-tuned checkpoint:
+From the repository root after `source env/activate.sh`, with a matching memory directory and fine-tuned checkpoint:
 
 ```bash
 XLA_PYTHON_CLIENT_PREALLOCATE=false python skill_moe/skillnet/examples/memory_pilot/anchor_flow/run_series_a.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a \
   --memory-dir /path/to/libero90_m6_memory --checkpoint /path/to/final-check/params \
   --minimal --workers 2 --trials 20
 # Resume the same case matrix and output directory:
 XLA_PYTHON_CLIENT_PREALLOCATE=false python skill_moe/skillnet/examples/memory_pilot/anchor_flow/run_series_a.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a \
+  --output .skillnet-state/outputs/memory-pilot/anchor-flow-<run-id>/series-a \
   --memory-dir /path/to/libero90_m6_memory --checkpoint /path/to/final-check/params \
   --minimal --workers 2 --trials 20 --resume
 ```
 
-Baseline timing smoke (LIBERO-90 task 0, `anchor_disabled_t0_1`, three paired initial states, two environment workers) completed 3/3 successes in 128.5 seconds wall time; individual episode times were 31.9, 60.5, and 64.6 seconds over 63–69 environment steps. Applying the observed throughput directly to 1,840 episodes gives **21.9 hours**. This is a rough projection from one short task and includes first-case compilation; task complexity varies, so use it as planning data rather than a guaranteed upper bound. Trial rows and the timing calculation are in `/work/.skillnet-state/outputs/memory-pilot/anchor-flow-20261028T090000Z/base-timing/`.
+Baseline timing smoke (LIBERO-90 task 0, `anchor_disabled_t0_1`, three paired initial states, two environment workers) completed 3/3 successes in 128.5 seconds wall time; individual episode times were 31.9, 60.5, and 64.6 seconds over 63–69 environment steps. Applying the observed throughput directly to 1,840 episodes gives **21.9 hours**. This is a rough projection from one short task and includes first-case compilation; task complexity varies, so use it as planning data rather than a guaranteed upper bound. Trial rows and the timing calculation are in `.skillnet-state/outputs/memory-pilot/anchor-flow-20261028T090000Z/base-timing/`.
 
 `--query-text-source instruction_only` is the default. `pi05_generated_subtask` is an explicit alternative and requires a memory built with generated-subtask keys and the identical generator checkpoint; it loads the fixed plain π0.5 base generator at each server start. The available LIBERO-40-trained generator had unseen-suite exact match 0.276 (goal) and 0.228 (spatial), so it is not substituted for the primary instruction-only condition. A 6,000-step generator adaptation is estimated at 15–20 GPU minutes from the previous Split A/B runs, excluding preparation and validation; it is optional for this pilot.

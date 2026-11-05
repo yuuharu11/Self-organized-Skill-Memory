@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-SCRIPT=Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory/local_key/run.py')
+SCRIPT=Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/local_key/run.py'
 SPEC=importlib.util.spec_from_file_location('pi05_local_key_testmod',SCRIPT)
 mod=importlib.util.module_from_spec(SPEC);assert SPEC.loader is not None;SPEC.loader.exec_module(mod)
 

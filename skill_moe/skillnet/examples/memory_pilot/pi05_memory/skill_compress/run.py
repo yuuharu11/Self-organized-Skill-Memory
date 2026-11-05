@@ -14,12 +14,16 @@ import numpy as np
 
 HERE=Path(__file__).resolve().parent
 PI05=HERE.parent
-RUN=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-MEMORIES=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-memories-01')
-GAP=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-TOPK=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production')
-RETRIEVAL=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01')
-OUT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-compress-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN=_PI05_ROOT / 'run-01'
+MEMORIES=_PI05_ROOT / 'skill-memories-01'
+GAP=_PI05_ROOT / 'memory-gap-01'
+TOPK=_PI05_ROOT / 'topk-long-01/production'
+RETRIEVAL=_PI05_ROOT / 'retrieval-4b-01'
+OUT=_PI05_ROOT / 'skill-compress-01'
 LONG_TASKS=set(range(10))
 KAPPAS=('k0p05','k0p1','k0p2')
 TIME_GRID=tuple((s,d) for s in (.65,.8,1.,1.25,1.5) for d in (-2.,-1.,0.,1.,2.))
@@ -281,7 +285,7 @@ def run(out=OUT,threads=8):
     task=np.asarray(rows['task'][pool],np.int32);episode=np.asarray(rows['episode'][pool],np.int32)
     assert np.all(task>=10) and not np.intersect1d(pool,long_ids).size
     if actions.shape!=(3857,10,7):raise AssertionError(actions.shape)
-    norm_file=next(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero/assets').rglob('norm_stats.json'))
+    norm_file=next(_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero/assets'.rglob('norm_stats.json'))
     norm=json.loads(norm_file.read_text())['norm_stats'];aq01=np.asarray(norm['actions']['q01'][:7],np.float32);aq99=np.asarray(norm['actions']['q99'][:7],np.float32)
     sq01=np.asarray(norm['state']['q01'][:8],np.float32);sq99=np.asarray(norm['state']['q99'][:8],np.float32)
     pose_kwargs={'action_q01':aq01,'action_q99':aq99,'state_q01':sq01,'state_q99':sq99}

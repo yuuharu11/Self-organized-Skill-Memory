@@ -77,16 +77,16 @@ Checker validation uses synthetic data. For a completed `record-*` run whose own
 `report.md` marks it 有効, the full comparison grid is:
 
 ```bash
-cd /work && source env/activate.sh
+cd "$SKILLNET_REPO_ROOT" && source env/activate.sh
 python -m skill_moe.skillnet.examples.memory_pilot.primitives.run_experiment \
-  --run-dir /work/.skillnet-state/outputs/memory-pilot/record-<valid-run-id> \
+  --run-dir .skillnet-state/outputs/memory-pilot/record-<valid-run-id> \
   --horizon 10 --epochs 30 --batch-size 64 --beta-kl 0.0001 0.001 0.01 0.1 \
   --latent-dims 4 8 16 --device cpu
 ```
 
 If there is a valid report under a `record-*` directory, `--run-dir` may be omitted and the
 CLI selects the newest valid record. Outputs are created in a new
-`/work/.skillnet-state/outputs/memory-pilot/primitives-<timestamp>-<id>/` directory with
+`.skillnet-state/outputs/memory-pilot/primitives-<timestamp>-<id>/` directory with
 `results.json` and `report.md`; existing output directories are never replaced.
 
 Run a generated CPU smoke experiment from the repository root with

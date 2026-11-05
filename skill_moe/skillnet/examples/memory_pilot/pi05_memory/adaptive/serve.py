@@ -20,8 +20,12 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
-RUN_DEFAULT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-CHECKPOINT_DEFAULT = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN_DEFAULT = _PI05_ROOT / 'run-01'
+CHECKPOINT_DEFAULT = _STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 SCORE_EDGES = np.asarray([0.92968, 0.94267, 0.95002], np.float64)
 MODES = {'adaptive': [1, 1, 2, 3], 'adaptive_fb': [0, 1, 2, 3]}
 MODE_T0 = {1: 0.6, 2: 0.4, 3: 0.2}

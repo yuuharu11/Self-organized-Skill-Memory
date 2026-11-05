@@ -1,13 +1,13 @@
 # Memory pilot: rollout recording and G0/G1 replay
 
-Run from `/work` after `source env/activate.sh`. The default checkpoint is
+Run from the repository root after `source env/activate.sh`. The default checkpoint is
 `.skillnet-state/checkpoints/pi05_libero_moe_skill_4_40/moe_add_balance_4_128_30000/29999`.
 Set `SKILLNET_MEMORY_PILOT_CHECKPOINT` to select another checkpoint.
 
 Record one spatial task (task 0, one initial state):
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 python skill_moe/skillnet/examples/memory_pilot/record_rollouts.py \
   --suite libero_spatial --task-ids 0 --trials 1
@@ -24,7 +24,7 @@ Run deterministic offline G0/G1 replay for all saved inference observations:
 
 ```bash
 python skill_moe/skillnet/examples/memory_pilot/analyze_offline.py \
-  /work/.skillnet-state/outputs/memory-pilot/record-<run-id> --g0 --g1
+  .skillnet-state/outputs/memory-pilot/record-<run-id> --g0 --g1
 ```
 
 For a short smoke analysis, add `--steps 2`. The recorder writes a unique

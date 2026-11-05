@@ -17,7 +17,7 @@ and z projections. The objective is flow-matching reconstruction plus
 `balance_loss_weight * balance_loss + kl_beta * KL(q || p)`. All registered configs use
 `balance_loss_weight=1.0`; each MoEFeedForward applies `router_loss_scale=0.01` to its
 load-balancing loss, matching SkillNet. Training data defaults to
-`/work/.skillnet-state/data/lerobot/emergent/libero_90_unsegmented`, with LIBERO-90 assets
+`.skillnet-state/data/lerobot/emergent/libero_90_unsegmented`, with LIBERO-90 assets
 under its `assets/` directory. Override paths with `SKILLNET_EMERGENT_DATASET_ROOT`,
 `SKILLNET_EMERGENT_ASSETS_DIR`, `SKILLNET_EMERGENT_ASSET_ID`, and `SKILLNET_EMERGENT_REPO_ID`.
 

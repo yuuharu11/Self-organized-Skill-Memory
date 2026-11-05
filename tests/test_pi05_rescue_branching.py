@@ -4,7 +4,7 @@ import importlib.util
 import numpy as np
 
 
-SOURCE = Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/fast_search.py')
+SOURCE = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/rescue_branching/fast_search.py'
 SPEC = importlib.util.spec_from_file_location('rescue_branch_fast_search', SOURCE)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)

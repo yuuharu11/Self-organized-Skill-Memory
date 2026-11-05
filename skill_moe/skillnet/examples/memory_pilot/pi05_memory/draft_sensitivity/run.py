@@ -13,10 +13,14 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
 REPO = HERE.parents[4]
-RUN = Path("/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01")
-OUT = Path("/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/draft-sensitivity-01")
-CODEC_KEYS = Path("/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01/keys/codec_prior_b_episode.npz")
-OFFICIAL = Path("/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero")
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN = _PI05_ROOT / 'run-01'
+OUT = _PI05_ROOT / 'draft-sensitivity-01'
+CODEC_KEYS = _PI05_ROOT / 'score-audit-01/keys/codec_prior_b_episode.npz'
+OFFICIAL = _STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 NOISE_SEEDS = (4101, 4102)
 MAIN_T0 = 0.6
 BATCH = 4  # calibrate.py uses this chunking for bridge keys.

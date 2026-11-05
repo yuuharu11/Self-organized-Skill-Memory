@@ -26,14 +26,14 @@ same 520-step cap. Results are append-only in `rollouts.jsonl`; `in_progress`,
 repeats incomplete/error keys while retaining earlier records.
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 source env/activate.sh
 tmux new-session -d -s bprior-long-01 \
-  "cd /work && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.30 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/bprior/evaluate.py --port 8167 --task-ids 0 --trial-indices 0 1"
+  "cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.30 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/bprior/evaluate.py --port 8167 --task-ids 0 --trial-indices 0 1"
 ```
 
 Attach with `tmux attach -t bprior-long-01`; logs are in
-`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01/server.log`.
+`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01/server.log`.
 
 ## Exp full-run command
 
@@ -44,9 +44,9 @@ directory if retaining the smoke artifacts separately is preferred, updating
 inside the run log; records are appended.
 
 ```bash
-cd /work && source env/activate.sh
+cd "$SKILLNET_REPO_ROOT" && source env/activate.sh
 tmux new-session -d -s bprior-long-full \
-  "cd /work && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.30 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/bprior/evaluate.py --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01 --port 8167 --task-ids 0 1 2 3 4 5 6 7 8 9 --trial-indices 0 1 2 3 4 5 6 7 8 9"
+  "cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=0.30 taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/bprior/evaluate.py --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01 --port 8167 --task-ids 0 1 2 3 4 5 6 7 8 9 --trial-indices 0 1 2 3 4 5 6 7 8 9"
 ```
 
 The server sets the allocator limits before JAX import. The single server

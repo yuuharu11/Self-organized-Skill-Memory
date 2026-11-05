@@ -23,7 +23,7 @@ chunks, never codec reconstruction.
 ## Reproduction
 
 ```bash
-cd /work && source env/activate.sh
+cd "$SKILLNET_REPO_ROOT" && source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \
   taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/score_audit/oracle.py --limit 64
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 \

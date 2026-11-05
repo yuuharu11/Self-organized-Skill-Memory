@@ -16,11 +16,15 @@ from pathlib import Path
 import numpy as np
 
 PI05 = Path(__file__).resolve().parents[1]
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-RETRIEVAL = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01')
-TOPK = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production/predictions_and_errors.npz')
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/varlen-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN = _PI05_ROOT / 'run-01'
+GAP = _PI05_ROOT / 'memory-gap-01'
+RETRIEVAL = _PI05_ROOT / 'retrieval-4b-01'
+TOPK = _PI05_ROOT / 'topk-long-01/production/predictions_and_errors.npz'
+OUT = _PI05_ROOT / 'varlen-01'
 NOISE_SEED = 4101
 T0S = (0.2, 0.4)
 sys.path.insert(0, str(PI05))

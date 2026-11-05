@@ -19,9 +19,13 @@ sys.path.insert(0,str(ANCHOR))
 from run_case import (S2WebsocketClientPolicy,_suite_name,_task_language,
     _quat2axisangle,environment_horizon,episode_status)
 
-RUN=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-CHECKPOINT=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
-OUT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN=_PI05_ROOT / 'run-01'
+CHECKPOINT=_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
+OUT=_PI05_ROOT / 'rescue-branching-01'
 
 
 def request(obs,language,task_id,trial_index,query_id,condition='normal_rank',seed_base=7,**extra):

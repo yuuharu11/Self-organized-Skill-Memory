@@ -22,10 +22,14 @@ import urllib.request
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT = _PI05_ROOT
 RUN = ROOT / 'run-01'
 OUTPUT = ROOT / 'adaptive-long-01'
-CHECKPOINT = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+CHECKPOINT = _STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 CONDITIONS = ('adaptive', 'adaptive_fb')
 
 
