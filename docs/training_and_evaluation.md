@@ -181,11 +181,6 @@ If Hugging Face access is slow in your network, use a mirror endpoint:
 export HF_ENDPOINT=https://hf-mirror.com
 ```
 
-From the repository root, `python scripts/check_public_release.py --hub-smoke`
-verifies the public checkpoint and source-dataset links. Add
-`--include-libero-derived-datasets` only when the derived LIBERO LeRobot dataset
-repos should be visible to the current account.
-
 ## Model and Config Summary
 
 | Config | Dataset | Batch | Steps | LR peak / final | EMA |

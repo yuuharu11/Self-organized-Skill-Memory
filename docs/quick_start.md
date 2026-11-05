@@ -197,56 +197,6 @@ export SKILLNET_PI05_BASE_PARAMS=checkpoints/pi05_base/params
 test -e "${SKILLNET_PI05_BASE_PARAMS}" && echo "pi0.5 base checkpoint is visible"
 ```
 
-## Public Release Check
-
-From the repository root, run the lightweight release check before installing
-the heavy simulator stacks:
-
-```bash
-cd "${SKILLNET_REPO_ROOT}"
-python scripts/check_public_release.py
-```
-
-This verifies key files, JSON/JSONL artifacts, selected CLI help commands,
-Python syntax for public data/eval helpers, and common private-path or token
-patterns. It does not import simulator packages or load model checkpoints.
-See `docs/release_status.md` for the current release-readiness checklist and
-external asset gates.
-
-To additionally test editable package metadata in a temporary Python 3.10
-environment without downloading heavyweight runtime dependencies, run the
-no-deps install smoke:
-
-```bash
-python scripts/check_public_release.py --install-smoke
-```
-
-If your Python 3.10 executable is not discoverable as `3.10`, provide it
-explicitly:
-
-```bash
-python scripts/check_public_release.py --install-smoke --install-python /path/to/python3.10
-```
-
-To check that the public Hugging Face checkpoints and LIBERO/RoboTwin source
-datasets are reachable from your machine:
-
-```bash
-python scripts/check_public_release.py --hub-smoke
-```
-
-This network check respects `HF_ENDPOINT` and intentionally does not use
-`HF_TOKEN` by default, so it checks what external users can read publicly. Add
-`--include-libero-derived-datasets` when you expect `jsw19/libero_40_v1` and
-`jsw19/libero_90_v1` to be publicly visible. A plain `--hub-smoke` pass means
-the public checkpoints and source datasets are reachable; it does not prove that
-the derived LIBERO LeRobot datasets are public. If the derived dataset check is
-not expected to pass, rebuild them locally and keep the same repo_id layout
-under `LEROBOT_HOME`. Use `--hub-authenticated` only when checking private or
-staging assets.
-`docs/libero_data_processing.md` includes metadata verification and Hub
-publishing commands for those derived datasets.
-
 ## Smoke Checks
 
 Run the hierarchy tokenizer from the repository root:

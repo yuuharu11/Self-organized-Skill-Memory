@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Support guide
-    url: https://github.com/yuuharu11/Self-organized-Skill-Memory/blob/main/SUPPORT.md
-    about: Start here for documentation links and issue-reporting scope.
-  - name: Release status and external asset gates
-    url: https://github.com/yuuharu11/Self-organized-Skill-Memory/blob/main/docs/release_status.md
-    about: Check known checkpoint, dataset, simulator, and repository-metadata gates.

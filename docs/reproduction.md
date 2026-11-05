@@ -222,10 +222,7 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 | `libGL.so.1` がない・EGL 初期化失敗 | OS の OpenGL/EGL ライブラリ、NVIDIA ドライバ、コンテナの GPU 共有を確認する |
 | TFDS import 時の Protobuf エラー | 固定リストの `tensorflow-metadata==1.21.0` と Protobuf 5.29.6 の生成コード互換性に問題がある。データ変換前に import を確認し、互換環境を別途検証する。元の変換処理はローカルの互換 overlay を使用していた |
 | 広いテスト実行で失敗する | PR #2 の確認時は関連146件中140件成功、既存の z-model 4件と D3 2件が失敗。全 `tests/` は描画環境の import でも停止する |
-| `check_public_release.py` が失敗する | 元の SkillNet 公開リリース契約と、この研究用リポジトリの README 等が一致せず47件失敗。PR #2 の整理前でも同じ失敗を確認済み |
 
-`python scripts/check_public_release.py --verbose` の全成功を、この研究用チェックアウトの前提にはしていません。
-個別の失敗を区別して記録してください。
 
 ## 6. 再現結果を共有する
 

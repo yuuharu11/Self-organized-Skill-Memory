@@ -41,6 +41,8 @@ def test_holm_step_down_is_monotone_and_bounded():
 
 
 def test_reviewed_shuffle_is_exact_top1_permutation_and_candidates_are_memory_rows():
+    if not module.REVIEW.exists():
+        pytest.skip('requires local artifacts')
     fair=module.fair_module(); rows=module.base_module().load_rows(module.RUN)
     prep=np.load(module.REVIEW/'drafts_prepared.npz',allow_pickle=False)
     long=prep['eval_query_rows']; m2=prep['m2_candidate_rows']; shuffle=prep['shuffle_candidate_rows']
@@ -52,6 +54,8 @@ def test_reviewed_shuffle_is_exact_top1_permutation_and_candidates_are_memory_ro
 
 
 def test_e2_selected_candidate_ids_are_preserved_for_training_and_not_long():
+    if not module.REVIEW.exists():
+        pytest.skip('requires local artifacts')
     fair=module.fair_module(); rows=module.base_module().load_rows(module.RUN)
     saved=np.load(module.FAIR/'E-M2/training_drafts.npz',allow_pickle=False)
     assert np.array_equal(saved['query_rows'],fair.training_rows(rows))

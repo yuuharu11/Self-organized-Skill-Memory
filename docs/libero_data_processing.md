@@ -80,164 +80,6 @@ before skill slicing: 1,693 for LIBERO-40 and 4,006 for LIBERO-90. During
 conversion, each skill segment is saved as one LeRobot episode, so the final
 LeRobot episode counts are 3,862 and 7,874.
 
-## Dataset Hub Publishing
-
-If you maintain the derived LeRobot datasets locally, verify the metadata before
-training or publishing. Use `--strict-parquet` for public release validation so
-the parquet row count is checked against `total_frames`.
-
-```bash
-python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
-  --expected-tasks 40 \
-  --expected-episodes 3862 \
-  --expected-frames 273465 \
-  --require-feature class \
-  --require-feature all_classes \
-  --strict-parquet \
-  --require-column class \
-  --require-column all_classes
-
-python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_90_v1" \
-  --expected-tasks 73 \
-  --expected-episodes 7874 \
-  --expected-frames 574571 \
-  --require-feature class \
-  --require-feature all_classes \
-  --strict-parquet \
-  --require-column class \
-  --require-column all_classes
-```
-
-To publish the datasets to Hugging Face Hub, install the large-folder upload
-stack, set `HF_TOKEN` in the shell environment, and run a dry run first:
-
-```bash
-python -m pip install "huggingface_hub>=1.0" hf_xet pyarrow
-export HF_XET_HIGH_PERFORMANCE=1
-```
-
-Copy the matching dataset card template into the dataset root before the public
-dry run:
-
-```bash
-cp data_process/libero/dataset_cards/README_libero_40_v1.md \
-  "$LEROBOT_HOME/jsw19/libero_40_v1/README.md"
-
-cp data_process/libero/dataset_cards/README_libero_90_v1.md \
-  "$LEROBOT_HOME/jsw19/libero_90_v1/README.md"
-```
-
-The dry run validates local metadata, checks parquet row counts, prints the
-planned size, verifies the large-folder uploader, checks whether the target Hub
-repo already exists, and never writes to the Hub:
-
-```bash
-python scripts/publish_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
-  --repo-id jsw19/libero_40_v1 \
-  --public \
-  --expected-tasks 40 \
-  --expected-episodes 3862 \
-  --expected-frames 273465 \
-  --require-feature class \
-  --require-feature all_classes \
-  --strict-parquet \
-  --require-column class \
-  --require-column all_classes \
-  --dry-run
-
-python scripts/publish_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_90_v1" \
-  --repo-id jsw19/libero_90_v1 \
-  --public \
-  --expected-tasks 73 \
-  --expected-episodes 7874 \
-  --expected-frames 574571 \
-  --require-feature class \
-  --require-feature all_classes \
-  --strict-parquet \
-  --require-column class \
-  --require-column all_classes \
-  --dry-run
-```
-
-For the public SkillNet release, the target repos should be public. For a
-staging upload, use `--private` and a separate repo id. Do not point a private
-staging run at the public repo id unless you intentionally pass
-`--allow-existing-visibility`.
-
-The publisher refuses a public dry run or real public upload without
-`README.md` at the dataset root unless `--allow-missing-card` is passed for an
-internal staging run. The script reads the token from `HF_TOKEN` or
-`HUGGINGFACE_HUB_TOKEN`; do not put tokens into command lines, scripts, docs, or
-repository files.
-
-After dry-run validation, start the real upload in a long-running shell or
-session manager by removing only `--dry-run`. The uploader uses
-`HfApi.upload_large_folder`, which is resumable and better suited to the 33G and
-65G derived LIBERO datasets than a single ordinary folder upload.
-
-If the upload already completed but either dataset repo is still private, switch
-only the repo visibility with the token-safe helper:
-
-```bash
-python scripts/set_hf_dataset_visibility.py \
-  --public \
-  --dry-run \
-  jsw19/libero_40_v1 \
-  jsw19/libero_90_v1
-
-read -rsp "HF_TOKEN: " HF_TOKEN
-export HF_TOKEN
-echo
-
-python scripts/set_hf_dataset_visibility.py \
-  --public \
-  jsw19/libero_40_v1 \
-  jsw19/libero_90_v1
-```
-
-The dry run is credential-free and dependency-light: if `huggingface_hub` is
-not installed, it still prints the intended target visibility and explains that
-repo inspection is unavailable. The real visibility change requires
-`huggingface_hub` and a write-capable `HF_TOKEN` or `HUGGINGFACE_HUB_TOKEN` in
-the environment.
-
-After publishing, run:
-
-```bash
-python scripts/check_public_release.py --hub-smoke --include-libero-derived-datasets
-```
-
-The strict Hub check should pass for `jsw19/libero_40_v1` and
-`jsw19/libero_90_v1` before claiming that external users can train directly
-from the released configs.
-
-LIBERO-40 uses:
-
-```text
-https://huggingface.co/datasets/openvla/modified_libero_rlds
-```
-
-Expected TFDS builder directories after download:
-
-```text
-libero_10_no_noops
-libero_goal_no_noops
-libero_object_no_noops
-libero_spatial_no_noops
-```
-
-LIBERO-90 uses:
-
-```text
-https://huggingface.co/datasets/jesbu1/libero_90_openvla_processed
-```
-
-Expected TFDS builder directory after download:
-
-```text
-libero_90_openvla_processed
-```
-
 ## Skill-Slice Inputs
 
 The v1 datasets are not a direct frame-for-frame copy of the RLDS data. Each
@@ -328,6 +170,22 @@ python data_process/libero/convert_libero_90_to_lerobot.py \
   --output-repo-id jsw19/libero_90_v1
 ```
 
+## Verifying a Local Dataset
+
+Check a converted dataset's metadata and parquet files before training:
+
+```bash
+python scripts/verify_lerobot_dataset.py "$LEROBOT_HOME/jsw19/libero_40_v1" \
+  --expected-tasks 40 \
+  --expected-episodes 3862 \
+  --expected-frames 273465 \
+  --require-feature class \
+  --require-feature all_classes \
+  --strict-parquet \
+  --require-column class \
+  --require-column all_classes
+```
+
 ## Released Scripts
 
 The cleaned scripts live at:
@@ -379,17 +237,6 @@ python data_process/libero/download_libero_sources.py \
   --hf-endpoint https://hf-mirror.com
 ```
 
-From the repository root, you can also check only the public checkpoint and
-source-dataset Hub links:
-
-```bash
-python scripts/check_public_release.py --hub-smoke
-```
-
-Use `--include-libero-derived-datasets` only when the derived LIBERO LeRobot
-dataset repos are expected to be accessible from the current account. A 401/403
-result for those derived datasets means you should rebuild them locally or
-request access.
 
 Convert LIBERO-40:
 
