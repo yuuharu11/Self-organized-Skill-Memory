@@ -20,8 +20,8 @@ assert spec.loader is not None
 spec.loader.exec_module(fair)
 
 
-def evaluate(output: Path, batch: int = 8):
-    source = fair.OUT_DEFAULT / 'evaluation-final'
+def evaluate(output: Path, batch: int = 8, source: Path = fair.OUT_DEFAULT):
+    source = Path(source)
     if output.exists():
         raise FileExistsError(f'refusing output overwrite: {output}')
     output.mkdir(parents=True)
@@ -57,7 +57,7 @@ def evaluate(output: Path, batch: int = 8):
     from openpi.shared.nnx_utils import module_jit
 
     base, skill = fair._base_run(), fair._skill_run()
-    selected = json.loads((fair.OUT_DEFAULT / 'E-M2' / 'best_bridge.json').read_text())
+    selected = json.loads((source / 'E-M2' / 'best_bridge.json').read_text())
     old = json.loads((fair.RUN / 'best_bridge.json').read_text())
     specs = {'E-M2': Path(selected['path']), 'old': Path(old['path'])}
     predictions = {}
@@ -118,9 +118,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path,
         default=fair.OUT_DEFAULT / 'corrected-top1-shuffle-01')
+    parser.add_argument('--source', type=Path, default=fair.OUT_DEFAULT,
+        help='evaluate-stage output directory holding offline_predictions.npz, decision.json and E-M2/best_bridge.json')
     parser.add_argument('--batch', type=int, default=8)
     args = parser.parse_args()
-    result = evaluate(args.output, args.batch)
+    result = evaluate(args.output, args.batch, args.source)
     print(json.dumps(result['decision'], ensure_ascii=False), flush=True)
 
 

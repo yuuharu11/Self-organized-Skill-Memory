@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -72,3 +73,28 @@ def test_attention_models_shapes_and_masked_attention():
     judge = M3CandidateJudge(dim=24, heads=4)
     score = judge(torch.randn(2, 12, 24), mask, torch.randn(2, 5, 10, 7), torch.randn(2, 5, 8))
     assert score.shape == (2, 5)
+
+
+def test_cpu_state_dict_snapshot_keeps_live_model_on_device():
+    from models import M1AttentionKey
+    model = M1AttentionKey(slots=3, dim=24, token_count=12, heads=4)
+    model.to(run.DEVICE)
+    before = {k: v.detach().clone().cpu() for k, v in model.state_dict().items()}
+    snapshot = run._cpu_state_dict(model)
+    # The live model must stay where it was so post-save encoding still hits DEVICE.
+    assert next(model.parameters()).device.type == torch.device(run.DEVICE).type
+    for key, value in before.items():
+        torch.testing.assert_close(model.state_dict()[key].cpu(), value)
+        assert snapshot[key].device.type == 'cpu'
+        torch.testing.assert_close(snapshot[key], value.cpu())
+
+
+def test_gap_threshold_reads_corrected_then_summary(tmp_path):
+    (tmp_path / 'summary_corrected.json').write_text(json.dumps({'threshold': 0.02}))
+    (tmp_path / 'summary.json').write_text(json.dumps({'threshold': 0.05}))
+    assert run._gap_threshold(tmp_path) == 0.02
+    (tmp_path / 'summary_corrected.json').unlink()
+    assert run._gap_threshold(tmp_path) == 0.05
+    (tmp_path / 'summary.json').unlink()
+    with pytest.raises(FileNotFoundError):
+        run._gap_threshold(tmp_path)

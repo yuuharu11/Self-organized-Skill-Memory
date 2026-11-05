@@ -56,6 +56,17 @@ def make_splits(rows,holdout=None):
 def _norm_stats(path):
     z=np.load(path,allow_pickle=False);return z
 
+def _gap_threshold(gap_path=GAP):
+    """Hard-row threshold; prefers summary_corrected.json, falls back to summary.json."""
+    for name in ('summary_corrected.json','summary.json'):
+        candidate=gap_path/name
+        if candidate.exists():return float(json.loads(candidate.read_text())['threshold'])
+    raise FileNotFoundError(f'neither summary_corrected.json nor summary.json in {gap_path}')
+
+def _cpu_state_dict(model):
+    """CPU copy of a model's state dict without moving the live model."""
+    return {k:v.cpu() for k,v in model.state_dict().items()}
+
 def _torch_batch(ids,rows,tokens,groups,context,*,use_text=False,device=DEVICE):
     ids=np.asarray(ids,np.int64);n=712 if use_text else 512
     tok=np.asarray(tokens[ids,:n],np.float32)
@@ -506,7 +517,7 @@ def _run(out,*,threads=16,smoke=False):
         raise AssertionError('Long Eval row set mismatch')
     long_ids=gap_long
     if not np.array_equal(long_ids,top['query_rows']):raise AssertionError('topk-long query row order mismatch')
-    if len(long_ids)!=548 or int(top['hard_mask'].sum())!=63 or not np.isclose(float(json.loads((GAP/'summary_corrected.json').read_text())['threshold']),Q80,atol=1e-10):
+    if len(long_ids)!=548 or int(top['hard_mask'].sum())!=63 or not np.isclose(_gap_threshold(GAP),Q80,atol=1e-10):
         raise AssertionError('fixed Long q80 split changed')
     hard=np.asarray(top['hard_mask'],bool)
     context=_history(rows)
@@ -668,7 +679,7 @@ def _run(out,*,threads=16,smoke=False):
     np.savez_compressed(out/'predictions.npz',query_rows=qids,hard_mask=hard,truth=truth,
         **{f'{n}_top1_mse':np.asarray(m['top1_mse'],np.float32) for n,m in method_results.items()},
         **{f'{n}_confidence':np.asarray(m['confidence'],np.float32) for n,m in method_results.items() if m.get('confidence') is not None})
-    torch.save({'models':{n:m.cpu().state_dict() for n,m in models.items()},'m3':m3.cpu().state_dict(),'direct':direct.cpu().state_dict(),
+    torch.save({'models':{n:_cpu_state_dict(m) for n,m in models.items()},'m3':_cpu_state_dict(m3),'direct':_cpu_state_dict(direct),
                 'selected_m1_for_m3':best_m1_name,'key_dev_order':dev_order,'selected_model':selected_name},out/'models.pt')
     if not smoke:
         attention_model=models[selected_name] if hasattr(models[selected_name],'encode_tokens') else base_m1

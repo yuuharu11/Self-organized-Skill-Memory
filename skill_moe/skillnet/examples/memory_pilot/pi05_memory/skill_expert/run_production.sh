@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../../.."
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../../"
 source env/activate.sh
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8
 export XLA_PYTHON_CLIENT_PREALLOCATE=false

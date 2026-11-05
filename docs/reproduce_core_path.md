@@ -115,6 +115,8 @@ python $PI05/skill_memories/build.py
 python $PI05/local_key/run.py
 ```
 
+`memory_gap/run.py` は `memory-gap-01/` に `summary.json` と同内容の `summary_corrected.json` を書き出します。段階 8 と 10 はこのファイルの閾値を読みます。
+
 後続の段は `topk-long-01/production/` を読みます。
 
 ### 10. M2 検索キー

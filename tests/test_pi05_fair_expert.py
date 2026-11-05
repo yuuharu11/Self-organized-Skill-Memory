@@ -1,4 +1,5 @@
 import importlib.util
+import inspect
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +11,13 @@ spec = importlib.util.spec_from_file_location('pi05_fair_expert_tested', MODULE_
 fair = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
 spec.loader.exec_module(fair)
+
+
+REVIEW_PATH = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/fair_expert/review_top1_shuffle.py'
+review_spec = importlib.util.spec_from_file_location('pi05_fair_expert_review_tested', REVIEW_PATH)
+review = importlib.util.module_from_spec(review_spec)
+assert review_spec.loader is not None
+review_spec.loader.exec_module(review)
 
 
 def test_candidate_row_ids_index_dataset_not_pool_positions():
@@ -104,3 +112,12 @@ def test_m2_fixed_dev_sample_is_reproducible_and_has_mixture_support():
     np.testing.assert_array_equal(a, b)
     np.testing.assert_array_equal(ar, br)
     assert np.unique(ar).size > 1
+
+
+def test_review_reads_evaluate_output_directory_by_default():
+    # run.evaluate writes offline_predictions.npz and decision.json directly
+    # under the output directory; the review must default to that directory,
+    # not an evaluation-final subdirectory that no command creates.
+    params = inspect.signature(review.evaluate).parameters
+    assert params['source'].default == fair.OUT_DEFAULT
+    assert 'evaluation-final' not in str(params['source'].default)

@@ -278,7 +278,7 @@ def main():
     a=ap.parse_args(); out=a.output
     if a.batch_size != BATCH: raise ValueError('batch size is fixed to 4 for parity with calibrate.py')
     out.mkdir(parents=True,exist_ok=True)
-    for name in ('protocol.json','predictions_and_errors.npz','summary.json'):
+    for name in ('protocol.json','predictions_and_errors.npz','summary.json','summary_corrected.json'):
         if (out/name).exists(): raise FileExistsError(out/name)
     os.environ.setdefault('XLA_PYTHON_CLIENT_PREALLOCATE','false')
     os.environ.setdefault('XLA_PYTHON_CLIENT_MEM_FRACTION','.22')
@@ -341,6 +341,9 @@ def main():
                         chosen_candidate_rows=np.stack([chosen['episode'],chosen['task']]),
                         chosen_oracle_mse=np.stack([oracle_values['episode'],oracle_values['task']]))
     (out/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
+    # Downstream stages (skill-memories, local-key, key-mechanism) read the hard-row
+    # threshold from summary_corrected.json; it carries the same evaluated result.
+    (out/'summary_corrected.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'rows':len(ids),'conditions':len(names),'inference_seconds':inference_s,
                       'parity':parity,'hard_threshold':threshold,'hard_rows':result['hard_rows']},indent=2))
 

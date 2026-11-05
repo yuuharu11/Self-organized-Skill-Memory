@@ -31,6 +31,14 @@ def _load_module(name,path):
     assert spec.loader is not None;spec.loader.exec_module(mod);return mod
 
 
+def _gap_threshold(gap_path=GAP):
+    """Hard-row threshold; prefers summary_corrected.json, falls back to summary.json."""
+    for name in ('summary_corrected.json','summary.json'):
+        candidate=gap_path/name
+        if candidate.exists():return float(json.loads(candidate.read_text())['threshold'])
+    raise FileNotFoundError(f'neither summary_corrected.json nor summary.json in {gap_path}')
+
+
 def _l2_normalize(x):
     x=np.asarray(x,np.float32);return x/np.maximum(np.linalg.norm(x,axis=-1,keepdims=True),1e-8)
 
@@ -327,7 +335,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     gap=np.load(GAP/'predictions_and_errors.npz',allow_pickle=False);top=np.load(TOPK/'predictions_and_errors.npz',allow_pickle=False)
     long_ids=gap['row_ids'][np.asarray(rows['task'][gap['row_ids']])<10];hard=top['hard_mask']
     if len(pool)!=3857 or len(long_ids)!=548 or int(hard.sum())!=63 or not np.array_equal(long_ids,top['query_rows']):raise AssertionError('fixed pool/Long split mismatch')
-    if abs(float(json.loads((GAP/'summary_corrected.json').read_text())['threshold'])-Q80)>1e-10:raise AssertionError('fixed q80 changed')
+    if abs(_gap_threshold(GAP)-Q80)>1e-10:raise AssertionError('fixed q80 changed')
     memids=np.load(MEMORY/'units.npz',allow_pickle=False)['representative_row_ids']
     if not np.array_equal(pool,memids):raise AssertionError('memory row IDs differ from raw-rows-noLong')
     row_train=np.flatnonzero((np.asarray(rows['task'])>=10)&~np.asarray(rows['memory'],bool)&~np.asarray(rows['validation'],bool))

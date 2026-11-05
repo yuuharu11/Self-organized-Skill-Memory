@@ -40,6 +40,20 @@ def load_rows(run: Path = RUN):
             for p in (run / 'rows').glob('*.npy')}
 
 
+def gap_threshold(gap_path: Path = GAP) -> float:
+    """Hard-row threshold from the memory-gap output.
+
+    Prefers ``summary_corrected.json`` and falls back to ``summary.json`` so
+    outputs written before the corrected artifact existed still resolve.
+    """
+    for name in ('summary_corrected.json', 'summary.json'):
+        candidate = gap_path / name
+        if candidate.exists():
+            return float(json.loads(candidate.read_text())['threshold'])
+    raise FileNotFoundError(
+        f'neither summary_corrected.json nor summary.json in {gap_path}')
+
+
 def dev_row_ids(rows: dict[str, np.ndarray]) -> np.ndarray:
     """Task-stratified validation episodes; Long tasks are never returned."""
     selected: list[tuple[int, int]] = []
@@ -64,7 +78,7 @@ def long_eval_ids(rows, gap_path: Path = GAP, topk_path: Path = TOPK) -> tuple[n
     names = gap['condition_names'].tolist()
     normal_i = names.index('A_normal')
     normal = np.asarray(gap['row_mse'][normal_i], np.float64).mean(axis=0)
-    threshold = float(json.loads((gap_path / 'summary_corrected.json').read_text())['threshold'])
+    threshold = gap_threshold(gap_path)
     all_ids = np.asarray(gap['row_ids'], np.int64)
     task = np.asarray(rows['task'])[all_ids]
     ids = all_ids[task < 10]
