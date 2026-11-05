@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skill-memory-core"
+version = "0.1.0"
+description = "Raw-action motion memory, M2 retrieval, and flow-bridge Expert correction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "torch>=2.2"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+packages = ["skill_memory_core", "skill_memory_core.adapters", "skill_memory_core.examples"]
+
+[tool.setuptools.package-dir]
+skill_memory_core = "."
+"skill_memory_core.adapters" = "adapters"
+"skill_memory_core.examples" = "examples"
