@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /work
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../../"
 source env/activate.sh
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
 
-RUN=/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01
-OUT=/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01
+PI05_ROOT="${SKILLNET_PI05_ROOT:-$SKILLNET_STATE_DIR/outputs/memory-pilot/pi05-memory40-20261104}"
+RUN="$PI05_ROOT/run-01"
+OUT="$PI05_ROOT/skill-expert-01"
 CODE=skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_expert/run.py
 EVAL=skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_expert/evaluate.py
-CKPT=/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero
+CKPT="$SKILLNET_STATE_DIR"/checkpoints/openpi-assets/checkpoints/pi05_libero
 EXPERT="$OUT/production-expert"
 
 test -f "$OUT/draft_sources.npz"

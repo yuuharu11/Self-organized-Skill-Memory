@@ -82,4 +82,4 @@ Longは学習40タスクに含まれる既知タスク。段階2では難しい1
 ## 実行の記録
 
 確認済みスナップショットから単一サーバー・最大4環境。CPUはcontroller2、server4、環境各3、監視1（合計19threads）、nice10、コア0–7は使用しない。PREALLOCATE=false、JAX fraction.11、Torch fraction.15。各枝600秒、技術的失敗は1回まで再試行してattemptごとに保存。正常な失敗は再試行しない。
-出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/production/run-20261104T102537Z`。旧preflightの未開始記録・旧スモークは別に保全。manifest.json、branch-events.jsonl、progress.jsonl、各枝のattempt JSON/ログ、各checkpointのkeys.json、control/health.jsonlを参照。
+出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/rescue-branching-01/production/run-20261104T102537Z`。旧preflightの未開始記録・旧スモークは別に保全。manifest.json、branch-events.jsonl、progress.jsonl、各枝のattempt JSON/ログ、各checkpointのkeys.json、control/health.jsonlを参照。

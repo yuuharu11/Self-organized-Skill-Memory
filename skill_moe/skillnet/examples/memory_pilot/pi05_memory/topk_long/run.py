@@ -14,11 +14,16 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-RETRIEVAL = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01')
-DATA10 = Path('/work/data/LIBERO/libero_10')
-DEFAULT_OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+_LIBERO_HDF5 = Path(_os.environ.get('SKILLNET_LIBERO_HDF5', _REPO / 'data/LIBERO'))
+RUN = _PI05_ROOT / 'run-01'
+GAP = _PI05_ROOT / 'memory-gap-01'
+RETRIEVAL = _PI05_ROOT / 'retrieval-4b-01'
+DATA10 = _LIBERO_HDF5 / 'libero_10'
+DEFAULT_OUT = _PI05_ROOT / 'topk-long-01'
 KEYS = ('wrist_state_contrastive', 'current', 'codec_prior_b', 'pi05_pred_to_memory_action')
 EXCLUSIONS = ('task', 'episode')
 T0S = (.2, .4)
@@ -201,7 +206,7 @@ def _load_runtime():
     import orbax.checkpoint as ocp
     from openpi.shared.nnx_utils import PathRegex, module_jit
     policy = _load_module('pi05_topk_long_policy_run', PI05 / 'run.py')
-    base, _ = policy.load_policy(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    base, _ = policy.load_policy(_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')
     baseline = module_jit(base.sample_actions, static_argnames=('num_steps',))
     probe_rows = np.arange(0, 4, dtype=np.int64)
     # Overlay the already-selected, immutable bridge checkpoint.

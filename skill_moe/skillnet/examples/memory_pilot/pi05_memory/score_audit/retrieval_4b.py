@@ -15,10 +15,14 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
 REPO = HERE.parents[5]
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-AUDIT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01')
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN = _PI05_ROOT / 'run-01'
+AUDIT = _PI05_ROOT / 'score-audit-01'
+GAP = _PI05_ROOT / 'memory-gap-01'
+OUT = _PI05_ROOT / 'retrieval-4b-01'
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(PI05))
 import keys

@@ -4,7 +4,7 @@
 この文書の `/tmp/skillnet-validation` や描画用ライブラリは元のコンテナの配置で、clone には含まれません。
 
 すでに起動しているコンテナ内で開発・実験します。追加のコンテナ構築・起動ファイルは管理しません。
-SkillNetの実行ルートは `skill_moe/skillnet`、現在のリポジトリルートは `/work` です。
+SkillNetの実行ルートは `skill_moe/skillnet`、リポジトリルートは clone した場所です（`SKILLNET_REPO_ROOT`）。
 
 ## 現在の環境を使う
 

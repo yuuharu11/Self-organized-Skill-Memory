@@ -90,4 +90,4 @@ Longは学習40タスクに含まれる既知タスクであり、未知タス�
 
 集計側の初期状態照合で、別suiteのbaseline行を同じtask IDとして扱う不備があった。Longだけに限定して修正し、個々の完了result.jsonを追記ログへ回収した。推論・固定境界・seedは変更せず、完了した試行の再実行や除外はしていない。復旧の記録はproduction-control/recovery.logとaggregation-recovery.json。
 
-出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/`。
+出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/`。

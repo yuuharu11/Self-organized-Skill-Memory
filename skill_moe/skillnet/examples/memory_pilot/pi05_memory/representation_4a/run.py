@@ -12,10 +12,14 @@ import numpy as np
 
 HERE=Path(__file__).resolve().parent
 PI05=HERE.parent
-RUN=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-GAP=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-OUT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01')
-OFFICIAL=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN=_PI05_ROOT / 'run-01'
+GAP=_PI05_ROOT / 'memory-gap-01'
+OUT=_PI05_ROOT / 'representation-4a-01'
+OFFICIAL=_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 NOISE_SEEDS=(4101,4102)
 T0S=(0.2,0.4)
 BATCH=4

@@ -186,7 +186,7 @@
 
 ## 7. 出力の場所（参考）
 
-`/work/.skillnet-state/outputs/memory-pilot/` 以下にあります。
+`.skillnet-state/outputs/memory-pilot/` 以下にあります。
 
 | 実験 | フォルダ |
 |---|---|

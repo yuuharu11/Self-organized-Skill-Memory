@@ -1,4 +1,4 @@
-# 07 π0.5 LIBERO-40：運動メモリと修正 Expert（2026-11-04〜、進行中）
+# 07 π0.5 LIBERO-40：運動メモリと修正 Expert（進行中）
 
 ## 問い
 
@@ -25,8 +25,9 @@
 | [paired_breakdown/results.md](paired_breakdown/results.md) | 通常方策との対応付き救済・悪化、通常失敗試行一覧 |
 | [topk_long/plan.md](topk_long/plan.md) | LIBERO-10 Long限定・生行動Top-K候補の生成後診断計画と事前判定 |
 
-スクリプトは `examples/memory_pilot/pi05_memory/`。実行結果は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/`（Git 管理外）。
+スクリプトは [`examples/memory_pilot/pi05_memory/`](../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/)。データから評価までの順序は [再現手順](../../reproduce_core_path.md) を参照。実行結果は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/`（Git 管理外）。
 - [修正 Expert の下書き依存性](draft_sensitivity/results.md)：同じノイズで下書きだけを変え、追加学習と下書き内容の効果をオフライン行動誤差で切り分ける。
+- [圧縮行動と生行動の公平比較](compress_vs_raw/README.md)：同じM2検索候補を使い、raw／M1-b12下書きで学習した修正ExpertをLong Evalで比較。
 - [メモリ有効候補の診断](memory_gap/results.md)：難しい Eval 行について検索・圧縮・下書き利用をオフライン比較。
 - [生行動に近い候補の検索](retrieval_raw/README.md)：VLM、手首＋状態、短い履歴、学習キーで段階4-Bを評価。
 - [失敗状態からの分岐検証](rescue_branching/results.md)：4キー×圧縮/生を含む44条件の本番を、通常失敗10試行・30分岐点で実行中。
@@ -37,3 +38,5 @@
 - [可変長区間の追従診断](varlen/README.md)：区間開始での一度の検索と固定10-step毎の再検索をLong Evalで比較。
 - [Skill ExpertのLong閉ループ](skill_expert/results.md)：スキルbを復元した下書きから直すExpertと、写像b̂の信頼度でt0を変える条件、各100試行。
 - [局所キーの検索](local_key/README.md)：手先まわりのキーがLong以外の実演から未知タスクの動きを検索できるかのオフライン評価。
+- [キー選択機構](key_mechanism/README.md)：アテンション型のキー・候補判定器で単一実演を選び、Longの生成前後MSEとK1–K4を評価。
+- [移植用アルゴリズムCore](../../../skill_memory_core/README.md)：生行動メモリ＋M2検索＋bridge Expertの自己完結パッケージと保存済み実験へのparity表。

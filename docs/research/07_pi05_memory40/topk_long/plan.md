@@ -6,7 +6,7 @@
 
 ## 固定条件
 
-- 元データは `pi05-memory40-20261104/run-01`。Eval 行は `memory-gap-01` の1,318行。LIBERO-10 Long は task ID 0〜9で、`run-01/data_manifest.json` の各 instruction が `/work/data/LIBERO/libero_10/*_demo.hdf5` の10デモ名と対応することを実行時に検証する。
+- 元データは `pi05-memory40-20261104/run-01`。Eval 行は `memory-gap-01` の1,318行。LIBERO-10 Long は task ID 0〜9で、`run-01/data_manifest.json` の各 instruction が `data/LIBERO/libero_10/*_demo.hdf5` の10デモ名と対応することを実行時に検証する。
 - hard 行は通常π0.5の行ごとのactive7 MSEがDev episode-mean q80 **0.01549410422449** 以上。閾値を再推定しない。
 - メモリは元の6,583行のまま。主条件は同task除外、副条件は同episode除外。候補は保存済み retrieval-4b-01 の keyファイルから取得し、全16候補を同じメモリ行集合上で選ぶ。
 - 下書きは候補の `rows/actions` [10,32]。圧縮codecは使わない。Expertは既存 `bridge/001500`、10積分、t0=.2/.4、各行で共通noise seed 4101。
@@ -45,8 +45,8 @@ Shuffled診断はmemory-gapと同じ固定shuffle seed 20261104・別task source
 スモークは `topk-long-01/smoke-final/` に少数のhard Long行を保存する。本番は固定snapshotから以下を実行し、出力rootを `topk-long-01/` とする（root直下にあるsmoke*ディレクトリは保持し、rootファイルは新規作成する）。
 
 ```bash
-cd /work && source env/activate.sh
+cd "$SKILLNET_REPO_ROOT" && source env/activate.sh
 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_PREALLOCATE=false XLA_PYTHON_CLIENT_MEM_FRACTION=.20 \
   taskset -c 8-47 nice -n 10 python skill_moe/skillnet/examples/memory_pilot/pi05_memory/topk_long/run.py \
-  --output /work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01
+  --output .skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01
 ```

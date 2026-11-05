@@ -16,14 +16,14 @@ Only the new Skill Expert checkpoint is trained. The run-01 codec, 6,583-row mem
 
 The first two closed-loop smoke attempts were preserved in separate output directories and exposed seed-parse and suite-key mistakes in the smoke harness. The final `smoke-closedloop-final` run passed; no run-01 output was changed.
 
-Artifacts: `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/`. The final smoke rollouts are in `smoke-closedloop-final/{C,A,D}/rollouts.jsonl`; the actual 30-step weights are under `smoke-model/`.
+Artifacts: `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/`. The final smoke rollouts are in `smoke-closedloop-final/{C,A,D}/rollouts.jsonl`; the actual 30-step weights are under `smoke-model/`.
 
 ## Production command and estimate
 
 After copying the approved source into the exp snapshot, run:
 
 ```bash
-cd /work
+cd "$SKILLNET_REPO_ROOT"
 bash skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_expert/run_production.sh
 ```
 

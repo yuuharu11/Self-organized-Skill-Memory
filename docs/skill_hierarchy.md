@@ -134,8 +134,7 @@ rule.
 ### Motion-Code Cluster Construction
 
 For released LIBERO and RoboTwin reproduction, use the frozen centers above.
-They are the centers used to produce the public SkillNet metadata and are
-checked by `scripts/check_public_release.py`.
+They are the centers used to produce the public SkillNet metadata.
 
 For a new corpus, first create a JSONL file with one annotated subtask per row:
 

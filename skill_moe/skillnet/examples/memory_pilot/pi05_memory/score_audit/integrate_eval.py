@@ -14,8 +14,12 @@ sys.path.insert(0,str(HERE.parent))
 import evaluate_keys as ek
 import run
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-AUDIT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT=_PI05_ROOT / 'run-01'
+AUDIT=_PI05_ROOT / 'score-audit-01'
 OUT=AUDIT/'integrated-full'
 
 def main():

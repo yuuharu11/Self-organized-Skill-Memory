@@ -108,6 +108,6 @@ OptimusVLA は Optimus-R（arXiv:2609.39794）と別論文。今回、コード�
 
 ## 8. 取得・作業記録
 
-原資料は `/work/.skillnet-state/outputs/memory-pilot/research-retrieval-init-20261104T082054Z/` に新規保存した（HTML、表JSON、PDF、抽出テキスト、manifest）。Git管理外のローカル証跡で、このcheckoutだけで再取得不要になるとは扱わない。PDF抽出の初回は不正Unicodeで失敗したため、再抽出した `.pdf.safe.txt` を照合に使用した。著者HTMLとPDFで上の主要表値を確認した。
+原資料は `.skillnet-state/outputs/memory-pilot/research-retrieval-init-20261104T082054Z/` に新規保存した（HTML、表JSON、PDF、抽出テキスト、manifest）。Git管理外のローカル証跡で、このcheckoutだけで再取得不要になるとは扱わない。PDF抽出の初回は不正Unicodeで失敗したため、再抽出した `.pdf.safe.txt` を照合に使用した。著者HTMLとPDFで上の主要表値を確認した。
 
 指定された旧 `docs/memory_pilot_gates.md` は存在しないため、移動先の [gates.md](../01_memory_gates/gates.md) と [研究文書の規則](../README.md)を確認した。変更範囲は本ファイルとsurveys/READMEの案内1行のみ。コード・モデル・実験計画・判定条件を変更せず、学習・ロールアウト・GPUジョブ・commitは実施していない。

@@ -5,12 +5,12 @@
 
 ## 前提
 
-- リポジトリルート: `/work`。実行ルート: `/work/skill_moe/skillnet`。環境: `cd /work && source env/activate.sh`。
+- リポジトリルート: clone した場所（`SKILLNET_REPO_ROOT`）。実行ルート: `skill_moe/skillnet`。環境: `cd "$SKILLNET_REPO_ROOT" && source env/activate.sh`。
 - 既存の未コミット変更を reset・上書きしない。Docker関連ファイルは作らない。
 - 公開 SkillNet-LIBERO-40（`pi05_libero_moe_skill_4_40`、重みは `.skillnet-state/checkpoints/`）を固定して使う。学習はしない。
 - 新規コードは `skill_moe/skillnet/examples/memory_pilot/` に置く。既存モジュールは、記録用のフック追加など最小限の変更にとどめる。
   メモリ・フックが無効のときは、元の推論と同じ出力になること。
-- 出力は `/work/.skillnet-state/outputs/memory-pilot/<gate>-<実行ID>/` に保存し、既存の結果を上書きしない。
+- 出力は `.skillnet-state/outputs/memory-pilot/<gate>-<実行ID>/` に保存し、既存の結果を上書きしない。
 - GPU: H200 ×1（143GB）を複数の作業で共有する。`env/activate.sh` が `XLA_PYTHON_CLIENT_PREALLOCATE=false` を設定するので、これを外さない。
   PyTorchの評価も含め、1プロセスで占有しない。作業は並行して進むため、他の担当のディレクトリ・ファイルを編集しない。
 
@@ -91,5 +91,5 @@ LIBERO-90モデルをLIBERO-Skillでゼロショット評価し、失敗が多�
 
 ## 報告
 
-各ゲートについて、`/work/.skillnet-state/outputs/memory-pilot/<gate>-<実行ID>/report.md` に次を書く。
+各ゲートについて、`.skillnet-state/outputs/memory-pilot/<gate>-<実行ID>/report.md` に次を書く。
 条件、データ数、指標の表、判定、注意点（ノイズ・サンプル数・漏洩の可能性）。結果を誇張しない。

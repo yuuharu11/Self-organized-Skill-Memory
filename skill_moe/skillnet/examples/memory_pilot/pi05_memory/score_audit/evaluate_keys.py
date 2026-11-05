@@ -12,8 +12,9 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 STATE = Path(os.environ.get('SKILLNET_STATE_DIR', HERE.parents[5] / '.skillnet-state')).expanduser()
-ROOT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
-DEFAULT_OUT = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/score-audit-01'
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+ROOT = PI05_ROOT / 'run-01'
+DEFAULT_OUT = PI05_ROOT / 'score-audit-01'
 
 
 def _rankdata(x: np.ndarray) -> np.ndarray:

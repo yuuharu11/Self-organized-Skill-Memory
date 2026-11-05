@@ -37,6 +37,6 @@ episode bootstrap 5,000回の対応差（新表現−raw、t0=.2）：全行・e
 
 - 事前設定：[plan.md](plan.md)
 - 実装：[run.py](../../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/representation_4a/run.py)
-- 固定行、draft、予測、row MSE：[predictions_and_errors.npz](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/predictions_and_errors.npz)
-- 実行条件・fit行・候補・seed：[protocol.json](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/protocol.json)
-- 詳細summary：[summary.json](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/summary.json)
+- 固定行、draft、予測、row MSE：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/predictions_and_errors.npz`
+- 実行条件・fit行・候補・seed：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/protocol.json`
+- 詳細summary：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/representation-4a-01/summary.json`

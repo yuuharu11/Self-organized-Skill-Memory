@@ -27,16 +27,11 @@ compositional out-of-domain evaluation, and RoboTwin few-shot transfer.
 - `data_process/libero/`: LIBERO-40 and LIBERO-90 source-download and LeRobot conversion scripts.
 - `data_process/robotwin/`: RoboTwin-2.0 few-shot task download, conversion, metadata, and collection helpers.
 - `docs/quick_start.md`: installation, environment setup, checkpoint download, and smoke checks.
-- `docs/release_status.md`: current release-readiness checklist and known external asset gates.
 - `docs/skill_hierarchy.md`: SkillNet hierarchy construction and tokenization notes.
 - `docs/libero_data_processing.md`: complete notes for reproducing the LIBERO LeRobot datasets used by the SkillNet training configs.
 - `docs/training_and_evaluation.md`: public launch instructions for LIBERO-40/90 Skill-MoE training and LIBERO-Skill evaluation.
 - `docs/robotwin_few_shot.md`: RoboTwin few-shot task lists, data setup, training, evaluation, and reported results.
 - `CITATION.cff`: machine-readable citation metadata for the SkillNet paper and software release.
-- `CONTRIBUTING.md`, `SUPPORT.md`, `SECURITY.md`: public contribution,
-  support, and sensitive-information handling guidelines.
-- `.github/ISSUE_TEMPLATE/` and `.github/pull_request_template.md`: public
-  issue and pull-request templates for reproducible reports.
 
 The RoboTwin few-shot release includes paper-aligned task plans, public data
 helpers, LeRobot conversion, skill metadata, training configs, training
@@ -90,36 +85,6 @@ commands. The runnable SkillNet source root used by training commands is
 
 For development inside the current container and local validation results,
 see [Development environment](development_environment.md) (Japanese).
-
-Before installing simulator stacks, you can run:
-
-```bash
-python scripts/check_public_release.py
-```
-
-To also verify the editable package metadata in a temporary Python 3.10
-environment without downloading heavyweight runtime dependencies, run:
-
-```bash
-python scripts/check_public_release.py --install-smoke
-```
-
-If Python 3.10 is not discoverable as `3.10` on your machine, pass an explicit
-interpreter:
-
-```bash
-python scripts/check_public_release.py --install-smoke --install-python /path/to/python3.10
-```
-
-To verify the public Hugging Face checkpoint and source-dataset links, run:
-
-```bash
-python scripts/check_public_release.py --hub-smoke
-```
-
-`--hub-smoke` checks public Hub visibility without using local Hub tokens.
-Before announcing direct LIBERO training from Hub datasets, also run the
-dataset-visibility check documented in `docs/release_status.md`.
 
 ## 2. Skill Hierarchy
 

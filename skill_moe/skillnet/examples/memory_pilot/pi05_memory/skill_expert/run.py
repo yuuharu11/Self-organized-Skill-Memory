@@ -16,8 +16,12 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
 REPO = HERE.parents[4]
-RUN_DEFAULT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-CHECKPOINT_DEFAULT = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN_DEFAULT = _PI05_ROOT / 'run-01'
+CHECKPOINT_DEFAULT = _STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 sys.path.insert(0, str(PI05))
 
 from run import (calibration_episodes, load_policy, load_rows, obs_batch, restore_codec,

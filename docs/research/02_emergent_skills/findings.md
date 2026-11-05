@@ -2,7 +2,7 @@
 
 [skill_formation_study.md](formation_study.md) の比較と、その後の「取り出したスキルから行動を仕上げる」検証の結果をまとめる。
 すべて軽量版（凍結した π0.5 基本重みの VLM 特徴をキャッシュし、その上で小さな MLP を学習する）での、オフラインの行動誤差の結果である。
-環境での成功率、π0.5 本体の action expert での効果は、まだ測っていない。出力の一覧は `/work/.skillnet-state/outputs/memory-pilot/INDEX.md`。
+環境での成功率、π0.5 本体の action expert での効果は、まだ測っていない。出力の一覧は `.skillnet-state/outputs/memory-pilot/INDEX.md`。
 
 ## 0. 前提と訂正
 

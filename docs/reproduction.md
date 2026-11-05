@@ -10,10 +10,9 @@
 | 対象 | 入力・実行条件 | 確認できるもの |
 | --- | --- | --- |
 | SkillNet の階層トークン | Git の小さな公開ファイル、Python | 公開済みトークナイザの出力。新しいスキルメモリとは別の仕組み |
-| 軽量研究コードの単体確認 | Python 依存、合成入力 | 入力変換・検索・デノイズ等の実装。データ・重み・GPU は不要 |
+| 研究コードの単体確認 | Python 依存、合成入力 | スキル表現・検索・修正 Expert の実装。データ・重み・GPU は不要 |
 | 公開 SkillNet-LIBERO-40 の評価スモーク | 公開重み、LIBERO 完全ソースとアセット、GPU、描画環境 | 公開方策の読込から環境実行まで |
-| 初期の軽量スキル実験 | 全エピソードを保持した LIBERO-40 LeRobot データ、π0.5 base 重み | 凍結 VLM 特徴の抽出と小さなモデルのオフライン評価 |
-| S1/S2 の研究ノートの数値比較 | 対応するデータ・特徴キャッシュ・学習済みメモリ・設定・コード版 | 後述の追加資産を揃えた条件での比較 |
+| 現行アルゴリズムの通し実行 | 全エピソードを保持した LIBERO-40、π0.5 重み、GPU | データ変換から修正 Expert の判定まで。[再現手順](reproduce_core_path.md) |
 
 公開重みの評価スモークは、スキルメモリの改善や論文の成功率を再現する実験とは別に報告してください。
 元のコンテナでは Spatial の各1試行が10/10成功しましたが、各50試行の論文評価ではありません。
@@ -82,14 +81,13 @@ python data_process/skill_hierarchy/skill_hierarchy_tokenizer.py \
 
 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 \
   CUDA_VISIBLE_DEVICES='' JAX_PLATFORMS=cpu python -m pytest -q \
-  tests/test_skill_methods_m4.py tests/test_skill_methods_m5.py \
-  tests/test_skill_intermediate_action.py tests/test_skill_intermediate_clip.py \
-  tests/test_skill_intermediate_ambiguity.py \
-  tests/test_emergent_fair_compare.py tests/test_emergent_roundtrip.py
+  tests/test_skill_methods_m1.py tests/test_pi05_memory_core.py \
+  tests/test_pi05_fair_expert.py tests/test_pi05_key_mechanism.py \
+  skill_memory_core/tests/test_core.py
 ```
 
 トークナイザの例では `tokens: [1, 7, 57]` が出力されます。
-続くテストはこのPRの確認時に57件成功しました。終了コード0が、この範囲の成功の目印です。各テストは合成入力を使います。
+続くテストの成功は終了コード0で確認します。各テストは合成入力を使います。
 続いて GPU と描画を個別に確認します。
 
 ```bash
@@ -123,89 +121,15 @@ bash env/eval_smoke.sh
 LIBERO-Skill のゼロショット評価とは条件が異なります。
 全スイートや SkillNet 自体の学習は [既存の学習・評価手順](training_and_evaluation.md) を参照してください。
 
-## 4. 軽量研究実験の入力と実行
+## 4. 研究実験の入力と実行
 
-### 入力データの違い
-
-軽量実験の入力は、**元のデモ1本を LeRobot の1エピソードとして保持した LIBERO-40** です。
-`meta/info.json`・`meta/episodes.jsonl`・`meta/tasks.jsonl` と
-`data/chunk-*/episode_*.parquet` が必要です。
-測定に使った入力は 40タスク・1,693エピソード・273,465フレームでした。
+現行アルゴリズムの入力は、**元のデモ1本を LeRobot の1エピソードとして保持した LIBERO-40** です（40タスク・1,693エピソード・273,465フレーム）。
 タスク番号は `0–9 = LIBERO-10`、`10–19 = goal`、`20–29 = object`、`30–39 = spatial` です。
-初期の軽量実験は0–9を除きます。
+既存の公開変換器が作る `libero_40_v1` はスキル区間ごとに分割した3,862エピソードの形式で、代用すると分割と評価条件が変わります。
 
-| 用途 | Parquet の列 |
-| --- | --- |
-| 凍結 VLM 特徴の抽出 | `image`, `wrist_image`, `state`, `actions`, `episode_index`, `task_index`, `frame_index` |
-| 後続の中間行動実験の事後評価・行結合 | 上記に加え `eval_skill_class`, `eval_skill_segment` |
-
-画像は Parquet に画像バイト列を保持し、状態は8次元、行動は7次元です。
-`meta/episodes.jsonl` の各行には `episode_index` と `tasks` を含めます。
-評価用注釈は特徴抽出器の入力列から除外されています。
-Split A は object+spatial → goal、Split B は object+goal → spatial です。
-
-**この全エピソード形式のデータセットと、その作成に使ったローカル変換ラッパーは Git に含まれていません。**
-既存の公開変換器が作る `libero_40_v1` はスキル区間ごとに分割した3,862エピソードの形式です。
-これをそのまま代用すると、分割・行動窓・評価条件が変わります。
-同じ研究条件を再現する際は、この入力形式を満たすデータと作成時の記録も共有してください。
+データの作成と実行順序は [現行アルゴリズムの再現手順](reproduce_core_path.md) にあります。
 公開 RLDS の取得と、ベースの SkillNet 用の変換手順は [データ処理ガイド](libero_data_processing.md) にあります。
-
-### 入力を揃えた後の初期実験
-
-入力を `$HF_LEROBOT_HOME/emergent/libero_40_unsegmented` に配置した場合の例です。
-π0.5 base の取得には Google Cloud CLI の `gcloud` を使います。
-公開 SkillNet-LIBERO-40 重みと π0.5 base は用途が違うので、別の保存先を使います。
-
-```bash
-export SKILLNET_LIGHT_DATASET="$HF_LEROBOT_HOME/emergent/libero_40_unsegmented"
-export SKILLNET_PI05_BASE_DIR="$SKILLNET_STATE_DIR/checkpoints/pi05_base"
-mkdir -p "$SKILLNET_PI05_BASE_DIR"
-gcloud storage cp -r gs://openpi-assets/checkpoints/pi05_base/params "$SKILLNET_PI05_BASE_DIR/"
-
-test -f "$SKILLNET_LIGHT_DATASET/meta/episodes.jsonl"
-test -d "$SKILLNET_PI05_BASE_DIR/params"
-python -m skill_moe.skillnet.examples.emergent.light.run \
-  --dataset "$SKILLNET_LIGHT_DATASET" \
-  --checkpoint "$SKILLNET_PI05_BASE_DIR/params" \
-  --cache-dir "$SKILLNET_STATE_DIR/cache/emergent-light" \
-  --output-root "$SKILLNET_STATE_DIR/outputs/memory-pilot" \
-  --vision-batch 2 --train-batch 256 --epochs 20 --seed 0
-```
-
-トークナイザは初回に取得されます。事前配置する場合は
-`SKILLNET_PALIGEMMA_TOKENIZER` にローカルのモデルファイルを指定できます。
-特徴抽出には π0.5 を使うため、MLP が小さくても GPU と重みの保存容量が必要です。
-`--cpu` は小さなモデルの学習先を変更するオプションで、特徴抽出の重みを不要にするものではありません。
-`--max-episodes` は読み出しの疎通確認用で、論文・研究ノートの比較値には使いません。
-
-生成先は `outputs/memory-pilot/emergent-light-<日時>-<ID>/` です。
-入口は `report.md`、各条件の詳細は `evaluations/H*_beta*/report.md` と `results.json`、
-学習済みの小さなモデルは `models/`、特徴一覧は `feature_manifest.json` にあります。
-特徴キャッシュの `manifest.json` はファイルのパスを保持するため、別のマシンへコピーした場合は
-パスを更新するか、新しい環境で再抽出してください。
-
-### S1/S2 や新しい結果も共有する場合
-
-[研究スクリプト一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md) から対象を選びます。
-一部の後続スクリプトには元の環境の固定パスや CLI で変更できない資産の参照が残っています。
-初期実験のキャッシュを作っただけで、S1/S2 のすべてが任意の場所から実行できる状態ではありません。
-
-研究ノートの数値まで比較する場合は、次も必要です。
-
-- 対応するコードのコミット IDと、未コミットの変更があればその差分。
-- 元のデモとタスク番号の対応、全エピソード形式の生成方法、評価用注釈。
-- 特徴抽出に使った重み・トークナイザ・抽出条件と、キャッシュの manifest。
-- S1 のサブタスク条件と予測テキストを使う場合の生成器・出力。S2 の LIBERO-90 メモリ・正規化統計・行分割。
-- 実際のコマンド、seed、試行数、タスクごとの初期状態番号、対照条件、集計前の行単位・試行単位の結果。
-
-10月30日の[結果・レビュー](research/03_anchor_flow/offline_results.md)と、
-較正・検索キー・区間スキル・場面適応・Optimus-R Stage AのコードとテストもGitで管理しています。
-[S2のスクリプト一覧と必要資産](../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)、
-[軽量実験の一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)、
-[Optimus-Rの実装範囲](../skill_moe/skillnet/examples/memory_pilot/optimus_r/DESIGN.md)を確認してください。
-コードの配布に、元データ・大容量キャッシュ・学習済みメモリ・実験出力の配布は含まれません。
-今回整理したスクリプトの既定保存先はチェックアウト先と `SKILLNET_STATE_DIR` から解決しますが、
-過去のrun名を含む入力は実際に用意した資産のパスへ指定し直す必要があります。
+完了した過去の実験のコードは Git タグ `archive/before-cleanup` にあります。
 
 ## 5. 検証の範囲と既知の問題
 
@@ -218,11 +142,7 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 | LIBERO のアセット・benchmark が見つからない | 完全ソースの固定リビジョン、editable install、アセット登録を確認する |
 | `libGL.so.1` がない・EGL 初期化失敗 | OS の OpenGL/EGL ライブラリ、NVIDIA ドライバ、コンテナの GPU 共有を確認する |
 | TFDS import 時の Protobuf エラー | 固定リストの `tensorflow-metadata==1.21.0` と Protobuf 5.29.6 の生成コード互換性に問題がある。データ変換前に import を確認し、互換環境を別途検証する。元の変換処理はローカルの互換 overlay を使用していた |
-| 広いテスト実行で失敗する | PR #2 の確認時は関連146件中140件成功、既存の z-model 4件と D3 2件が失敗。全 `tests/` は描画環境の import でも停止する |
-| `check_public_release.py` が失敗する | 元の SkillNet 公開リリース契約と、この研究用リポジトリの README 等が一致せず47件失敗。PR #2 の整理前でも同じ失敗を確認済み |
 
-`python scripts/check_public_release.py --verbose` の全成功を、この研究用チェックアウトの前提にはしていません。
-個別の失敗を区別して記録してください。
 
 ## 6. 再現結果を共有する
 

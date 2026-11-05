@@ -8,13 +8,13 @@
 
 | 実測 | 読み取れること・限界 |
 | --- | --- |
-| **閉ループ計240試行**：①公開SkillNet 43/80＝**53.8%**、③FT・記憶なし35/80＝**43.8%**、④FT・検索下書きを初期値に使用35/80＝**43.8%**。④−③＝0ポイント、対応する不一致は16対16。⑤専用bridgeは16/40＝**40.0%** | 現行検索による成功率の優位は未確認。①は10積分、③④は2積分なので、①との差をメモリだけの効果としない。⑤は初期状態0–4だけで、80試行群とそのまま比較しない。非有意は同等の証明ではない。[閉ループ集計](/work/.skillnet-state/outputs/memory-pilot/closedloop-ft-20261031T151100Z/report_r8_240.md)、[⑤の記録](review_answer.md) |
-| **検索**：オラクルが選ぶ単位のhit@20は約**90–98%**だが、最良の項目そのもののhit@5は**1.7–14.2%**。top-1化・低温化は改善せず、多くの条件で悪化 | 単位へ到達しても、その中の適切な運動片を選べていない。ただし「正しい」は未来の正解チャンクへの距離で定義したオラクルであり、意味ラベルではない。範囲は異なるbank・診断集合の値で、同一実験のCIではない。[検索鋭化](/work/.skillnet-state/outputs/memory-pilot/retrieval-sharpen-20261101T010006Z/report.md)、[R012オラクル](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md) |
-| **運動単位**：旧bankの57単位ではグリッパー開閉の2群が最も明瞭。行レベルのlatent silhouetteは**.069** | 57個の意味的プリミティブが創発したとは言えない。別の細かな構造の不存在までは示さない。以下は暫定的に「運動片」「候補単位」と呼ぶ。[単位解析](/work/.skillnet-state/outputs/memory-pilot/unit-cluster-20261101T010123Z/report.md) |
-| **R012**：Train 10タスクから作った26単位を用い、Diag 4タスク・20実演・316行でR0/R1/R2の生成誤差に明確な差なし。R2はオラクルでも下書き誤差**.8792**、共通clip後**.3860** | これは主に**オフライン**の結果であり、閉ループで同等と判定した結果ではない。今回の参照物体選択・正準化を続ける根拠は乏しい。sourceのround-tripは通っており、単なる逆変換の数値バグでは説明しにくい。[R012](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/report.md)、[オラクル診断](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md) |
-| **オラクル下書き**：R1生成器で**.02500**、公開SkillNetのP3 **.02935**との差**−.00435［−.00725, −.00206］** | 良い下書きを渡せば利用できるという上限診断。選択に正解の未来行動を使っており、実行可能な改善や汎化の証拠ではない。Diagは公開SkillNetの既習タスク。P3は3予測の平均、R1側は各noiseの誤差平均という集計差もあり、計算量を揃えた最終比較ではない。[オラクル診断](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md) |
-| **10タスクの学習rerank**：下書き**.18125→.10136**。生成後はR0比**−.00175［−.00495, +.00073］**、shuffle比**−.00058［−.00225, +.00122］**で、事前基準は**不通過** | 下書き改善は生成後の優位まで届いていない。最良項目が64候補内にある割合も**55.7%**に限られる。生成後のR0は同じrerank再評価の**.03190**を用い、以前の別集計値.03046とは混ぜない。[rerank-v1](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank-v1/report.md) |
-| **信頼度**：top-20の最大単位重みと下書き誤差のSpearman相関は開発側で**−.409**。信頼度でt0を変える試みは改善せず | 順位相関は適切な積分開始時刻が分かることを意味しない。今回、適応t0は追加しない。[信頼度診断](/work/.skillnet-state/outputs/memory-pilot/retrieval-conf-20261101T015100Z/report.md) |
+| **閉ループ計240試行**：①公開SkillNet 43/80＝**53.8%**、③FT・記憶なし35/80＝**43.8%**、④FT・検索下書きを初期値に使用35/80＝**43.8%**。④−③＝0ポイント、対応する不一致は16対16。⑤専用bridgeは16/40＝**40.0%** | 現行検索による成功率の優位は未確認。①は10積分、③④は2積分なので、①との差をメモリだけの効果としない。⑤は初期状態0–4だけで、80試行群とそのまま比較しない。非有意は同等の証明ではない。閉ループ集計（`.skillnet-state/outputs/memory-pilot/closedloop-ft-20261031T151100Z/report_r8_240.md`）、[⑤の記録](review_answer.md) |
+| **検索**：オラクルが選ぶ単位のhit@20は約**90–98%**だが、最良の項目そのもののhit@5は**1.7–14.2%**。top-1化・低温化は改善せず、多くの条件で悪化 | 単位へ到達しても、その中の適切な運動片を選べていない。ただし「正しい」は未来の正解チャンクへの距離で定義したオラクルであり、意味ラベルではない。範囲は異なるbank・診断集合の値で、同一実験のCIではない。検索鋭化（`.skillnet-state/outputs/memory-pilot/retrieval-sharpen-20261101T010006Z/report.md`）、R012オラクル（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md`） |
+| **運動単位**：旧bankの57単位ではグリッパー開閉の2群が最も明瞭。行レベルのlatent silhouetteは**.069** | 57個の意味的プリミティブが創発したとは言えない。別の細かな構造の不存在までは示さない。以下は暫定的に「運動片」「候補単位」と呼ぶ。単位解析（`.skillnet-state/outputs/memory-pilot/unit-cluster-20261101T010123Z/report.md`） |
+| **R012**：Train 10タスクから作った26単位を用い、Diag 4タスク・20実演・316行でR0/R1/R2の生成誤差に明確な差なし。R2はオラクルでも下書き誤差**.8792**、共通clip後**.3860** | これは主に**オフライン**の結果であり、閉ループで同等と判定した結果ではない。今回の参照物体選択・正準化を続ける根拠は乏しい。sourceのround-tripは通っており、単なる逆変換の数値バグでは説明しにくい。R012（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/report.md`）、オラクル診断（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md`） |
+| **オラクル下書き**：R1生成器で**.02500**、公開SkillNetのP3 **.02935**との差**−.00435［−.00725, −.00206］** | 良い下書きを渡せば利用できるという上限診断。選択に正解の未来行動を使っており、実行可能な改善や汎化の証拠ではない。Diagは公開SkillNetの既習タスク。P3は3予測の平均、R1側は各noiseの誤差平均という集計差もあり、計算量を揃えた最終比較ではない。オラクル診断（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/evaluation-oracle/report.md`） |
+| **10タスクの学習rerank**：下書き**.18125→.10136**。生成後はR0比**−.00175［−.00495, +.00073］**、shuffle比**−.00058［−.00225, +.00122］**で、事前基準は**不通過** | 下書き改善は生成後の優位まで届いていない。最良項目が64候補内にある割合も**55.7%**に限られる。生成後のR0は同じrerank再評価の**.03190**を用い、以前の別集計値.03046とは混ぜない。rerank-v1（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank-v1/report.md`） |
+| **信頼度**：top-20の最大単位重みと下書き誤差のSpearman相関は開発側で**−.409**。信頼度でt0を変える試みは改善せず | 順位相関は適切な積分開始時刻が分かることを意味しない。今回、適応t0は追加しない。信頼度診断（`.skillnet-state/outputs/memory-pilot/retrieval-conf-20261101T015100Z/report.md`） |
 
 240試行は完了したrolloutの集計であり、途中のサーバー障害・未完了試行を含む全投入数ではない。元報告の再試行・欠損履歴も保存して解釈する。
 
@@ -22,7 +22,7 @@
 
 ## 2. 新規性の確認：経路の組合せは既存研究と重なる
 
-2026-11-01にarXiv本文を確認した。**最も近いRA-VLAは、行動対応で学習した検索器、検索チャンクの平均によるflow初期化、検索特徴による条件付けを既に備える。** 「学習した検索＋検索行動からのflow」を本研究の初出とは主張しない。詳細な版・本文の節・差分表は[文献調査](/work/.skillnet-state/outputs/memory-pilot/research-final-novelty-20261101T075830Z/novelty.md)に残した。
+2026-11-01にarXiv本文を確認した。**最も近いRA-VLAは、行動対応で学習した検索器、検索チャンクの平均によるflow初期化、検索特徴による条件付けを既に備える。** 「学習した検索＋検索行動からのflow」を本研究の初出とは主張しない。詳細な版・本文の節・差分表は文献調査（`.skillnet-state/outputs/memory-pilot/research-final-novelty-20261101T075830Z/novelty.md`）に残した。
 
 | 先行研究（確認版・日付） | 今回との差を一行で示す |
 | --- | --- |
@@ -50,10 +50,10 @@
 
 問いは、**「既存のR1生成器を固定したまま、69タスクで学習した選択器が、正解を見ない検索でもメモリなし対照と対応を壊した記憶を上回るか」**とする。今回はR2、単位の再設計、t0調整、生成器の再学習を同時に入れない。
 
-- [既存の分割manifest](/work/.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/proposed_split_final.json)の**Train 69／Dev 10／Diag 10**を維持する。task名は分割と監査にのみ用いる。メモリ項目、検索器への勾配、特徴統計はTrainから作る。episode・同一初期状態単位で分け、訓練query自身と同じ実演・初期状態の未来区間を候補から除く。
+- 既存の分割manifest（`.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/proposed_split_final.json`）の**Train 69／Dev 10／Diag 10**を維持する。task名は分割と監査にのみ用いる。メモリ項目、検索器への勾配、特徴統計はTrainから作る。episode・同一初期状態単位で分け、訓練query自身と同じ実演・初期状態の未来区間を候補から除く。
 - 69は**検索器の訓練タスク数**である。R0/R1生成器は今回の10タスク診断の重みを凍結する。公開SkillNetは全89タスクを既習として扱う。既存の運動codecにも全89由来の学習があれば明記し、「すべてを69タスクだけで学習した」とは書かない。単位統計・新しい正規化へのDiag流入は許さない。
 - 現在までの画像・全体指示・robot state・関係履歴Φを使う。Φは`t,t−5,t−10,t−15`の4時点。R0にも同じΦを与える。未来のquery行動・未来物体状態・進捗正解・subtask labelを検索入力へ渡さない。**教師行動を使うのはTrainの検索損失だけ**。保存済み候補の行動列を読むことは、現在queryの未来を見ることとは区別する。
-- Diagは各タスク5実演、計50実演を固定する。[準備側の選定manifest](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/diag_selection.json)に従い、画像・action・物理状態の厳密対応が確認できる実演だけを使う。除外した未対応実演の数と偏りも報告する。
+- Diagは各タスク5実演、計50実演を固定する。準備側の選定manifest（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/diag_selection.json`）に従い、画像・action・物理状態の厳密対応が確認できる実演だけを使う。除外した未対応実演の数と偏りも報告する。
 - Diag 10のうち4タスクは既に今日のR012診断で見ている。全10タスクの結果を主表に残し、**R012既見4／R012追加6**も分けて出す。追加6も過去解析・cacheの利用履歴を監査し、完全に未使用の検証集合とは仮定しない。新しく選んだ実演にしても4タスクの既見は消えない。公開基盤の既習も含め、厳密な未見タスク検定とは呼ばない。
 
 公開済み特徴の再利用では、行の対応、skill／object annotation入力の有無、codecの学習範囲をmanifestで確認する。確認できない場合は準備未成立として扱い、ラベルなし・Train-onlyという記述を推測で埋めない。
@@ -81,7 +81,7 @@ bank = Train 69の経験のみから作る固定10×7 actionチャンクと因�
 
 bridgeの既存訓練定義は`X_s=(1−s)a*+sB`、`t=.4s`、速度教師`(B−a*)/.4`である。今回はその生成器へ新しいAを渡す。**H=10、replan=5、t0=.4、Euler 2回**を固定する。低確信でも通常方策へ切り替えず、適応積分・候補数変更・可変長・グラフ探索を加えない。
 
-rerankerは[10タスク版の実装](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank-v1/run_rerank.py)と同じ小MLPを用いる。AdamW、LR `5e−4`、weight decay `1e−4`、batch16、最大80 epoch、patience8、seed `20261102`を基準に固定する。episodeで分けたTrain内部validationの候補選択誤差でepochを選び、ブレンド温度は既存grid`.01,.025,.05,.1,.2,.5,1`から同validationだけで決める。10タスク版の選択値1.0を、69タスクでの選択済み値として流用したとは書かない。Devは入力・整合の確認に使い、Diagの誤差で設定を選び直さない。
+rerankerは10タスク版の実装（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank-v1/run_rerank.py`）と同じ小MLPを用いる。AdamW、LR `5e−4`、weight decay `1e−4`、batch16、最大80 epoch、patience8、seed `20261102`を基準に固定する。episodeで分けたTrain内部validationの候補選択誤差でepochを選び、ブレンド温度は既存grid`.01,.025,.05,.1,.2,.5,1`から同validationだけで決める。10タスク版の選択値1.0を、69タスクでの選択済み値として流用したとは書かない。Devは入力・整合の確認に使い、Diagの誤差で設定を選び直さない。
 
 ### 3.3 比較と事前の通過条件
 
@@ -132,7 +132,7 @@ CIはこの診断集合のepisode変動を扱う。訓練seed間や新しいタ�
 
 ## 6. 実行範囲とコスト
 
-本書の作成ではコード編集・学習・評価は実施していない。69版は別担当の[実行先](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md)へ結果を残す。本書の数値欄は後日追記する。
+本書の作成ではコード編集・学習・評価は実施していない。69版は別担当の実行先（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md`）へ結果を残す。本書の数値欄は後日追記する。
 
 今回の追加学習は小MLPだけで、既存R0/R1生成器を凍結するため、3条件の再学習を待つ計画ではない。69タスクのΦ・prefix・候補行の厳密な対応と候補構築が準備コストになる。新しい69版の実測速度がないため、完了時刻やGPU時間を断定しない。10タスクの生成器学習は各約22.5分だったが、これは69版rerankerの所要時間ではない。
 
@@ -140,7 +140,7 @@ CIはこの診断集合のepisode変動を扱う。訓練seed間や新しいタ�
 
 ## 7. 69タスク決着実験の結果（2026-11-01 10:25 UTC 追記）
 
-出典：`/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md`、`evaluation-donate/evaluation_metrics.json`。
+出典：`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md`、`evaluation-donate/evaluation_metrics.json`。
 
 **設定（実施した形）**：Train 69 タスク（37,312 行）／Dev 10（5,239 行、候補・温度の決定のみ）／Diag 10（50 デモ、737 行、事前に固定）。メモリは Train 69 タスクの生チャンク全行。候補は cosine 上位 256（Dev で固定、単位経由の追加なし）。reranker は行動 MSE の listwise 教師、τ=1.0。生成器は §3 の固定生成器ではなく、公開 SkillNet-90 から G0（A=0）と G1（反対 fold の rerank 下書き）を同条件（1,500 updates、batch 32、Φ 入り）で学習し直した。照合できない 7,151 行は除外。
 

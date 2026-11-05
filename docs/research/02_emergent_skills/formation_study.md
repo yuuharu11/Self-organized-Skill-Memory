@@ -17,7 +17,7 @@ base だけをメモリで引き、residual は観測から決める。運動制
 
 ## 共通の条件
 
-- 特徴キャッシュ：`/work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache`（言語なしのカメラ別特徴は `emergent-light-keys-20261026T074213Z-9e39c3/camera_features`）。再抽出しない。
+- 特徴キャッシュ：`.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache`（言語なしのカメラ別特徴は `emergent-light-keys-20261026T074213Z-9e39c3/camera_features`）。再抽出しない。
 - 学習：object/goal の20タスクだけ。spatial は学習・正規化・PCA・プロトタイプの初期化に使わない。H=25 を本命、H=10 を比較。乱数シード3つ。
 - 追加：spatial の store 分を流し、パラメータを勾配で更新せずに追加する（プロトタイプの移動平均の更新など、勾配でない更新は方式ごとに明記する）。
 - 評価：spatial の query 分。評価用の運動の特徴（環境の手先の軌道）は学習・追加の判断に使わない。

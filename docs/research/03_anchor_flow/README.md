@@ -1,4 +1,4 @@
-# 03 運動の型から始めるデノイズ（開始点デノイズ、2026-10-28〜11-01）
+# 03 運動の型から始めるデノイズ（開始点デノイズ）
 
 ## 問い
 
@@ -6,14 +6,14 @@
 
 ## 経緯
 
-| 時期 | やったこと | 結果 |
+| 順 | やったこと | 結果 |
 |---|---|---|
-| 10-28 | 設計（S1 / S2）、新規性の調査 | [design.md](design.md)、[novelty.md](novelty.md) |
-| 10-29 | 外部・内部の査読。v2 の設計 | 学習目標の不具合を発見。スキルを補助扱いする初版は撤回（[architecture_v2.md](architecture_v2.md)） |
-| 10-30 | 学習なしで、凍結ヘッドにスキルを入れる。場面に合わせる変換器 F | 既知タスクでは誤差 16〜21% 減、新しいタスクではほぼ消える。F は −.009 で基準（−.02）未達（[offline_results.md](offline_results.md)） |
-| 10-31 | 1,500 行で再評価、ヘッドの微調整 | 「グリッパーはスキルが効く」を撤回。効いたのはスキルと無関係な2点（微調整と少ステップのデノイズ）（[report.md](report.md)） |
-| 10-31〜11-01 | 閉ループ 240 試行、スキル専用 expert | ① 公開 53.8%、③ FT・記憶なし 43.8%、④ FT・下書きあり 43.8%。④ − ③ ＝ 0（[review_answer.md](review_answer.md)、[progress.md](progress.md)） |
-| 11-01 | 69 タスクで選択（並べ直し）を学習する決着実験 | 事前基準で不通過（G1 − G0 ＝ −.0015）。オラクル下書きなら公開比 35% 減（[proposal_rerank69.md](proposal_rerank69.md) §7） |
+| 1 | 設計（S1 / S2）、新規性の調査 | [design.md](design.md)、[novelty.md](novelty.md) |
+| 2 | 外部・内部の査読。v2 の設計 | 学習目標の不具合を発見。スキルを補助扱いする初版は撤回（[architecture_v2.md](architecture_v2.md)） |
+| 3 | 学習なしで、凍結ヘッドにスキルを入れる。場面に合わせる変換器 F | 既知タスクでは誤差 16〜21% 減、新しいタスクではほぼ消える。F は −.009 で基準（−.02）未達（[offline_results.md](offline_results.md)） |
+| 4 | 1,500 行で再評価、ヘッドの微調整 | 「グリッパーはスキルが効く」を撤回。効いたのはスキルと無関係な2点（微調整と少ステップのデノイズ）（[report.md](report.md)） |
+| 5 | 閉ループ 240 試行、スキル専用 expert | ① 公開 53.8%、③ FT・記憶なし 43.8%、④ FT・下書きあり 43.8%。④ − ③ ＝ 0（[review_answer.md](review_answer.md)、[progress.md](progress.md)） |
+| 6 | 69 タスクで選択（並べ直し）を学習する決着実験 | 事前基準で不通過（G1 − G0 ＝ −.0015）。オラクル下書きなら公開比 35% 減（[proposal_rerank69.md](proposal_rerank69.md) §7） |
 
 ## 結論
 
@@ -29,8 +29,8 @@
 
 | ファイル | 中身 |
 |---|---|
-| [report.md](report.md) | 10-31 時点の現状報告。前提知識なしで読める |
-| [progress.md](progress.md) | 11-01 の進捗報告（閉ループ確定、失敗分析、決着実験の不通過） |
+| [report.md](report.md) | 現状報告。前提知識なしで読める |
+| [progress.md](progress.md) | 進捗報告（閉ループ確定、失敗分析、決着実験の不通過） |
 
 **設計と提案**
 
@@ -47,9 +47,9 @@
 
 | ファイル | 中身 |
 |---|---|
-| [offline_results.md](offline_results.md) | 手法の定義と全結果の数値（10-30 時点、変換器 F を含む） |
+| [offline_results.md](offline_results.md) | 手法の定義と全結果の数値（変換器 F を含む） |
 | [report_working_notes.md](report_working_notes.md) | report.md の先行版。§7 外部レビューへの対応と、§8 1,500 行での訂正の全表 |
-| [review_answer.md](review_answer.md) | 10-31 のレビューへの回答。評価の前提の監査、閉ループ、スキル専用 expert |
+| [review_answer.md](review_answer.md) | レビューへの回答。評価の前提の監査、閉ループ、スキル専用 expert |
 
 **査読・相談**（[reviews/](reviews/)）
 
@@ -64,9 +64,9 @@
 
 | ファイル | 中身 |
 |---|---|
-| [logs/morning_report_s2.md](logs/morning_report_s2.md) | 10-29 夜の自律実験の朝のレポート |
-| [logs/handoff_stopped_s2.md](logs/handoff_stopped_s2.md) | 10-30 の測定停止時点の引き継ぎ（英語） |
-| [logs/night_log_s2_closed_loop.md](logs/night_log_s2_closed_loop.md) | 10-30 夜〜10-31 の作業ログと全表 |
-| [logs/night_log_skill_expert.md](logs/night_log_skill_expert.md) | 10-31 午後〜11-01 朝の作業ログ（閉ループ完走、スキル専用 expert） |
+| [logs/morning_report_s2.md](logs/morning_report_s2.md) | S2 の自律実験の朝のレポート |
+| [logs/handoff_stopped_s2.md](logs/handoff_stopped_s2.md) | 測定停止時点の引き継ぎ（英語） |
+| [logs/night_log_s2_closed_loop.md](logs/night_log_s2_closed_loop.md) | S2 閉ループの作業ログと全表 |
+| [logs/night_log_skill_expert.md](logs/night_log_skill_expert.md) | スキル専用 expert までの作業ログ（閉ループ完走、スキル専用 expert） |
 
-スクリプトは [examples/memory_pilot/anchor_flow/](../../../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)（S2）と [examples/emergent/light/intermediate/](../../../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)（S1）。
+スクリプトは `skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md`（S2）と `skill_moe/skillnet/examples/emergent/light/intermediate/README.md`（S1）。

@@ -1,11 +1,15 @@
 """CPU-only checks for open-ended M6-style raw action memories."""
 from __future__ import annotations
 
+import json
+
 import numpy as np
+import pytest
 
 from skill_moe.skillnet.examples.memory_pilot.pi05_memory.skill_memories.build import (
     RawFunctional,
     assert_no_long,
+    gap_threshold,
     m6_fit,
     unit_medoid,
 )
@@ -56,3 +60,19 @@ def test_no_long_guard_rejects_long_rows_and_eval_overlap():
         assert 'Long Eval rows leaked' in str(exc)
     else:
         raise AssertionError('Eval row was not rejected')
+
+
+def test_gap_threshold_prefers_corrected_over_summary(tmp_path):
+    (tmp_path / 'summary_corrected.json').write_text(json.dumps({'threshold': 0.02}))
+    (tmp_path / 'summary.json').write_text(json.dumps({'threshold': 0.05}))
+    assert gap_threshold(tmp_path) == 0.02
+
+
+def test_gap_threshold_falls_back_to_summary(tmp_path):
+    (tmp_path / 'summary.json').write_text(json.dumps({'threshold': 0.01549410422449}))
+    assert gap_threshold(tmp_path) == 0.01549410422449
+
+
+def test_gap_threshold_missing_both_raises(tmp_path):
+    with pytest.raises(FileNotFoundError, match='summary_corrected.json'):
+        gap_threshold(tmp_path)

@@ -14,7 +14,7 @@ C＝信頼度適応＋低帯は公開通常方策へfallback。A＝b-prior検索
 
 学習完了：4000更新、学習ループ13.0分。最初/最後のbatch損失 0.130974 / 0.061020。Dev最良：500更新、速度MSE 0.028441。batchごとに入力が異なるため最初/最後だけを曲線の改善量と解釈しない。全曲線は production-expert/trained.json。
 
-![学習損失と固定Dev損失](/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/production-learning-curve.png)
+学習損失と固定Dev損失（`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/production-learning-curve.png`）
 
 実際の訓練下書き使用数（nearest / rank23 / b-prior）: [19127, 4903, 7970]。
 
@@ -171,9 +171,9 @@ C＝信頼度適応＋低帯は公開通常方策へfallback。A＝b-prior検索
 
 推論秒はサーバー内前処理・VLM・prior・検索・復号・デノイズ・出力変換を含む（初回JIT込み）。通信待ちとシミュレーターを含まない。C/A/Dは3サーバー同時、Bは単一サーバー実行で負荷が異なるため、条件間の単純な速度比には使わない。
 
-固定snapshot：`/work/.skillnet-state/snapshots/skill-expert-20261104T180006Z`。tracked diff SHA256：`268213e0a055de7a1ef4ff921907736b34a5f7d42667cd9577c056040fa1f7c3`。openpi/client import先・torchスレッド数・CPU affinityは `production-control-*/imports/*.json` に記録。学習/オフライン8threads、閉ループserver/controller各2threads・worker各2threads、最大3server×2worker（通常24threads＋監視）。nice10以上、cores8–47、PREALLOCATE=false。JAX fraction train/offline=.30、closedloop=.20（初回.10は起動前OOM、ログ保全し新出力で再開）、Torch fraction環境変数=.10/server（codecはCPU実行）。CPU/GPU観測はhealth.jsonl。共通gatesの旧パスは存在せず、移動先 docs/research/01_memory_gates/gates.md を参照。今回の承認済み学習計画を優先。
+固定snapshot：`.skillnet-state/snapshots/skill-expert-20261104T180006Z`。tracked diff SHA256：`268213e0a055de7a1ef4ff921907736b34a5f7d42667cd9577c056040fa1f7c3`。openpi/client import先・torchスレッド数・CPU affinityは `production-control-*/imports/*.json` に記録。学習/オフライン8threads、閉ループserver/controller各2threads・worker各2threads、最大3server×2worker（通常24threads＋監視）。nice10以上、cores8–47、PREALLOCATE=false。JAX fraction train/offline=.30、closedloop=.20（初回.10は起動前OOM、ログ保全し新出力で再開）、Torch fraction環境変数=.10/server（codecはCPU実行）。CPU/GPU観測はhealth.jsonl。共通gatesの旧パスは存在せず、移動先 docs/research/01_memory_gates/gates.md を参照。今回の承認済み学習計画を優先。
 
-正常完了試行 400件の環境seed・問い合わせseed・初期状態hashを照合（4つの比較対象も照合）。smokeは本番に含めない。出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01`。
+正常完了試行 400件の環境seed・問い合わせseed・初期状態hashを照合（4つの比較対象も照合）。smokeは本番に含めない。出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01`。
 
 ## 解釈
 
@@ -260,4 +260,4 @@ C-oldは旧Expert `run-01/bridge/001500` を使用。推論コード、写像（
 
 C-oldは96/100、新Cは89/100。差の点推定は+7ポイント、対応比較は救済9・悪化2、exact p=0.0654297。これはExpertを替えた場合の探索的な結果であり、通常方策に対する改善や、外れ下書きが原因との因果的結論は別に判断する。
 
-出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/posthoc-C-old-20261104T192321Z`。manifestはcontrol/manifest.json、各試行はclosedloop/C/rollouts.jsonlとattempts/。初期状態・seed・Cと同じ帯の適用を完了試行ごとに照合。各初期状態の最初の問い合わせでは、新Cと検索行・スコア（許容絶対差1e-6）・t0・fallbackも照合。事前登録4条件の報告原本を `preregistered-report-preserved.md` に保全（primaryのfinal-validation.jsonにあるSHA256と一致）。上の事前登録節の数値と原本は変更しない。
+出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-expert-01/posthoc-C-old-20261104T192321Z`。manifestはcontrol/manifest.json、各試行はclosedloop/C/rollouts.jsonlとattempts/。初期状態・seed・Cと同じ帯の適用を完了試行ごとに照合。各初期状態の最初の問い合わせでは、新Cと検索行・スコア（許容絶対差1e-6）・t0・fallbackも照合。事前登録4条件の報告原本を `preregistered-report-preserved.md` に保全（primaryのfinal-validation.jsonにあるSHA256と一致）。上の事前登録節の数値と原本は変更しない。

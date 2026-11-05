@@ -12,7 +12,11 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+ROOT=_PI05_ROOT
 RUN=ROOT/'run-01'; MEMORY=ROOT/'skill-memories-01'/'raw-rows-noLong'
 GAP=ROOT/'memory-gap-01'; TOPK=ROOT/'topk-long-01'/'production'
 OUT=ROOT/'local-key-02'; Q80=0.01549410422449
@@ -25,6 +29,14 @@ REGIONS={'wrist_center4':(slice(6,10),slice(6,10)),
 def _load_module(name,path):
     spec=importlib.util.spec_from_file_location(name,path);mod=importlib.util.module_from_spec(spec)
     assert spec.loader is not None;spec.loader.exec_module(mod);return mod
+
+
+def _gap_threshold(gap_path=GAP):
+    """Hard-row threshold; prefers summary_corrected.json, falls back to summary.json."""
+    for name in ('summary_corrected.json','summary.json'):
+        candidate=gap_path/name
+        if candidate.exists():return float(json.loads(candidate.read_text())['threshold'])
+    raise FileNotFoundError(f'neither summary_corrected.json nor summary.json in {gap_path}')
 
 
 def _l2_normalize(x):
@@ -323,7 +335,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     gap=np.load(GAP/'predictions_and_errors.npz',allow_pickle=False);top=np.load(TOPK/'predictions_and_errors.npz',allow_pickle=False)
     long_ids=gap['row_ids'][np.asarray(rows['task'][gap['row_ids']])<10];hard=top['hard_mask']
     if len(pool)!=3857 or len(long_ids)!=548 or int(hard.sum())!=63 or not np.array_equal(long_ids,top['query_rows']):raise AssertionError('fixed pool/Long split mismatch')
-    if abs(float(json.loads((GAP/'summary_corrected.json').read_text())['threshold'])-Q80)>1e-10:raise AssertionError('fixed q80 changed')
+    if abs(_gap_threshold(GAP)-Q80)>1e-10:raise AssertionError('fixed q80 changed')
     memids=np.load(MEMORY/'units.npz',allow_pickle=False)['representative_row_ids']
     if not np.array_equal(pool,memids):raise AssertionError('memory row IDs differ from raw-rows-noLong')
     row_train=np.flatnonzero((np.asarray(rows['task'])>=10)&~np.asarray(rows['memory'],bool)&~np.asarray(rows['validation'],bool))
@@ -333,7 +345,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     dev_ids=val_no_long[np.isin(np.asarray(rows['episode'][val_no_long]),dev_eps)]
     _assert_no_long(np.r_[pool,row_train],dev_ids,rows)
     all_required=np.unique(np.r_[pool,row_train,dev_ids,long_ids])
-    norm=json.loads(next(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero/assets').rglob('norm_stats.json')).read_text())['norm_stats']
+    norm=json.loads(next(_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero/assets'.rglob('norm_stats.json')).read_text())['norm_stats']
     state_q01=np.asarray(norm['state']['q01'][:8],np.float32);state_q99=np.asarray(norm['state']['q99'][:8],np.float32)
     if skip_camera:raise NotImplementedError('camera projection is required for the final run')
     task_texts=json.loads((RUN/'data_manifest.json').read_text())['tasks']

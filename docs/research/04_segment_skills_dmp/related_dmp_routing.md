@@ -4,7 +4,7 @@
 
 **結論：DMPの形／ゴール／時間の分離、ネットワークによるパラメータ予測、運動原始と拡散の結合、無注釈分節化、原始の追加は、それぞれ既存である。差の候補は「意味ラベルを使わず形成した、個数を固定しない形の辞書を1本選び、場面から幾何・時間を指定してVLAの生成を実際に支配する」という組合せと、その因果的な検証にある。現在のS4は埋め込みと出力行を学習するため、全パラメータ固定／勾配なし追加とは呼べない。**
 
-可変長単位のPRISE／QueST／LOTUS／BUDS／LOVE等の詳細は [related_action_units.md](related_action_units.md)、言語ベンチマーク・Hi Robot／π0.5／SayCan等は [abstract-prompt調査](/work/.skillnet-state/outputs/memory-pilot/abstract-prompt-20261101/related_work.md) を参照。本稿はDMPとの接続と、その後に確認した近接研究を補う。
+可変長単位のPRISE／QueST／LOTUS／BUDS／LOVE等の詳細は [related_action_units.md](related_action_units.md)、言語ベンチマーク・Hi Robot／π0.5／SayCan等は abstract-prompt調査（`.skillnet-state/outputs/memory-pilot/abstract-prompt-20261101/related_work.md`） を参照。本稿はDMPとの接続と、その後に確認した近接研究を補う。
 
 ## 1. 今回の表現のうち、古典的DMPですでにあるもの
 
@@ -117,4 +117,4 @@ Hi Robotの同じ合成データを使ったflat比較、SkillDiffuserのskill�
 2. **形を消せる自由なbridgeと、形を保つ補正を分ける。** 派生条件として、選択DMPを主軌道とし、始終点を変えない位相依存の補正basis内でflowを学ぶ構成を比較する。g・τ・scene adaptationを許しつつ、選択形を全面的に描き直せる経路を制約する。MPDの構造化decoderの知見を使えるが、**shapeの選択が主役だと分かる介入**を重視する。補正を縛りすぎると接触・修正に弱くなるので、現S3を置き換える前提にはしない。
 3. **新規性の比較軸を「shape依存」と「言語階層の利得」に分ける。** 既定G0／shuffleに加える将来の補助条件として、`g,τ,s`は同じでwを直進型へ置換する条件と、同じprefix／同じ上位解釈を使ってwだけを替える条件を用意する。全体SRに加え、g・τを変えたときの型の保持、wrong shape時の段階誤り、flowの補正量を測る。これにより**DMP一般の平滑化・goal回帰・強い言語plannerだけでは説明できない差**を示せる。追加のmodel selectionにDiagは使わず、既定の通過判定とは分けて報告する。
 
-一次資料・表抽出・版履歴は [research/sources](/work/.skillnet-state/outputs/memory-pilot/dmp-route-20261102/research/sources/) に保存した。HTML未提供のMovement Primitive DiffusionはarXiv PDF本文を使用。コード・設計書・既存調査文書・評価プロセスは変更していない。
+一次資料・表抽出・版履歴は `.skillnet-state/outputs/memory-pilot/dmp-route-20261102/research/sources/` に保存した。HTML未提供のMovement Primitive DiffusionはarXiv PDF本文を使用。コード・設計書・既存調査文書・評価プロセスは変更していない。

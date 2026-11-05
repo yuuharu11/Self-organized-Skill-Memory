@@ -14,11 +14,15 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/memory-gap-01')
-RETRIEVAL = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01')
-TOPK = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production')
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-memories-01')
+import os as _os
+_REPO = Path(__file__).resolve().parents[6]
+_STATE_DIR = Path(_os.environ.get('SKILLNET_STATE_DIR', _REPO / '.skillnet-state'))
+_PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))
+RUN = _PI05_ROOT / 'run-01'
+GAP = _PI05_ROOT / 'memory-gap-01'
+RETRIEVAL = _PI05_ROOT / 'retrieval-4b-01'
+TOPK = _PI05_ROOT / 'topk-long-01/production'
+OUT = _PI05_ROOT / 'skill-memories-01'
 SEED = 20261104
 DEV_SEED = 20261105
 MIN_SUPPORT = 10
@@ -34,6 +38,20 @@ LONG_TASKS = set(range(10))
 def load_rows(run: Path = RUN):
     return {p.stem: np.load(p, mmap_mode='r', allow_pickle=False)
             for p in (run / 'rows').glob('*.npy')}
+
+
+def gap_threshold(gap_path: Path = GAP) -> float:
+    """Hard-row threshold from the memory-gap output.
+
+    Prefers ``summary_corrected.json`` and falls back to ``summary.json`` so
+    outputs written before the corrected artifact existed still resolve.
+    """
+    for name in ('summary_corrected.json', 'summary.json'):
+        candidate = gap_path / name
+        if candidate.exists():
+            return float(json.loads(candidate.read_text())['threshold'])
+    raise FileNotFoundError(
+        f'neither summary_corrected.json nor summary.json in {gap_path}')
 
 
 def dev_row_ids(rows: dict[str, np.ndarray]) -> np.ndarray:
@@ -60,7 +78,7 @@ def long_eval_ids(rows, gap_path: Path = GAP, topk_path: Path = TOPK) -> tuple[n
     names = gap['condition_names'].tolist()
     normal_i = names.index('A_normal')
     normal = np.asarray(gap['row_mse'][normal_i], np.float64).mean(axis=0)
-    threshold = float(json.loads((gap_path / 'summary_corrected.json').read_text())['threshold'])
+    threshold = gap_threshold(gap_path)
     all_ids = np.asarray(gap['row_ids'], np.int64)
     task = np.asarray(rows['task'])[all_ids]
     ids = all_ids[task < 10]
@@ -353,7 +371,7 @@ def raw_diagnostics(query_actions, representatives, *, batch=32):
         qb=q[start:start+batch]; qn=np.einsum('ij,ij->i',qb,qb)
         d=np.maximum(qn[:,None]+rn[None,:]-2*(qb@r.T),0.)/70.
         part=np.partition(d,min(4,d.shape[1]-1),axis=1)
-        out1[start:start+len(qb)]=part[:,0]
+        out1[start:start+len(qb)]=d.min(axis=1)
         out5[start:start+len(qb)]=part[:,:min(5,d.shape[1])].min(axis=1)
     return out1,out5
 
@@ -378,7 +396,7 @@ def b_diagnostics(codec, rep_b, query_feat, query_state, query_actions, *, batch
             d=np.mean((pred-target[:,None])**2,axis=(-1,-2))
             all_d[:,rs:re]=d
         p=np.partition(all_d,min(4,all_d.shape[1]-1),axis=1)
-        one[qs:qe]=p[:,0]; five[qs:qe]=p[:,:min(5,p.shape[1])].min(axis=1)
+        one[qs:qe]=all_d.min(axis=1); five[qs:qe]=p[:,:min(5,p.shape[1])].min(axis=1)
         print(f'Long b-query diagnostics {qe}/{len(A)}',flush=True)
     return one,five
 

@@ -25,7 +25,6 @@
 ## 成功した確認
 
 - 開始時のGit作業ツリーはクリーン。公式リモート、必要ドキュメント、Gitオブジェクト整合性を確認。
-- 今回の変更を含むソースコピーで、公式 `check_public_release.py --verbose` が成功。
 - JAXでH200を検出し、行列積を実行。PyTorchでもCUDA上の演算を実行。
 - `skillnet_client.websocket_client_policy`、`openpi.models.pi0_moe_skill`、
   `openpi.policies.policy_config`、`openpi.training.data_loader_skill` のimport成功。

@@ -38,7 +38,7 @@ b+rの比較は、この流れの補足として扱う。実装した初期表�
 
 検証は新規5テスト通過。入力の窓順・タスク順照合、重複検出、共有エピソードの拒否、重なる窓の等重み処理、評価タスクの誤差を変更してもそのタスクのルーターが変わらないことを確認した。
 
-[可搬な集計JSON](evidence/offline_diagnostics_summary.json) / [再集計・ルーター実験コード](../../../scripts/analyze_memory_slide_evidence.py) / [テスト](../../../tests/test_memory_slide_evidence.py)
+[可搬な集計JSON](evidence/offline_diagnostics_summary.json) / 再集計・ルーター実験コード（`scripts/analyze_memory_slide_evidence.py`） / テスト（`tests/test_memory_slide_evidence.py`）
 
 以下は生成した詳細報告。ローカル出力は `.skillnet-state/outputs/memory-pilot/slide-evidence-20261103/run-0840/`。
 
@@ -136,7 +136,7 @@ oracleは将来の正解誤差で良い経路を選ぶ実行不能な下限。ra
 
 ## 再現と出典
 
-- Source: `/work/.skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z`
-- 実行コマンド: `scripts/analyze_memory_slide_evidence.py --source /work/.skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z --cache /work/.skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache --output /work/.skillnet-state/outputs/memory-pilot/slide-evidence-20261103/run-0840 --bootstrap 1000`
+- Source: `.skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z`
+- 実行コマンド: `scripts/analyze_memory_slide_evidence.py --source .skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z --cache .skillnet-state/outputs/memory-pilot/emergent-light-20261026T050453Z-0cb536/feature-cache --output .skillnet-state/outputs/memory-pilot/slide-evidence-20261103/run-0840 --bootstrap 1000`
 - 入力hash・照合数・fold監査はsummary.json、全タスク別値はtask_metrics.csv、各foldの選択はrouting_predictions.npz。
 - 元のresults.json/per_row.npz/cacheは読み取りのみ。

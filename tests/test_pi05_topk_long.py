@@ -2,9 +2,10 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 
-SCRIPT = Path('/work/skill_moe/skillnet/examples/memory_pilot/pi05_memory/topk_long/run.py')
+SCRIPT = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/pi05_memory/topk_long/run.py'
 SPEC = importlib.util.spec_from_file_location('pi05_topk_long_testmod', SCRIPT)
 mod = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -74,6 +75,8 @@ def test_episode_exclusion_is_task_namespaced():
 
 
 def test_long_mapping_is_verified_from_task_text_and_data_filenames():
+    if not mod.RUN.exists():
+        pytest.skip('requires the local run-01 artifact')
     rows, _, _, long_rows = mod.load_inputs()
     mapping = mod.verify_long_task_mapping(rows)
     assert set(mapping) == {str(i) for i in range(10)}

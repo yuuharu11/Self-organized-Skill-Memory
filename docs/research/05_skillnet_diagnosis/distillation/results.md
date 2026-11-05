@@ -110,4 +110,4 @@ M1：1000更新完了。凍結重みSHA一致：True。
 
 集計図：`analysis/paired_outcomes.png` / `analysis/paired_outcomes.svg`。成否・成功step・query数・推論時間は`analysis/rollouts.csv`、対応内訳と検証詳細は`analysis/summary.json`に保存する。
 
-ローカル成果物：`/work/.skillnet-state/outputs/memory-pilot/recovery-distill-20261103`。生データ・画像は外部公開しない。
+ローカル成果物：`.skillnet-state/outputs/memory-pilot/recovery-distill-20261103`。生データ・画像は外部公開しない。
