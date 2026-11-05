@@ -35,5 +35,6 @@ Oracle候補存在率、Top-1 hit、候補存在時のRecall@10/@64、Top-1 acti
 
 - 全3,277 queryの action-only oracle は作成済み。
 - 非VLM側は `score-audit-01/nonvlm-full/` に全件の評価表がある。
-- VLM側はQ=64 smokeのみ。block=256の計測はスコア計算だけなら約18.8分だが、draft/cache保存を含む外挿は約43分。30分上限を超えるため全件VLM検索は未実行。
-- 統合 `results.md` と `07_pi05_memory40/README.md` の案内行は、VLM・非VLMの全手法が同一の全query分割でそろい、整合性を確認してから追加する。smoke値を全件値と混ぜない。
+- VLM側は全3,277 query、block=256で12キー方式×task/episode除外を作成した。既存 `retrieved_row.npy` と現行キーのTop-1は同一episode条件で全行一致し、スコア差は0。CUDA peak allocatedは約18.1 GiB。
+- 共通 `_metrics` でEval 1,318行を再集計し、既存 `nonvlm-full` の重複22手法×除外条件はτ=.01のTop-1 action MSEで完全一致した。Dev由来のπ0.5予測誤差q75/q90に基づくEval部分集合も追加した。
+- 統合結果、検索なし基準、Eval episode bootstrap CI、高誤差部分集合は [results.md](results.md) と `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/score-audit-01/integrated-full/` に記録した。Q=64 smoke値と全件値は分けて扱う。
