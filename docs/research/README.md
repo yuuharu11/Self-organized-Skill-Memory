@@ -25,6 +25,7 @@
 | 06 | [発表用のメモリ検証](06_memory_evidence/README.md) | 11-03〜11-04 | 10-28 の結果は発表に使えるか | 材料は揃った。成功率の改善は主張しない |
 | 07 | [π0.5 LIBERO-40](07_pi05_memory40/README.md) | 11-04〜 | 修正 Expert で通常生成を上回るか | 進行中 |
 | 08 | [保留タスクへのメモリ追加](08_heldout_memory_addition/README.md) | 11-04〜 | 重みを固定した実演追加がLong評価を変えるか | 準備のみ。互換性・split・資源見積もりを整理 |
+| 09 | [実機タスクの設計](09_real_robot_tasks/README.md) | 11-05〜 | 実機でどの運動を獲得し、どう組み合わせるか | 提案のみ。実機実験は未実施 |
 
 横断の文献調査は [surveys/](surveys/README.md)。
 
