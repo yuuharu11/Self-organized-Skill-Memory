@@ -21,11 +21,9 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 現行アルゴリズムをデータから評価まで通す | [現行アルゴリズムの再現手順](docs/reproduce_core_path.md) |
 | アルゴリズムを別プロジェクトへ移植する | [Skill Memory Core](skill_memory_core/README.md)、[アルゴリズム仕様](skill_memory_core/ALGORITHM.md) |
-| 各研究スクリプトの役割 | [軽量実験の一覧](skill_moe/skillnet/examples/emergent/light/README.md)、[中間行動実験の一覧](skill_moe/skillnet/examples/emergent/light/intermediate/README.md) |
-| S2の較正・検索・オフライン診断 | [S2スクリプトの一覧](skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md) |
 | ベースの SkillNet の学習・データ処理 | [Quick Start](docs/quick_start.md)、[学習と評価](docs/training_and_evaluation.md) |
 
-コードと小さな設定・注釈は Git に含まれます。データセット、重み、特徴キャッシュ、実験出力は別途用意します。
+コードと小さな設定・注釈は Git に含まれます。完了した過去の実験のコードは Git タグ `archive/before-cleanup` にあります。データセット、重み、特徴キャッシュ、実験出力は別途用意します。
 研究ノートに書かれた `.skillnet-state/` 以下のパスは測定時のローカル記録で、公開ダウンロード先ではありません。
 公開重みの評価と、研究ノートの数値を同じ条件で再現するための要件は、再現ガイドでそれぞれ説明しています。
 
@@ -53,8 +51,8 @@ SkillNet 由来の構成（`skill_moe/`, `data_process/` など）に、次を�
 | パス | 内容 |
 | --- | --- |
 | `docs/research/` | 研究ノート（方針・判定基準・結果・関連研究）。入口は [docs/research/README.md](docs/research/README.md) |
-| `skill_moe/skillnet/examples/emergent/` | 創発スキルの軽量検証（スキル表現の比較 M0〜M6、運動の型から始めるデノイズの S1） |
-| `skill_moe/skillnet/examples/memory_pilot/` | 検索メモリの事前判定（G0〜G3）と、LIBERO 閉ループでのデノイズ開始点の検証（S2） |
+| `skill_moe/skillnet/examples/emergent/light/methods/` | スキル表現の実装（M0〜M6）。現行の実験は M1 を圧縮器に使います |
+| `skill_moe/skillnet/examples/memory_pilot/` | 現行の実験コード。[一覧](skill_moe/skillnet/examples/memory_pilot/README.md) |
 | `skill_moe/skillnet/src/openpi/models/pi0_anchor_flow.py` ほか | デノイズ開始点の注入（anchor flow）とスキル潜在を持つ π0 の変種 |
 | `env/` | 現在のコンテナ用の環境設定・スモークテスト・依存の固定リスト |
 | `skill_memory_core/` | 現行アルゴリズム（生行動メモリ＋M2検索＋修正Expert）の移植用パッケージ |

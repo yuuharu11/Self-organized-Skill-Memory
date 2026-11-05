@@ -34,4 +34,4 @@
 | [instruction_update/related_work.md](instruction_update/related_work.md) | 固定 VLA への指示介入の先行研究との重なり |
 | [evidence/](evidence/) | スキル介入の生データ（`skillnet_prompt.jsonl`）と集計 |
 
-スクリプトは [examples/skill_conditioning/](../../../skill_moe/skillnet/examples/skill_conditioning/README.md)。
+スクリプトは `skill_moe/skillnet/examples/skill_conditioning/README.md`。

@@ -166,4 +166,4 @@ SKILL_MEMORY_ARTIFACTS="$SKILLNET_PI05_ROOT" python -m pytest -q -s skill_memory
 - **`_history` に既知の不具合があります。** 既存の重みとの互換性のため `as_trained` として残しています（[ALGORITHM.md](../skill_memory_core/ALGORITHM.md)）。
 - **学習済みの M2 と Expert は公開していません。** 手順どおりに再学習が必要で、同じ値になる保証はありません。
 - **Long は未知タスクではありません。** 公開 π0.5 のモデルと VLM は Long タスクを事前学習で見ています。
-- 主経路以外のスクリプトは、過去の run の出力を前提にしているものがあります。
+- 完了した過去の実験のコードは Git タグ `archive/before-cleanup` にあります。

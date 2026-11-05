@@ -13,7 +13,7 @@ import numpy as np
 
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
-sys.path.insert(0,str(HERE.parents[3]))  # skillnet/examples, for emergent.light methods
+sys.path.insert(0,str(HERE.parents[2]))  # skillnet/examples, for emergent.light methods
 from common import (FAIR, MEMORY, ROOT, RUN, T0S, base_module, fair_module,
                     require_new_artifacts)
 

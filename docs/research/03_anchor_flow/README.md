@@ -69,4 +69,4 @@
 | [logs/night_log_s2_closed_loop.md](logs/night_log_s2_closed_loop.md) | S2 閉ループの作業ログと全表 |
 | [logs/night_log_skill_expert.md](logs/night_log_skill_expert.md) | スキル専用 expert までの作業ログ（閉ループ完走、スキル専用 expert） |
 
-スクリプトは [examples/memory_pilot/anchor_flow/](../../../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)（S2）と [examples/emergent/light/intermediate/](../../../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)（S1）。
+スクリプトは `skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md`（S2）と `skill_moe/skillnet/examples/emergent/light/intermediate/README.md`（S1）。

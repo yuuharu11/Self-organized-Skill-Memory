@@ -32,4 +32,4 @@
 | [findings.md](findings.md) | 軽量検証の結果のまとめ |
 | [representation_survey.md](representation_survey.md) | 追加可能なスキルメモリの表現学習（文献調査） |
 
-実験スクリプトは [examples/emergent/light/](../../../skill_moe/skillnet/examples/emergent/light/README.md)。
+実験スクリプトは `skill_moe/skillnet/examples/emergent/light/README.md`。

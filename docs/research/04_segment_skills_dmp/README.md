@@ -22,4 +22,4 @@
 | [related_action_units.md](related_action_units.md) | 可変長の行動単位の発見・選択・実行の研究（調査） |
 | [related_dmp_routing.md](related_dmp_routing.md) | DMP 型の運動原始と VLA ルーティングの関連研究（調査） |
 
-スクリプトは [examples/memory_pilot/primitives/](../../../skill_moe/skillnet/examples/memory_pilot/primitives/README.md) と `examples/memory_pilot/dmp_route/`。
+スクリプトは `skill_moe/skillnet/examples/memory_pilot/primitives/README.md` と `examples/memory_pilot/dmp_route/`。

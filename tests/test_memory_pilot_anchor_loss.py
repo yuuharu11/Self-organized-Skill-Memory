@@ -106,11 +106,3 @@ def test_direct_anchor_path_at_t0_one_delegates_to_skillnet_sampler(monkeypatch)
         assert calls["observation"] is observation
         assert calls["num_steps"] == 6
         np.testing.assert_array_equal(np.asarray(calls["noise"]), np.asarray(noise))
-
-
-def test_design_documents_corrected_anchor_flow_target():
-    design = (REPO / "skill_moe" / "skillnet" / "examples" / "memory_pilot" /
-              "anchor_flow" / "DESIGN.md").read_text(encoding="utf-8")
-    assert "target_v=(x_t−A)/t = ε−A + ((1−t)/t)(a−A)" in design
-    assert "For ordinary rows, `a=A`, so this reduces exactly to OpenPI's `ε−A` target." in design
-    assert "ideal velocity above reaches `A` for any starting anchor and step count" in design
