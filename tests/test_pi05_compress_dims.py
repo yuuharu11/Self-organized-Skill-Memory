@@ -40,6 +40,12 @@ def test_holm_step_down_is_monotone_and_bounded():
     assert adjusted['a']<=adjusted['b']<=adjusted['c']<=adjusted['d']
 
 
+def test_c3_direction_uses_m2_minus_shuffle_sign_convention():
+    assert module._contrast_direction('C3', {'ci95': [-.2, -.1]}) == 'M2_better_than_shuffle'
+    assert module._contrast_direction('C3', {'ci95': [.1, .2]}) == 'shuffle_better_than_M2'
+    assert module._contrast_direction('C3', {'ci95': [-.1, .1]}) == 'no_detected_difference'
+
+
 def test_reviewed_shuffle_is_exact_top1_permutation_and_candidates_are_memory_rows():
     if not module.REVIEW.exists():
         pytest.skip('requires local artifacts')
