@@ -4,12 +4,12 @@
 
 ## 1. 今回の判断の出発点
 
-[提案書§7](/work/docs/research/03_anchor_flow/proposal_rerank69.md)と[実行報告](/work/.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md)を読んだ。実際の69タスク版は、固定生成器の計画から変更し、**生チャンクのcosine top-256→rerank top-5のブレンド**でG1を学習し直した。37,312 Train行、737 Diag行・50実演で、G1−G0は**−.00148［−.00344,+.00041］、事前基準は不通過**。以後この結果を、最初の「固定生成器・64候補」の計画の結果と混同しない。
+[提案書§7](proposal_rerank69.md)と実行報告（`.skillnet-state/outputs/memory-pilot/r012-20261101T004734Z/rerank69-v1/report.md`）を読んだ。実際の69タスク版は、固定生成器の計画から変更し、**生チャンクのcosine top-256→rerank top-5のブレンド**でG1を学習し直した。37,312 Train行、737 Diag行・50実演で、G1−G0は**−.00148［−.00344,+.00041］、事前基準は不通過**。以後この結果を、最初の「固定生成器・64候補」の計画の結果と混同しない。
 
 - G1は**.02912→shuffle .06369**と悪化する。検索に整合して学習したこの生成器は下書きに依存している。ただし、無視があらゆる設定で解消したことや、依存がそのまま有益であることまでは示さない。
 - オラクルなら**.01775**で、公開SkillNet P3の.02743より約35%低い。しかし未来の正解行動で下書きを選んだ上限であり、実行可能な改善・未見タスク汎化ではない。公開基盤はDiagを既習と扱う。P3と各noise誤差平均の集計差も維持して注記する。
 - exact-bestの候補内率33.1%、top-5率15.7%は選択の弱さを示す。ただし**「使える候補がある割合33%」ではない**。最良項目以外でも生成に有効なことがあり、候補内オラクルの誤差で被覆を別に測る。
-- [失敗分析](/work/.skillnet-state/outputs/memory-pilot/failure-analysis-20261101T090838Z/report.md)の⑤の失敗9件は、対象／段階Aが3、位置・接触Bが4、解放遅延Cが2。遅い成功にもA/C各1件。これは選別された18組の再実行に基づく事後分類で、母集団の率でも原因の介入同定でもない。**段階だけ直せば全失敗が直る、とは置かない。**
+- 失敗分析（`.skillnet-state/outputs/memory-pilot/failure-analysis-20261101T090838Z/report.md`）の⑤の失敗9件は、対象／段階Aが3、位置・接触Bが4、解放遅延Cが2。遅い成功にもA/C各1件。これは選別された18組の再実行に基づく事後分類で、母集団の率でも原因の介入同定でもない。**段階だけ直せば全失敗が直る、とは置かない。**
 
 変えるのはスキルの利用形式である。「検索した正解に近い生チャンクを、そのまま開始点にできること」を前提から外す。**全案とも標準Gaussianからflowを始め、運動の型を生成の必須経路に置く。** 推論時の未来情報、手製のsubtask／phaseラベル、通常方策へのfallback、確信度ゲートは入れない。
 
@@ -28,7 +28,7 @@
 1. VLMは画像・全体指示・状態を読み、**型の選択／位相／低容量の場面パラメータ**を推定する。action expertが元の画像・指示prefixを別経路で自由に読んで、そのまま行動を出す構成にはしない。デコーダに直接与えるのは型token、必要な位相、現在robot state、4次元の場面パラメータ`r`までとする。`r`にはKL／容量制約を置く。
 2. 行動を作るのは共通のskill-conditioned生成器だけ。検索失敗時も通常VLAへ分岐しない。**型を選ぶことと、記憶経路をオン／オフするゲートは区別**する。新しいMoEゲートも提案しない。既存SkillNet内部のMoEは全条件共通の基盤として扱う。
 3. `r`や位相だけで行動が出ていないか、型成分の入替え・除去・gripper一致の入替えで検査する。注意の可視化や「tokenが入力に存在する」だけでは主役の証拠にしない。
-4. 型の数を先に決めるk-meansは使わない。[既存のユーザー確認済み方針](/work/docs/research/02_emergent_skills/formation_study.md)に沿い、支持のある運動のまとまりを登録・統合する。出力logit数に固定されたID埋め込み表ではなく、**プロトタイプの値を読む共通デコーダ／共通スコア関数**にする。
+4. 型の数を先に決めるk-meansは使わない。[既存のユーザー確認済み方針](../02_emergent_skills/formation_study.md)に沿い、支持のある運動のまとまりを登録・統合する。出力logit数に固定されたID埋め込み表ではなく、**プロトタイプの値を読む共通デコーダ／共通スコア関数**にする。
 
 これは設計上の迂回路を減らす条件であって、有用な型の創発の保証ではない。生成精度と型への因果的依存の両方を通過条件にする。
 
@@ -151,7 +151,7 @@ N(0,I)から10-step行動を生成し、5 step実行する。
 
 ## 6. 一次資料で確認した重なり
 
-調査日2026-11-01。arXiv本文の確認版と節を示す。表は手法の比較で、異なる設定の論文成功率を本日の成功率へ換算しない。[本文保存・版履歴](/work/.skillnet-state/outputs/memory-pilot/research-direction-B-20261101T104000Z/sources.json)と[追加分](/work/.skillnet-state/outputs/memory-pilot/research-direction-B-20261101T104000Z/sources_additional.json)を保存した。
+調査日2026-11-01。arXiv本文の確認版と節を示す。表は手法の比較で、異なる設定の論文成功率を本日の成功率へ換算しない。本文保存・版履歴（`.skillnet-state/outputs/memory-pilot/research-direction-B-20261101T104000Z/sources.json`）と追加分（`.skillnet-state/outputs/memory-pilot/research-direction-B-20261101T104000Z/sources_additional.json`）を保存した。
 
 | 研究・確認版／日付 | 本文で確認した内容／本案への意味 |
 | --- | --- |
@@ -221,7 +221,7 @@ bootstrapはepisodeを単位に5,000回、seed713で固定。episode内の窓を
 
 合計は順調なら**約7–15時間**、準備・compile・長い失敗が多い場合は1日を超え得る。期限内に閉ループが終わらなければ、オフライン判定と未完了数を報告し、完了扱いにしない。3案すべてを1日で本比較する計画にはしない。GPU共有を守り、CPUのPythonはOMP/MKL/OPENBLASとtorchを8以下、core8–47、長い処理はnice10とする。
 
-既存コードの関連箇所は、[PosteriorEncoder／ObservationPrior／ZToken](/work/skill_moe/skillnet/src/openpi/models/skill_latent.py)、[embed_suffix・生成損失](/work/skill_moe/skillnet/src/openpi/models/pi0_moe_skill.py)、[MoEFeedForward](/work/skill_moe/skillnet/src/openpi/models/gemma_moe_skill.py)。**既存のZRouterTokensを使うだけではMoEの選択を変える経路になり、今回のgateなし設計とは一致しない。** また既存zにはposterior/priorが既にあるため、それを足すこと自体を新しい案とは呼ばない。新規に必要なのは履歴、型の教師と登録、action側が型tokenを直接読む経路、VLM prefixの迂回遮断であり、変更規模は中。これは今後の実装範囲で、今回これらのファイルは変更していない。
+既存コードの関連箇所は、[PosteriorEncoder／ObservationPrior／ZToken](../../../skill_moe/skillnet/src/openpi/models/skill_latent.py)、[embed_suffix・生成損失](../../../skill_moe/skillnet/src/openpi/models/pi0_moe_skill.py)、[MoEFeedForward](../../../skill_moe/skillnet/src/openpi/models/gemma_moe_skill.py)。**既存のZRouterTokensを使うだけではMoEの選択を変える経路になり、今回のgateなし設計とは一致しない。** また既存zにはposterior/priorが既にあるため、それを足すこと自体を新しい案とは呼ばない。新規に必要なのは履歴、型の教師と登録、action側が型tokenを直接読む経路、VLM prefixの迂回遮断であり、変更規模は中。これは今後の実装範囲で、今回これらのファイルは変更していない。
 
 ## 9. 私たちへの推奨
 

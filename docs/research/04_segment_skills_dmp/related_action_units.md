@@ -132,7 +132,7 @@ QueSTの「可変長motionを表せる」という主張は否定しない。た
 6. **閉ループを主にする**：同じ初期状態・seedでA/B/Cと無記憶対照をpaired評価。最初は訓練内開発task **10task×20初期状態＝200組**をscreeningに使い、全体SR、達成predicate、段階誤り、早期終了／滞留を報告する。この規模で小差を確証としない。境界・被覆の通過条件と最終のpaired SR判定は実験前に固定し、MSEや最良checkpointへの事後変更をしない。
 7. **凍結追加は別の段**：encoder／selector／flow／終了予測を全固定し、訓練時に辞書へ入れなかった単位の経験をappendする。旧task、新task、未見順序で追加前後を比較する。未知macroが既存primitiveの新連結なのか、primitive自体が未知なのかを区別する。LIBERO-10を5実演使った追加は**5-shot・重み更新なし**と記し、ゼロショットとは呼ばない。
 
-本調査ではモデル実行・コード編集・実装コストの実測はしていない。文献の主要本文・表・版履歴の証跡は [research-action-units-20261101T163753Z](/work/.skillnet-state/outputs/memory-pilot/research-action-units-20261101T163753Z/) に保存した。
+本調査ではモデル実行・コード編集・実装コストの実測はしていない。文献の主要本文・表・版履歴の証跡は `.skillnet-state/outputs/memory-pilot/research-action-units-20261101T163753Z/` に保存した。
 
 ## 推奨（5行）
 

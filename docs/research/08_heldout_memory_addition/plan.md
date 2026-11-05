@@ -46,8 +46,8 @@
 
 | データ | ファイル/タスク | episode | frame/action step | stride10の完全10-step窓 |
 |---|---:|---:|---:|---:|
-| `/work/data/LIBERO/libero_90` | 90タスクファイル | 4,500（50/task） | 669,043 | 64,865 |
-| `/work/data/LIBERO/libero_10`（Long候補） | 10タスクファイル | 500（50/task） | 138,090 | 13,570 |
+| `data/LIBERO/libero_90` | 90タスクファイル | 4,500（50/task） | 669,043 | 64,865 |
+| `data/LIBERO/libero_10`（Long候補） | 10タスクファイル | 500（50/task） | 138,090 | 13,570 |
 
 Longは1 episode内を分割前に割り当て、そこから10-step固定strideで窓を作る。隣接窓を別splitに分けない。
 
@@ -59,7 +59,7 @@ run-01はLIBERO-40の1,693 episode、273,465 framesから26,581窓を処理し�
 
 | 工程 | run-01実測 | 90版の見積もり | 根拠・注意 |
 |---|---:|---:|---|
-| HDF5→LeRobot変換 | 未計測 | 見積もり保留。先に5タスクで計測 | 提供converterはHDF5 readerではなく `tfds.load("libero_90_openvla_processed", data_dir=...)` を呼ぶ。ローカル `/work/data/LIBERO/libero_90` は90個のHDF5が直下にあり、TFDSのディレクトリ構成ではない。入力adapter/既存TFDS rootを確定しないと変換時間を外挿できない。 |
+| HDF5→LeRobot変換 | 未計測 | 見積もり保留。先に5タスクで計測 | 提供converterはHDF5 readerではなく `tfds.load("libero_90_openvla_processed", data_dir=...)` を呼ぶ。ローカル `data/LIBERO/libero_90` は90個のHDF5が直下にあり、TFDSのディレクトリ構成ではない。入力adapter/既存TFDS rootを確定しないと変換時間を外挿できない。 |
 | prepare・画像/行動窓作成 | 約8分 / 273k frames | 約18–22分 / 669k frames | frame数比2.45倍で外挿。 |
 | frozen特徴抽出 | 375秒 / 26,581窓 | 約15–18分 / 64,865窓 | 375.3×64,865/26,581。SkillNet条件付き入力が増える場合は追加余裕。 |
 | 行動codec | 約45秒（artifact mtime差。codec.logは空） | 約1.5–3分 | 28 epoch。窓数比例の粗い外挿で、直接測定ではない。 |

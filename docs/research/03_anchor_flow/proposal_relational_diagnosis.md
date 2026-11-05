@@ -4,11 +4,11 @@
 
 採用する構成は、**固定10ステップの運動単位→top-5のsoftmaxブレンド→S-all型bridge**。R2で変えるのは、同じ運動の保存・復元座標だけ。単位の再分割、可変長、候補数の適応、積分回数の適応、探索、通常方策へのゲートは入れない。R0は対照であり、提案手法の実行経路ではない。
 
-前提：[レビューへの回答](review_answer.md)、[監査](/work/.skillnet-state/outputs/memory-pilot/research-audit-20261031T161442Z/report.md)、[既存S-all設計](/work/.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/DESIGN.md)・[結果](/work/.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/report.md)。以下は実験計画であり、今回、学習・評価・コード編集は行っていない。
+前提：[レビューへの回答](review_answer.md)、監査（`.skillnet-state/outputs/memory-pilot/research-audit-20261031T161442Z/report.md`）、既存S-all設計（`.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/DESIGN.md`）・結果（`.skillnet-state/outputs/memory-pilot/skill-expert-bridge-20261031T161500Z/report.md`）。以下は実験計画であり、今回、学習・評価・コード編集は行っていない。
 
 ## 1. データと復元
 
-**分割を先に固定する。** 実演のあるLIBERO-90の89タスクを、`sha256("R012-20261101-v1|" + 正式task名)`の昇順に並べ、先頭69をTrain、次10をDev、末尾10をDiagとする。task名は分割にだけ使い、単位形成・検索・損失へtask IDやsubtask labelを渡さない。全リストと今日の小集合は[分割manifest](/work/.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/proposed_split_final.json)。
+**分割を先に固定する。** 実演のあるLIBERO-90の89タスクを、`sha256("R012-20261101-v1|" + 正式task名)`の昇順に並べ、先頭69をTrain、次10をDev、末尾10をDiagとする。task名は分割にだけ使い、単位形成・検索・損失へtask IDやsubtask labelを渡さない。全リストと今日の小集合は分割manifest（`.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/proposed_split_final.json`）。
 
 - **Train**：メモリ、運動単位、追加学習、特徴の標準化に使用。実演・初期状態単位で二分し、学習queryは反対foldのメモリを検索する。query自身の未来チャンクを再取得しない。
 - **Dev**：整合性確認と、実験を完走させてよいかの判定だけ。メモリへの追加・勾配更新はしない。Diagを見る前に設定を凍結する。
@@ -32,7 +32,7 @@ body_xpos / body_xmat、EEFのsite pose、gripper qposを読む。行動を再�
 
 各行を`(task, HDF5 demo ID, t)`で識別する。監査で件数が異なった4,006件のslice indexと3,959件のRLDSを、episode番号だけで結合しない。既存画像・特徴cacheの再利用も、HDF5との対応を検証できた行に限る。
 
-配布元HDF5の全89件は約**226.5 GB**ある。全量downloadを今日の前提にしない。HTTP Range＋HDF5の部分読みで、選んだdemoのstates/actionsと必要な画像だけを取り出す。3.69 GBの1ファイルについて8 byteのRange取得が206で返ることは確認済みだが、全metadataの部分読出し速度・XML復元は未検証。[取得確認](/work/.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/range_probe.json)
+配布元HDF5の全89件は約**226.5 GB**ある。全量downloadを今日の前提にしない。HTTP Range＋HDF5の部分読みで、選んだdemoのstates/actionsと必要な画像だけを取り出す。3.69 GBの1ファイルについて8 byteのRange取得が206で返ることは確認済みだが、全metadataの部分読出し速度・XML復元は未検証。取得確認（`.skillnet-state/outputs/memory-pilot/research-proposal-r012-20261101T003453Z/range_probe.json`）
 
 ## 2. 3条件に与える同一入力
 

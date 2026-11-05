@@ -31,10 +31,10 @@ Pi0Config(
 
 config のその他の実値は `action_dim=32`、`skill_num=6`、`skill_embed_dim=64`、`positional_encoding=False`、`t_coding=False`、`dtype=bfloat16`、`vision_variant=So400m/14`。shape metadata 照合は重み値、チェックポイントの実推論、入力契約まで保証するものではない。
 
-確認コマンド（`/work/skill_moe/skillnet` から実行、CPU のみ）:
+確認コマンド（`skill_moe/skillnet` から実行、CPU のみ）:
 
 ```bash
-source /work/env/activate.sh
+source env/activate.sh
 taskset -c 8-47 nice -n 10 env JAX_PLATFORMS=cpu XLA_PYTHON_CLIENT_PREALLOCATE=false \
   OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 python - <<'PY'
 import jax, flax.nnx as nnx, orbax.checkpoint as ocp
@@ -45,7 +45,7 @@ cfg = Pi0Config(pi05=True, action_horizon=10, discrete_state_input=False,
                 paligemma_variant='gemma_2b', action_expert_variant='gemma_300m_moe_4')
 model = nnx.eval_shape(lambda: cfg.create(jax.random.key(0)))
 abstract = flatten_dict(nnx.state(model, nnx.Param).to_pure_dict())
-metadata = ocp.PyTreeCheckpointer().metadata(Path('/work/.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params'))
+metadata = ocp.PyTreeCheckpointer().metadata(Path('.skillnet-state/checkpoints/pi05_libero_moe_skill_4_90/moe_balance_4_32_90_20000/19999/params'))
 leaves = flatten_dict(metadata.tree['params'])
 checkpoint = {k[:-1]: v.shape for k, v in leaves.items() if k[-1] == 'value'}
 assert set(abstract) == set(checkpoint)

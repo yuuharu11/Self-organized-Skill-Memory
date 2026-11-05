@@ -42,7 +42,7 @@ task 8で救済が集まる一方、他タスクには悪化もある。task別�
 
 run-01全suiteの通常方策で43試行が失敗した。内訳は`libero_10`が41、spatialが1、goalが1。失敗理由はすべて`control_budget`。通常失敗43試行のうちtask 6・8が26件で、ステップ数は220–520（平均507.9）。この分布は段階3の分岐試行を選ぶ参考であり、失敗の因果説明ではない。
 
-機械可読一覧は [.skillnet-state output](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/paired-breakdown-01/normal_failures.jsonl) に保存した。各JSONL行はsuite/task名/task id、初期状態index、seedと初期状態hash、通常の終了理由・ステップ数・問い合わせ数、5つの候補条件の結果を含む。後続条件が実施していないsuite・初期状態は`not_evaluated`と記録し、失敗扱いしていない。
+機械可読一覧は .skillnet-state output（`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/paired-breakdown-01/normal_failures.jsonl`） に保存した。各JSONL行はsuite/task名/task id、初期状態index、seedと初期状態hash、通常の終了理由・ステップ数・問い合わせ数、5つの候補条件の結果を含む。後続条件が実施していないsuite・初期状態は`not_evaluated`と記録し、失敗扱いしていない。
 
 ## 長さ500のrun-01との整合
 

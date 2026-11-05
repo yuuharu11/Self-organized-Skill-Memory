@@ -83,7 +83,7 @@ seed 0, 1, 2
 
 #### S1 本番の結果（2026-10-28、サブタスクは gold、3 seed）
 
-[report.md](../../../.skillnet-state/outputs/memory-pilot/s1-production-20261028T065924Z/report.md)。行動の MSE（平均 ± seed 間 SD）：
+`.skillnet-state/outputs/memory-pilot/s1-production-20261028T065924Z/report.md`。行動の MSE（平均 ± seed 間 SD）：
 
 | 対象 | 通常 | RAGDP 型（生の区間） | 提案（成分サンプル＋エントロピー t0） | アンカーのシャッフル |
 | --- | ---: | ---: | ---: | ---: |
@@ -100,7 +100,7 @@ seed 0, 1, 2
 
 #### 往復テスト（2026-10-28、学習 suite のデモだけ、同じエピソードを除いたメモリ、3 seed）
 
-[summary.md](../../../.skillnet-state/outputs/memory-pilot/roundtrip-20261028T094621Z/summary.md)。Split A・gold（B・instruction もほぼ同じ）：
+`.skillnet-state/outputs/memory-pilot/roundtrip-20261028T094621Z/summary.md`。Split A・gold（B・instruction もほぼ同じ）：
 
 | 段階 | MSE | 位置（終端） | 回転（終端） | グリッパー一致 |
 | --- | ---: | ---: | ---: | ---: |
@@ -119,7 +119,7 @@ seed 0, 1, 2
 
 #### 公平比較（2026-10-28、サブタスクは instruction、3 seed）
 
-[summary.md](../../../.skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z/summary.md)。通常 = ノイズだけで学習した F_normal（10 ステップ）。提案 = §2 のとおり（確信度で t0 と反復回数を決める）。全方式で同じノイズ・E・評価行。MSE：
+`.skillnet-state/outputs/memory-pilot/fair-compare-20261028T101842Z/summary.md`。通常 = ノイズだけで学習した F_normal（10 ステップ）。提案 = §2 のとおり（確信度で t0 と反復回数を決める）。全方式で同じノイズ・E・評価行。MSE：
 
 | 条件 | 通常 | 提案（F_anchor） | 提案（F_normal、学習し直しなし） | 生の区間 | シャッフル | 正解の単位 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -138,7 +138,7 @@ seed 0, 1, 2
 
 #### 単位の解釈（2026-10-28、S2 メモリ 57 単位、事後の解釈）
 
-[summary.md](../../../.skillnet-state/outputs/memory-pilot/interpret-units-20261028T171143Z/summary.md)、図鑑：https://claude.ai/artifact/8AKkqV5zurMmp9aNKmyfU7
+`.skillnet-state/outputs/memory-pilot/interpret-units-20261028T171143Z/summary.md`、図鑑：https://claude.ai/artifact/8AKkqV5zurMmp9aNKmyfU7
 - 57 単位中 42 単位（74%）は、場面を変えても方向・回転・グリッパーが一貫する運動として記述できる（例：右へグリッパーを開いたまま 50 mm）。
 - 1 単位は中央値で約 70 タスクにまたがる。39 単位（68%）は「方向×グリッパー×回転」の記述が他の単位と重なる。
 - 同じ単位が続く長さは中央値 0.5 秒（区間 1 つ）、隣の区間で単位が切り替わる率は 79%（区間は重なりなし）。
@@ -179,9 +179,9 @@ seed 0, 1, 2
 
 #### S3 と R の結果（2026-10-29、軽量版、3 seed、D3 = メモリに似たデモがない条件）
 
-S3（[summary](../../../.skillnet-state/outputs/memory-pilot/hier-skills-20261028T173818Z-071506/summary.md)）：上位スキルにすると切り替わり率は 79% → 4〜6% に下がり、時間的にまとまった単位になる（gripper 区切りでスキル 14〜21 個、被覆 82〜84%）。ただし D3 の MSE はプリミティブ単位より少し悪い（A 0.232 対 0.223、B 0.175 対 0.167）。
+S3（summary（`.skillnet-state/outputs/memory-pilot/hier-skills-20261028T173818Z-071506/summary.md`））：上位スキルにすると切り替わり率は 79% → 4〜6% に下がり、時間的にまとまった単位になる（gripper 区切りでスキル 14〜21 個、被覆 82〜84%）。ただし D3 の MSE はプリミティブ単位より少し悪い（A 0.232 対 0.223、B 0.175 対 0.167）。
 
-R（[summary](../../../.skillnet-state/outputs/memory-pilot/review-tests-20261028T180100Z/summary.md)）：
+R（summary（`.skillnet-state/outputs/memory-pilot/review-tests-20261028T180100Z/summary.md`））：
 - R8：**同じ件数の生の区間のメモリより単位が良い**（D3 B：単位 0.167、生 medoid 0.199、生ランダム 0.209、生の全件 0.193）。「少ないメモリで、似たデモがない場面への汎化が良い」を支える。
 - R4：多正例 InfoNCE ＋ top-5 で D3 が改善（A 0.206→0.200、B 0.184→0.168）。
 - R7：ブリッジ型の補正経路は B で改善（0.157）、A では改善なし。

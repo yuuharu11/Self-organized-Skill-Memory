@@ -52,4 +52,4 @@ Longは学習した40タスクに含まれる既知タスク。既存run-01の�
 
 実行証跡：`production/manifest.json`、`import-audit.json`、`baseline-selected.jsonl`、`rollouts.jsonl`、`summary.json`。run-01は読み取りのみ。単一サーバー・単一環境、各8スレッド、nice10、CPU16–47、PREALLOCATE=false、MEM_FRACTION=0.30。
 
-出力先：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01/`。事前設定の固定記録は同ディレクトリの `production/manifest.json`。
+出力先：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/bprior-long-01/`。事前設定の固定記録は同ディレクトリの `production/manifest.json`。

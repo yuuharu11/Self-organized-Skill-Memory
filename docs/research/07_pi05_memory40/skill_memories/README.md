@@ -2,7 +2,7 @@
 
 ## 結論
 
-Long除外の生行動メモリは、Long hard 63行で正解との最良距離が .0399。M6 medoid単位では最良でも .1320（κ=.1）、b12-M6は .1310だった。代表へまとめることで、Long場面に近い実区間へのアクセスが悪化している。一方、既存のwrist+state cosineでkey-ranked Top-5を取るとraw行メモリもhard MSE .2089で、近い実区間をキーだけで選ぶ問題は残る。
+Long除外の生行動メモリは、Long hard 63行で正解との最良距離が .0351。M6 medoid単位では最良でも .0896（κ=.1）、b12-M6は .0900だった。代表へまとめることで、Long場面に近い実区間へのアクセスが悪化している。一方、既存のwrist+state cosineでkey-ranked Top-5を取るとraw行メモリもhard MSE .2089で、近い実区間をキーだけで選ぶ問題は残る。
 
 次にExpertを学習するなら、**raw-rows-noLongを主メモリ**にし、raw-m6-noLong-k0p1を容量削減の対照として並べる。raw区間は行動の情報を保持するが、現在のkey Top-5では弱い。M6は少数単位にまとめやすい一方、oracle候補距離の悪化が大きい。routerは未学習なので、この比較だけではどちらがExpert学習後に有効かは決められない。
 
@@ -18,17 +18,19 @@ Long除外の生行動メモリは、Long hard 63行で正解との最良距離�
 
 ## 各メモリとLong診断
 
+**訂正：** 当初の `build.py` は最近傍距離を `np.partition` 後の先頭要素から取っており、最小値ではなかった。下表の「hard最近傍oracle MSE」は正しい最小値に訂正した。保存済みの `summary.json` と `diagnostics.json` の `*_nearest_*` は旧値のままで、正しい最小値は `*_top5_best_*` に入っている。
+
 「最良代表」は正解行動に対する全代表内のoracle最近傍。「key Top-5」はretrieval-4bのwrist+state cosine上位5候補のうち正解に最も近い距離。どちらも生成前normalized active7 MSEで、生成後性能・実行時のoracleではない。unassignedはM6 poolのうちsupported unitへ登録されずpendingに残った割合。
 
 | ID | pool | κ | units | unassigned | hard最近傍oracle MSE | hard key Top-5 best MSE |
 |---|---|---:|---:|---:|---:|---:|
-| raw-rows-noLong | Long以外30 task、memory行 | — | 3,857 | 0% | .03993 | .20894 |
-| raw-rows-all40 | 全40 task、memory行 | — | 6,583 | 0% | .02881 | .15689 |
-| raw-m6-noLong-k0p05 | Long以外30 task | .05 | 25 | 59.1% | .18249 | .17492 |
-| raw-m6-noLong-k0p1 | Long以外30 task | .1 | 32 | 22.9% | .13197 | .13248 |
-| raw-m6-noLong-k0p2 | Long以外30 task | .2 | 16 | 5.5% | .18864 | .15770 |
-| raw-m6-all40 | 全40 task | .1 | 42 | 23.5% | .10309 | .11078 |
-| b12-m6-noLong | Long以外30 task | .1 | 31 | 24.9% | .13097 | .15124 |
+| raw-rows-noLong | Long以外30 task、memory行 | — | 3,857 | 0% | .03512 | .20894 |
+| raw-rows-all40 | 全40 task、memory行 | — | 6,583 | 0% | .02487 | .15689 |
+| raw-m6-noLong-k0p05 | Long以外30 task | .05 | 25 | 59.1% | .16059 | .17492 |
+| raw-m6-noLong-k0p1 | Long以外30 task | .1 | 32 | 22.9% | .08957 | .13248 |
+| raw-m6-noLong-k0p2 | Long以外30 task | .2 | 16 | 5.5% | .11942 | .15770 |
+| raw-m6-all40 | 全40 task | .1 | 42 | 23.5% | .07427 | .11078 |
+| b12-m6-noLong | Long以外30 task | .1 | 31 | 24.9% | .09004 | .15124 |
 
 ### 単位の共有・長さ
 
@@ -46,7 +48,7 @@ Long除外の生行動メモリは、Long hard 63行で正解との最良距離�
 
 - Builder：[build.py](../../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_memories/build.py)
 - CPU test：[test_pi05_skill_memories.py](../../../../tests/test_pi05_skill_memories.py)
-- 出力：[skill-memories-01](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-memories-01/)
-- 実行例：`cd /work && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 taskset -c 8-15 nice -n 10 python -u skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_memories/build.py`
+- 出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-memories-01`
+- 実行例：`cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 taskset -c 8-15 nice -n 10 python -u skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_memories/build.py`
 
 Expert学習、GPU推論、シミュレーションでの閉ループ評価は行っていない。

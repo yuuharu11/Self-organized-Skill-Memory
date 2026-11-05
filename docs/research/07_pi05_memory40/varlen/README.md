@@ -1,6 +1,6 @@
 # 可変長の運動区間メモリ：選んで追従する診断
 
-2026-11-04。問いは、10-step 下書きを毎回検索する代わりに、区間開始時に一度メモリ区間を選び、その後を経過時間または位相で追従すると改善するか。Expert は再学習せず、既存 `run-01/bridge/001500` を使用した。
+問いは、10-step 下書きを毎回検索する代わりに、区間開始時に一度メモリ区間を選び、その後を経過時間または位相で追従すると改善するか。Expert は再学習せず、既存 `run-01/bridge/001500` を使用した。
 
 ## 結論
 
@@ -65,7 +65,7 @@ MSEは正規化 active7（10×7）で平均。生成後は bridge/001500、t0=.2
 
 ## 出力・コード
 
-- 最終結果：[varlen-01/final-04](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/varlen-01/final-04/)（`DONE`あり、境界・候補・下書き・bridge予測・集計を保存）
+- 最終結果：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/varlen-01/final-04`（`DONE`あり、境界・候補・下書き・bridge予測・集計を保存）
 - 実装：[run.py](../../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/varlen/run.py)
 - CPU tests：[test_pi05_varlen.py](../../../../tests/test_pi05_varlen.py)（4 passed）
 - 実行はCPU 8 thread / taskset 8–15 / nice 10。生成後確認だけGPUを使用し、`XLA_PYTHON_CLIENT_PREALLOCATE=false`, `XLA_PYTHON_CLIENT_MEM_FRACTION=0.20` を指定。Expert学習なし。

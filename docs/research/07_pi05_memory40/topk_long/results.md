@@ -263,7 +263,7 @@ K=1主キーの生成後誤差とretrieval-4b、zero_K先頭seedとmemory-gapの
 
 ## Episode bootstrapと解釈
 
-全Longは20 episode、hardは20 episode。episodeを単位に5000回復元抽出し、選択行を保持した行加重の対差95% percentile区間。一般の全比較（各キー・除外・t0・K・集合のpost_best−zero_K、selector−対応zero_K、selector−単発通常π0.5）は [episode_bootstrap.csv](/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production/episode_bootstrap.csv) に1,152行保存。G1/G2の専用区間は上表。
+全Longは20 episode、hardは20 episode。episodeを単位に5000回復元抽出し、選択行を保持した行加重の対差95% percentile区間。一般の全比較（各キー・除外・t0・K・集合のpost_best−zero_K、selector−対応zero_K、selector−単発通常π0.5）は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production/episode_bootstrap.csv` に1,152行保存。G1/G2の専用区間は上表。
 
 G1は事前基準に未達であり、事前の分岐規則では生成側を直すのが先。今回の候補集合・既知Long行・オフラインMSEに限定した判定で、全メモリに有効な運動がないという結論ではない。
 
@@ -272,4 +272,4 @@ G1は事前基準に未達であり、事前の分岐規則では生成側を直
 ## 実行と再現情報
 
 計算時間（モデルロード後〜集計・保存）：4920.6秒（82.0分）。固定スナップショット、PREALLOCATE=false、MEM_FRACTION=.20、8threads、nice10、CPU38–45。rescue-branchingは別ジョブとして継続し、そのプロセス・出力を変更していない。
-入力／出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production`。protocol.json、predictions_and_errors.npz、summary.json、progress.jsonlを保持。追加の集計はmemory_table.csv、controls_by_subset.csv、episode_bootstrap.csv、sensitivity.csv、shuffled.csv、report_values.json。実行環境・スナップショット・入力のハッシュは `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production-control-20261104T123356Z/manifest.json` とimport-audit.json。ローカル実行記録へのリンクは、このチェックアウトだけで再現できるデータ配布とは扱わない。
+入力／出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production`。protocol.json、predictions_and_errors.npz、summary.json、progress.jsonlを保持。追加の集計はmemory_table.csv、controls_by_subset.csv、episode_bootstrap.csv、sensitivity.csv、shuffled.csv、report_values.json。実行環境・スナップショット・入力のハッシュは `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/topk-long-01/production-control-20261104T123356Z/manifest.json` とimport-audit.json。ローカル実行記録へのリンクは、このチェックアウトだけで再現できるデータ配布とは扱わない。

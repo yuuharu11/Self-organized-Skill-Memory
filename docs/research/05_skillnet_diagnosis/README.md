@@ -1,4 +1,4 @@
-# 05 公開 SkillNet の失敗診断と介入（2026-11-02〜11-03）
+# 05 公開 SkillNet の失敗診断と介入
 
 ## 問い
 
@@ -29,7 +29,7 @@
 
 | ファイル | 中身 |
 |---|---|
-| [conditioning_fixes.md](conditioning_fixes.md) | 10-30 の別軸候補：既存スキル系 VLA の構造的な弱点と小さな改善案（診断の出発点） |
+| [conditioning_fixes.md](conditioning_fixes.md) | 別軸候補：既存スキル系 VLA の構造的な弱点と小さな改善案（診断の出発点） |
 | [instruction_update/slide_outline.md](instruction_update/slide_outline.md) | 指示更新の実験をスライドにするときの主張と結果 |
 | [instruction_update/related_work.md](instruction_update/related_work.md) | 固定 VLA への指示介入の先行研究との重なり |
 | [evidence/](evidence/) | スキル介入の生データ（`skillnet_prompt.jsonl`）と集計 |

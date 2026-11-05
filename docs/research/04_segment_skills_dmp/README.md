@@ -1,4 +1,4 @@
-# 04 行動の単位で区切るスキルと DMP ルーティング（2026-11-01〜11-02）
+# 04 行動の単位で区切るスキルと DMP ルーティング
 
 ## 問い
 
@@ -11,13 +11,13 @@
 - ゼロショットの区間スキル（segskill-v2）は不通過。
 - DMP の S3 閉ループは、ユーザー指示で 69/135 試行の時点で停止。途中停止なので、通過・不通過は判定していない。
 - 関連研究：無注釈の可変長スキルの発見と選択（PRISE、LOTUS など）、DMP の形・ゴール・時間の分離は、どれも既存。
-- 11-02 夜に、新しい方式の実装を保留し、公開 SkillNet の失敗原因の診断（[05](../05_skillnet_diagnosis/README.md)）へ移った。
+- その後、新しい方式の実装を保留し、公開 SkillNet の失敗原因の診断（[05](../05_skillnet_diagnosis/README.md)）へ移った。
 
 ## ファイル
 
 | ファイル | 中身 |
 |---|---|
-| [offline_results.md](offline_results.md) | 11-01 夜〜11-02 朝のオフライン結果（検索、区間スキル v1〜v3、5-shot 対照） |
+| [offline_results.md](offline_results.md) | オフライン結果（検索、区間スキル v1〜v3、5-shot 対照） |
 | [dmp_routing_plan.md](dmp_routing_plan.md) | DMP ルーティングの設計と事前基準（停止済み。再開の指示ではない） |
 | [related_action_units.md](related_action_units.md) | 可変長の行動単位の発見・選択・実行の研究（調査） |
 | [related_dmp_routing.md](related_dmp_routing.md) | DMP 型の運動原始と VLA ルーティングの関連研究（調査） |

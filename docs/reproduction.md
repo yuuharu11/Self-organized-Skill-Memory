@@ -89,7 +89,7 @@ OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 \
 ```
 
 トークナイザの例では `tokens: [1, 7, 57]` が出力されます。
-続くテストはこのPRの確認時に57件成功しました。終了コード0が、この範囲の成功の目印です。各テストは合成入力を使います。
+続くテストはこのPRの確認時に58件成功しました。終了コード0が、この範囲の成功の目印です。各テストは合成入力を使います。
 続いて GPU と描画を個別に確認します。
 
 ```bash
@@ -144,10 +144,9 @@ LIBERO-Skill のゼロショット評価とは条件が異なります。
 評価用注釈は特徴抽出器の入力列から除外されています。
 Split A は object+spatial → goal、Split B は object+goal → spatial です。
 
-**この全エピソード形式のデータセットと、その作成に使ったローカル変換ラッパーは Git に含まれていません。**
+**この全エピソード形式のデータセットは Git に含まれていません。** 変換スクリプトは [convert_libero_unsegmented.py](../data_process/libero/convert_libero_unsegmented.py) で、手順は [現行アルゴリズムの再現手順](reproduce_core_path.md) にあります。
 既存の公開変換器が作る `libero_40_v1` はスキル区間ごとに分割した3,862エピソードの形式です。
 これをそのまま代用すると、分割・行動窓・評価条件が変わります。
-同じ研究条件を再現する際は、この入力形式を満たすデータと作成時の記録も共有してください。
 公開 RLDS の取得と、ベースの SkillNet 用の変換手順は [データ処理ガイド](libero_data_processing.md) にあります。
 
 ### 入力を揃えた後の初期実験
@@ -184,6 +183,10 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 特徴キャッシュの `manifest.json` はファイルのパスを保持するため、別のマシンへコピーした場合は
 パスを更新するか、新しい環境で再抽出してください。
 
+### 現行アルゴリズムを通す場合
+
+π0.5 LIBERO-40 の主経路（データ変換から修正Expertの評価まで）は [現行アルゴリズムの再現手順](reproduce_core_path.md) にまとめています。
+
 ### S1/S2 や新しい結果も共有する場合
 
 [研究スクリプト一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md) から対象を選びます。
@@ -198,7 +201,7 @@ python -m skill_moe.skillnet.examples.emergent.light.run \
 - S1 のサブタスク条件と予測テキストを使う場合の生成器・出力。S2 の LIBERO-90 メモリ・正規化統計・行分割。
 - 実際のコマンド、seed、試行数、タスクごとの初期状態番号、対照条件、集計前の行単位・試行単位の結果。
 
-10月30日の[結果・レビュー](research/03_anchor_flow/offline_results.md)と、
+[結果・レビュー](research/03_anchor_flow/offline_results.md)と、
 較正・検索キー・区間スキル・場面適応・Optimus-R Stage AのコードとテストもGitで管理しています。
 [S2のスクリプト一覧と必要資産](../skill_moe/skillnet/examples/memory_pilot/anchor_flow/README.md)、
 [軽量実験の一覧](../skill_moe/skillnet/examples/emergent/light/intermediate/README.md)、

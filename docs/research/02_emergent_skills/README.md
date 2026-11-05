@@ -1,4 +1,4 @@
-# 02 創発スキル：表現の作り方と軽量検証（2026-10-25〜10-27）
+# 02 創発スキル：表現の作り方と軽量検証
 
 ## 問い
 
@@ -19,7 +19,7 @@
 - 粒度 κ を、データだけから一意に決める規則はない。
 - 環境での成功率、π0.5 本体での効果は未測定。この結果を受けて、型をフローの開始点に使う案（[03](../03_anchor_flow/README.md)）へ進んだ。
 
-途中で見つかった訂正：特徴抽出で goal と spatial の suite 名が逆だった（10-27 に修正）。言語ありの VLM 特徴は指示文が混ざるので、画像だけのクエリではない。
+途中で見つかった訂正：特徴抽出で goal と spatial の suite 名が逆だった（修正済み）。言語ありの VLM 特徴は指示文が混ざるので、画像だけのクエリではない。
 
 ## ファイル
 
@@ -28,7 +28,7 @@
 | [plan.md](plan.md) | 方針（決定事項と未決事項） |
 | [verification.md](verification.md) | 最初の検証のアルゴリズムと判定基準 |
 | [formation_study.md](formation_study.md) | スキル表現の作り方の比較（M0〜M6） |
-| [construction_brief.md](construction_brief.md) | スキルの作り方の暫定方針（10-27 時点。取り出しは当時 softmax ブレンド） |
+| [construction_brief.md](construction_brief.md) | スキルの作り方の暫定方針（当時の方針。取り出しは softmax ブレンド） |
 | [findings.md](findings.md) | 軽量検証の結果のまとめ |
 | [representation_survey.md](representation_survey.md) | 追加可能なスキルメモリの表現学習（文献調査） |
 

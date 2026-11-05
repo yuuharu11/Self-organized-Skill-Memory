@@ -17,4 +17,4 @@ LIBERO-Longの既知10タスク × 初期状態0–9を、adaptive / adaptive_fb
 
 Wilson95%、タスク別、ノイズ別/fallback使用率、normal / memory固定0.6 / bprior_direct / bprior_retrieveとの対応比較（救済・悪化、両側exact McNemar）、時間内訳を報告。集計は同じ100組に限定する。スモークは本番の分母に入れない。
 
-出力：`/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/full/`。固定設定・入力/ソースハッシュ：`../production-control/manifest.json`。結果は [results.md](results.md)。
+出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/adaptive-long-01/full/`。固定設定・入力/ソースハッシュ：`../production-control/manifest.json`。結果は [results.md](results.md)。

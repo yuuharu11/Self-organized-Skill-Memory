@@ -77,7 +77,7 @@ Long 548行・hard 63行、凍結 `run-01/bridge/001500`、10積分、noise seed
 
 ## 注意点と成果物
 
-手先投影図は [projection_overlay.png](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/local-key-02/projection_overlay.png)、token格子確認は [token_grid_order.png](../../../../.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/local-key-02/token_grid_order.png)。Attention poolingは保存済みtoken cacheにattentionが含まれないため未実施。
+手先投影図は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/local-key-02/projection_overlay.png`、token格子確認は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/local-key-02/token_grid_order.png`。Attention poolingは保存済みtoken cacheにattentionが含まれないため未実施。
 出力: `local-key-02/summary.json`, `predictions.npz`, `generation_summary.json`, `generation.npz`, `ranks_*.npz`, `models.pt`, `protocol.json`。local-key-01は誤ったMSE集計の記録として保持。
 
 結果は生成前/生成後のオフライン行動誤差に限られ、閉ループ成功率を主張しない。

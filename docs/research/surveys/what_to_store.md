@@ -111,4 +111,4 @@ RT-Cacheの題名は古いv1の *Efficient Robot Trajectory Retrieval System* �
 
 以下は今回**未確認**：指定された潜在手法で、全パラメータ固定のまま新しい運動型を可変個数追記した結果／同じVLA・同じ検索と学習予算でraw・codec・DMP valueのbytes対成功率を網羅した結果／今回のb12損失が潜在次元だけで決まるという根拠。これらがないことから、どちらの保存方式を採用すべきかまでは決めない。
 
-原資料のHTML・表JSON・版履歴は、新規出力 `/work/.skillnet-state/outputs/memory-pilot/research-what-to-store-20261104T092616Z/` に保存した。OptimusVLA/RTSは[直前の本文確認](retrieval_init_methods_check.md)とその保存資料も参照した。日付なしのファイル名は[文書規則](../README.md)、旧gatesパスの移動先は[gates.md](../01_memory_gates/gates.md)に従った。この作業の編集範囲は本ファイルとsurveys/READMEの案内1行のみ。コード編集・学習・rollout・GPU利用・commitは実施していない。
+原資料のHTML・表JSON・版履歴は、新規出力 `.skillnet-state/outputs/memory-pilot/research-what-to-store-20261104T092616Z/` に保存した。OptimusVLA/RTSは[直前の本文確認](retrieval_init_methods_check.md)とその保存資料も参照した。日付なしのファイル名は[文書規則](../README.md)、旧gatesパスの移動先は[gates.md](../01_memory_gates/gates.md)に従った。この作業の編集範囲は本ファイルとsurveys/READMEの案内1行のみ。コード編集・学習・rollout・GPU利用・commitは実施していない。

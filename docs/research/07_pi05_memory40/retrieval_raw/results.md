@@ -89,7 +89,7 @@ Task除外以外のepisode除外結果、各方式の全行/難行の生行動MS
 
 ## 成果物・再現
 
-- 全候補・Recall・最終MSE・Dev選択記録はGit管理外の `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01/results.json`。
+- 全候補・Recall・最終MSE・Dev選択記録はGit管理外の `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/retrieval-4b-01/results.json`。
 - `keys/*_task.npz` / `keys/*_episode.npz` は全query×Top-64とそのTop-8の`cand_actions[Q,8,10,32]`を格納。
 - `wrist_token_mean.npy`、正規化統計、`*_embedding.npy`、`*_learned/wrist_contrastive.pt`、`learned_fit.json`を保存。
 - `raw_draft_final_mse.npz` はEvalの2 seed×72条件の最終row MSE、hard mask、候補生行動誤差を保存。
