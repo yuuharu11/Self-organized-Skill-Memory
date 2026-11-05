@@ -27,6 +27,7 @@
 
 スクリプトは [`examples/memory_pilot/pi05_memory/`](../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/)。データから評価までの順序は [再現手順](../../reproduce_core_path.md) を参照。実行結果は `.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/`（Git 管理外）。
 - [修正 Expert の下書き依存性](draft_sensitivity/results.md)：同じノイズで下書きだけを変え、追加学習と下書き内容の効果をオフライン行動誤差で切り分ける。
+- [圧縮行動と生行動の公平比較](compress_vs_raw/README.md)：同じM2検索候補を使い、raw／M1-b12下書きで学習した修正ExpertをLong Evalで比較。
 - [メモリ有効候補の診断](memory_gap/results.md)：難しい Eval 行について検索・圧縮・下書き利用をオフライン比較。
 - [生行動に近い候補の検索](retrieval_raw/README.md)：VLM、手首＋状態、短い履歴、学習キーで段階4-Bを評価。
 - [失敗状態からの分岐検証](rescue_branching/results.md)：4キー×圧縮/生を含む44条件の本番を、通常失敗10試行・30分岐点で実行中。
