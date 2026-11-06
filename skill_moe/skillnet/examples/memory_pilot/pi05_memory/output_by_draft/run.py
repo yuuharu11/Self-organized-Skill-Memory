@@ -15,7 +15,7 @@ import numpy as np
 
 ROOT = Path(os.environ.get('SKILL_MEMORY_ARTIFACTS',
                            '/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104'))
-DRAFT_BINS = (0, .002, .005, .01, .02, .04, .08, .16, 10.)
+DRAFT_BINS = (0, .002, .02, .04, .08, 10.)
 T0S = (.2, .4, .6)
 PCA_K = (2, 4, 6, 8, 12, 16, 24, 32, 48)
 AXES = ('x', 'y', 'z', 'rx', 'ry', 'rz', 'grip')
