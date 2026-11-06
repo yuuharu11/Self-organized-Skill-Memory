@@ -58,3 +58,14 @@ def test_rebuild_counts_values_and_keeps_a_smooth_motion():
     out, values = _error_module().rebuild(a, [(0, 30), (30, 60)], 3)
     assert values == 2 * (6 * 3 + 2)
     assert np.mean((out[:, 0] - a[:, 0]) ** 2) < 2e-3 and np.all(out[:, 6] == -1.)
+
+
+def test_segment_values_round_trip_at_its_own_length_and_stretch():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory")]
+    import variable_memory_oracle as vm
+    a = _actions(30); a[:, 0] = np.cos(np.pi * (np.arange(30) + .5) / 30) * .5 + .2
+    v = vm.segment_values(a, 0, 30)
+    np.testing.assert_allclose(vm.decode(v, 30)[0], a, atol=1e-6)
+    assert vm.decode(v, 60).shape == (1, 60, 7)
+    assert abs(vm.decode(v, 60)[0, :, 0].mean() - .2) < 1e-6
