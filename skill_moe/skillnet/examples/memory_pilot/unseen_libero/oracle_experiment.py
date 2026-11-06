@@ -15,9 +15,12 @@ from sklearn.decomposition import PCA
 
 HERE=Path(__file__).resolve().parent
 PI05=HERE.parent/'pi05_memory'
-RUN=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-OUT=Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/oracle-01')
-CHECKPOINT=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+REPO_ROOT=Path(__file__).resolve().parents[5]
+STATE_DIR=Path(os.environ.get('SKILLNET_STATE_DIR',REPO_ROOT/'.skillnet-state')).expanduser()
+PI05_ROOT=Path(os.environ.get('SKILLNET_PI05_ROOT',STATE_DIR/'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+RUN=PI05_ROOT/'run-01'
+OUT=Path(os.environ.get('UNSEEN_LIBERO_OUT',STATE_DIR/'outputs/memory-pilot/unseen-libero/oracle-01')).expanduser()
+CHECKPOINT=Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 REPS=('raw','b12','pca24','pca12','dct14','dct21','keyframe21','keyframe35')
 LEVELS=('none','m6default')
 T0S=(.05,.1,.2,.3,.4,.5,.6,.8,1.)
@@ -274,7 +277,10 @@ def train_cell(rep,level,*,threads=8):
 def training_queue(max_parallel=2, mem_fraction='.25'):
     if not (OUT/'drafts_ready.json').exists():raise FileNotFoundError('draft stage incomplete')
     specs=[(r,l) for r in REPS for l in LEVELS]+[('zero','none')]
-    slots=['8-15'];running={};pending=list(specs);records=[]
+    slots=['8-15','16-23']
+    if not 1 <= max_parallel <= len(slots):
+        raise ValueError(f'max_parallel must be between 1 and {len(slots)}')
+    running={};pending=list(specs);records=[]
     # Resume safely after interrupted/OOM runs: every existing attempt directory
     # is preserved, and a fresh attempt gets a new numbered directory.
     attempts={}
@@ -333,13 +339,21 @@ def _pca_from_saved():
     return p24,p12
 
 
-def _m1_candidate_drafts(codec,bases,row_ids,features,states,batch=256):
+def _m1_candidate_drafts(codec,bases,row_ids,features,states,batch=256,*,context_features=None,context_states=None):
+    row_ids=np.asarray(row_ids,np.int64)
+    if (context_features is None) != (context_states is None):
+        raise ValueError('context_features and context_states must be provided together')
+    if context_features is not None and (len(context_features)!=len(row_ids) or len(context_states)!=len(row_ids)):
+        raise ValueError('decode contexts must align with candidate rows')
     out=np.empty((len(row_ids),10,32),np.float32)
     for st in range(0,len(row_ids),batch):
         ix=np.asarray(row_ids[st:st+batch],np.int64)
-        r=codec.prior(np.asarray(features[ix],np.float32),np.asarray(states[ix],np.float32))[1]
+        sl=slice(st,st+len(ix))
+        ctx_features=np.asarray(features[ix] if context_features is None else context_features[sl],np.float32)
+        ctx_states=np.asarray(states[ix] if context_states is None else context_states[sl],np.float32)
+        r=codec.prior(ctx_features,ctx_states)[1]
         out[st:st+len(ix)]=codec.decode(np.asarray(bases[ix],np.float32),r,
-                np.asarray(features[ix],np.float32),np.asarray(states[ix],np.float32))
+                ctx_features,ctx_states)
     return out
 
 
@@ -413,7 +427,10 @@ def evaluate_cell(rep,level,*,batch=8,threads=8):
                 codec.device=torch.device('cuda')
                 for name in ('encoder','prior_net','base_decoder','residual_decoder'):getattr(codec,name).to('cuda')
             bases=np.load(RUN/'bases.npy',mmap_mode='r',allow_pickle=False)
-            shuffle=_m1_candidate_drafts(codec,bases,shuffle_rows,features,states)
+            query_features=np.asarray(unseen['pooled'][ids],np.float32)
+            query_states=np.asarray(unseen['state'][ids],np.float32)
+            shuffle=_m1_candidate_drafts(codec,bases,shuffle_rows,features,states,
+                    context_features=query_features,context_states=query_states)
             del codec
         else:
             bank=np.load(OUT/'candidate_banks'/f'{rep}_{level}.npz',allow_pickle=False)
@@ -612,7 +629,7 @@ def finalize():
       ax.axvspan(.2,.6,color='#e5e3de',alpha=.42,label='training range [0.2,0.6]')
       ax.set_ylabel('Active-7 MSE');ax.set_title('All Eval rows' if subset=='all' else 'Hard rows (Dev raw-oracle q80)');ax.grid(True,color='#d8d7d2',linewidth=.5)
     axes[-1].set_xlabel('Start noise t0');axes[0].legend(ncol=4,fontsize=7,loc='upper right')
-    fig.tight_layout();figdir=Path('/work/docs/research/09_unseen_libero/figures');figdir.mkdir(parents=True,exist_ok=True);fig.savefig(figdir/'oracle_noise_curves.png',dpi=200,bbox_inches='tight')
+    fig.tight_layout();figdir=REPO_ROOT/'docs/research/09_unseen_libero/figures';figdir.mkdir(parents=True,exist_ok=True);fig.savefig(figdir/'oracle_noise_curves.png',dpi=200,bbox_inches='tight')
     outfig=OUT/'figures';outfig.mkdir(parents=True,exist_ok=True);fig.savefig(outfig/'oracle_noise_curves.png',dpi=200,bbox_inches='tight');plt.close(fig)
     # Markdown report with short selected-t0 table and all paired intervals.
     def fmt(x):return '—' if x is None else (f'{x:.4f}' if isinstance(x,(int,float,np.floating)) else str(x))
@@ -652,7 +669,7 @@ def finalize():
       't0=.05,.1,.8,1.0はExpertの学習範囲[.2,.6]外の外挿である。通常π0.5はt0を持たない水平基準、同一Expertのt0=1は各Expert別に評価した。全t0の3種下書き・対比較の全値はmetrics.csv / paired_contrasts.csv。',
       '生成前の候補誤差とmemory代表の復元誤差は表に記録した。主候補は実在窓または実在medoidを選び、混合していない。シャッフルは同じ候補multisetを別タスクへ一対一置換し、成立しない場合は同じcandidate poolの別タスクから一意割当または重複許容抽出を行い、方式をresults JSONに記録した。',
       '対象は未学習タスク実演を意図的に含む候補選択上限であり、汎化や閉ループでの実効性を主張しない。']
-    report='\n'.join(lines)+'\n';(OUT/'oracle_results.md').write_text(report);Path('/work/docs/research/09_unseen_libero/oracle_results.md').write_text(report)
+    report='\n'.join(lines)+'\n';(OUT/'oracle_results.md').write_text(report);(REPO_ROOT/'docs/research/09_unseen_libero/oracle_results.md').write_text(report)
     save_json(OUT/'finalized.json',{'status':'complete','rows':len(ev),'hard_rows':int(hard.sum()),'report':str(OUT/'oracle_results.md'),'figure':str(figdir/'oracle_noise_curves.png')})
 
 

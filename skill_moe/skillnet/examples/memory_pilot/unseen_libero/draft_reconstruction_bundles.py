@@ -18,12 +18,15 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent / "pi05_memory"
 SHAPE = PI05 / "shape_skills"
-ROOT = Path("/work/.skillnet-state/outputs/memory-pilot")
-RUN = ROOT / "pi05-memory40-20261104/run-01"
-UNSEEN = ROOT / "unseen-libero/oracle-01"
-TOPK = ROOT / "pi05-memory40-20261104/topk-long-01/production/predictions_and_errors.npz"
-BUNDLES = ROOT / "pi05-memory40-20261104/shape-skills-02/corrected-v5"
-CHECKPOINT = Path("/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero")
+REPO_ROOT = Path(__file__).resolve().parents[5]
+STATE_DIR = Path(os.environ.get("SKILLNET_STATE_DIR", REPO_ROOT / ".skillnet-state")).expanduser()
+PI05_ROOT = Path(os.environ.get("SKILLNET_PI05_ROOT", STATE_DIR / "outputs/memory-pilot/pi05-memory40-20261104")).expanduser()
+ROOT = STATE_DIR / "outputs/memory-pilot"
+RUN = PI05_ROOT / "run-01"
+UNSEEN = Path(os.environ.get("UNSEEN_LIBERO_OUT", ROOT / "unseen-libero/oracle-01")).expanduser()
+TOPK = PI05_ROOT / "topk-long-01/production/predictions_and_errors.npz"
+BUNDLES = PI05_ROOT / "shape-skills-02/corrected-v5"
+CHECKPOINT = Path(os.environ.get("SKILLNET_PI05_CHECKPOINT", STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_libero")).expanduser()
 TARGET = ROOT / "unseen-libero/draft-reconstruction-01/bundles.json"
 
 sys.path.insert(0, str(SHAPE))

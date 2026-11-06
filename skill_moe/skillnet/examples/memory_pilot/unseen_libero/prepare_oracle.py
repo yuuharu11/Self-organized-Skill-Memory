@@ -1,17 +1,19 @@
 """Prepare fixed unseen-task demonstration windows and VLM prefix features."""
 from __future__ import annotations
-import argparse, hashlib, importlib.util, json, sys, time
+import argparse, hashlib, importlib.util, json, os, sys, time
 from pathlib import Path
 
 import h5py
 import numpy as np
 
 HERE=Path(__file__).resolve().parent
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+REPO_ROOT=Path(__file__).resolve().parents[5]
+STATE_DIR=Path(os.environ.get('SKILLNET_STATE_DIR',REPO_ROOT/'.skillnet-state')).expanduser()
+ROOT=Path(os.environ.get('SKILLNET_PI05_ROOT',STATE_DIR/'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 RUN=ROOT/'run-01'
-DEFAULT_OUT=Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/oracle-01')
-DEFAULT_H5=Path('/work/.skillnet-state/data/libero/datasets/libero_90')
-CHECKPOINT=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+DEFAULT_OUT=Path(os.environ.get('UNSEEN_LIBERO_OUT',STATE_DIR/'outputs/memory-pilot/unseen-libero/oracle-01')).expanduser()
+DEFAULT_H5=Path(os.environ.get('SKILLNET_LIBERO_HDF5',STATE_DIR/'data/LIBERO')).expanduser()
+CHECKPOINT=Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 
 def module(path,name):
     spec=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(spec);sys.modules[name]=m;spec.loader.exec_module(m);return m
@@ -20,7 +22,7 @@ def write_json(path,obj):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(obj,indent=2,ensure_ascii=False)+'\n');tmp.replace(path)
 
 def fixed_tasks():
-    chosen=json.loads((Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/baseline-01/decision.json')).read_text())
+    chosen=json.loads((STATE_DIR/'outputs/memory-pilot/unseen-libero/baseline-01/decision.json').read_text())
     evaluation=[{'task_id':int(t['task_id']),'name':t['name'],'instruction':t['instruction'],'split':'eval'} for t in chosen['tasks']]
     from libero.libero import benchmark
     suite=benchmark.get_benchmark_dict()['libero_90']()
@@ -106,6 +108,7 @@ def prepare(out:Path,h5root:Path,checkpoint:Path):
     print(json.dumps({'stage':'prepare','rows':len(rows),'dev_rows':int(split.sum()),'eval_rows':int((~split).sum())}),flush=True)
 
 def extract(out:Path,checkpoint:Path,batch=4):
+    started=time.monotonic()
     import flax.nnx as nnx
     import jax
     from openpi.shared.nnx_utils import module_jit
@@ -121,7 +124,7 @@ def extract(out:Path,checkpoint:Path,batch=4):
         valid=g>=0;pooled[ids]=(h*valid[...,None]).sum(1)/np.maximum(valid.sum(1),1)[:,None]
         if st%(batch*100)==0:
             tok.flush();grp.flush();pooled.flush()
-            write_json(out/'unseen_rows/feature_progress.json',{'rows':min(st+batch,n),'total':n,'seconds_elapsed':time.time()})
+            write_json(out/'unseen_rows/feature_progress.json',{'rows':min(st+batch,n),'total':n,'seconds_elapsed':time.monotonic()-started})
     tok.flush();grp.flush();pooled.flush()
     write_json(out/'unseen_rows/features.json',{'rows':n,'shape_tokens':[712,2048],'checkpoint':str(checkpoint),'complete':True})
     print(json.dumps({'stage':'extract','rows':n}),flush=True)

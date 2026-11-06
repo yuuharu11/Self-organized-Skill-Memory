@@ -13,6 +13,7 @@
 | 研究コードの単体確認 | Python 依存、合成入力 | スキル表現・検索・修正 Expert の実装。データ・重み・GPU は不要 |
 | 公開 SkillNet-LIBERO-40 の評価スモーク | 公開重み、LIBERO 完全ソースとアセット、GPU、描画環境 | 公開方策の読込から環境実行まで |
 | 現行アルゴリズムの通し実行 | 全エピソードを保持した LIBERO-40、π0.5 重み、GPU | データ変換から修正 Expert の判定まで。[再現手順](reproduce_core_path.md) |
+| 未学習 LIBERO タスクでの表現上限比較 | LIBERO-40 の run-01、LIBERO-90 のデモ、π0.5 重み、GPU | 固定メモリ候補のオフライン上限比較。[事前計画](research/09_unseen_libero/oracle_plan.md) |
 
 公開重みの評価スモークは、スキルメモリの改善や論文の成功率を再現する実験とは別に報告してください。
 元のコンテナの記録は Spatial の各1試行で10/10成功です。新規 clone の現行コードでは2回とも9/10で、同じタスク（top drawer の black bowl）が失敗しました。いずれも各50試行の論文評価ではありません。
@@ -26,7 +27,7 @@ Ubuntu 22.04 では、たとえば次で OS 依存を用意できます。
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y cmake make build-essential libgl1 libegl1 libglib2.0-0 libopengl0
+sudo apt-get install -y cmake make build-essential python3-pip libgl1 libegl1 libglib2.0-0 libopengl0
 python3.10 -m pip install uv==0.8.22
 ```
 
