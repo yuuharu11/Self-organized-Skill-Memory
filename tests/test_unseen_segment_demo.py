@@ -257,3 +257,43 @@ def test_more_coefficients_rebuild_a_motion_more_closely():
     finally:
         vs.set_coefficients(3)
     assert errors[1] < errors[0] and errors[1] < 1e-8
+
+
+def _core_module():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import motion_core_eval
+    return motion_core_eval
+
+
+def test_end_effector_frame_round_trip_and_same_motion_in_two_poses():
+    from scipy.spatial.transform import Rotation
+    m = _core_module(); vs = m.vs
+    world = vs.to_normalized(np.array([[.1, .0, .0, .01, .0, .0]] * 5))
+    R = Rotation.from_euler("z", 40, degrees=True).as_matrix()
+    np.testing.assert_allclose(m.from_frame(m.to_frame(world, R), R), world, atol=1e-8)
+    physical = vs.to_physical(world)
+    turned = vs.to_normalized(np.concatenate([physical[:, :3] @ R.T, physical[:, 3:6] @ R.T], 1))
+    np.testing.assert_allclose(m.to_frame(turned, R), world, atol=1e-8)
+
+
+def test_anchor_cuts_at_gripper_switch_and_speed_minimum():
+    m = _core_module(); vs = m.vs
+    motion = np.zeros((40, 6))
+    motion[:, 0] = np.abs(np.sin(np.pi * np.arange(40) / 20)) * .5
+    a = np.zeros((40, 7)); a[:, :6] = vs.to_normalized(motion); a[:, 6] = -1.; a[33:, 6] = 1.
+    spans = m.anchor_spans(a)
+    starts = [s for s, _ in spans]
+    assert 33 in starts and any(abs(s - 20) <= 2 for s in starts)
+    assert spans[0][0] == 0 and spans[-1][1] == 40 and all(x[1] == y[0] for x, y in zip(spans, spans[1:]))
+
+
+def test_encode_decode_keeps_a_smooth_motion_and_metrics_reward_a_match():
+    m = _core_module()
+    t = _smooth_trace(20)
+    rotations = np.repeat(np.eye(3)[None], 20, axis=0)
+    out = m.decode(m.encode(t, rotations, 0, 20, "world", 1), 20, 1)[0]
+    assert np.mean((out - t) ** 2) < 1e-3
+    pred = np.stack([t[:10], t[10:]])
+    result = m.metrics(pred, pred, np.array([True, False]))
+    assert result["all"] == 0 and result["fde_all"] == 0 and result["gripper_match"] == 1
