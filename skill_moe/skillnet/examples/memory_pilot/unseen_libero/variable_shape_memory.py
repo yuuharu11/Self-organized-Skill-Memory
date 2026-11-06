@@ -111,7 +111,13 @@ def spans_of(trace, segment):
 
 def grip_values(segment):
     # A variable segment holds one gripper sign; a fixed window may cross a switch.
-    return 3 if segment == 'fixed10' else 1
+    return K if segment == 'fixed10' else 1
+
+
+def set_coefficients(k):
+    """Change how many DCT values each axis keeps, for this process."""
+    global K
+    K = int(k)
 
 
 def straight_candidates(form, grip_k):

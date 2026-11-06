@@ -241,3 +241,19 @@ def test_cover_units_keeps_one_of_two_identical_items():
     units = cc.cover_units(a, .01)
     assert len(units) == 2
     assert 2 in units
+
+
+def test_more_coefficients_rebuild_a_motion_more_closely():
+    d = _draft_module(); vs = d.vs
+    a = _actions(30)
+    t = np.arange(30) + .5
+    a[:, 0] = .3 * np.cos(4 * np.pi * t / 30)
+    errors = []
+    try:
+        for k in (3, 5):
+            vs.set_coefficients(k)
+            out = vs.decode(vs.encode(a, 0, 30, "as_is", 1), 30, "as_is", None, 1)[0]
+            errors.append(np.mean((out - a) ** 2))
+    finally:
+        vs.set_coefficients(3)
+    assert errors[1] < errors[0] and errors[1] < 1e-8
