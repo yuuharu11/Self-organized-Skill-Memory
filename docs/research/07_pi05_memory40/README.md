@@ -40,4 +40,5 @@
 - [局所キーの検索](local_key/README.md)：手先まわりのキーがLong以外の実演から未知タスクの動きを検索できるかのオフライン評価。
 - [キー選択機構](key_mechanism/README.md)：アテンション型のキー・候補判定器で単一実演を選び、Longの生成前後MSEとK1–K4を評価。
 - [圧縮とクラスタリングの上限診断](compress_cluster_oracle/results.md)：正解を必ず含むメモリから正解で選び、検索の影響を除いて、圧縮とクラスタリングの損失とノイズ強度ごとのデノイズ後MSEを比較。
+- [下書きを変えたときの出力](output_by_draft/results.md)：デノイズで戻せる距離、別タスクの下書きが残るか、まとめたメモリと実際の検索の差、PCAの復元を保存済み予測から集計。
 - [移植用アルゴリズムCore](../../../skill_memory_core/README.md)：生行動メモリ＋M2検索＋bridge Expertの自己完結パッケージと保存済み実験へのparity表。
