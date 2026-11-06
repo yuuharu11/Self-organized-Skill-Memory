@@ -233,7 +233,7 @@ the launcher uses `jsw19/robotwin_${TRANSFER_TASK}_v1`.
 
 ## Training
 
-Set `SKILLNET_REPO_ROOT` as described in `docs/quick_start.md`, then run from
+Set `SKILLNET_REPO_ROOT` as described in `docs/reproduction.md`, then run from
 the SkillNet source root:
 
 Pretrain on the 15 RoboTwin pretraining tasks:

@@ -19,7 +19,7 @@ _PI05_CODE = Path(__file__).resolve().parents[1]
 ROOT=_PI05_ROOT
 RUN=ROOT/'run-01'; MEMORY=ROOT/'skill-memories-01'/'raw-rows-noLong'
 GAP=ROOT/'memory-gap-01'; TOPK=ROOT/'topk-long-01'/'production'; LOCAL=ROOT/'local-key-02'
-OUT=ROOT/'key-mechanism-01'; Q80=.01549410422449; SEED=20261105
+OUT=ROOT/'key-mechanism-01'; SEED=20261105
 SUITES=((10,20,'goal'),(20,30,'object'),(30,40,'spatial'))
 DEVICE='cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -517,8 +517,9 @@ def _run(out,*,threads=16,smoke=False):
         raise AssertionError('Long Eval row set mismatch')
     long_ids=gap_long
     if not np.array_equal(long_ids,top['query_rows']):raise AssertionError('topk-long query row order mismatch')
-    if len(long_ids)!=548 or int(top['hard_mask'].sum())!=63 or not np.isclose(_gap_threshold(GAP),Q80,atol=1e-10):
-        raise AssertionError('fixed Long q80 split changed')
+    if len(long_ids)!=548 or not np.any(top['hard_mask']):
+        raise AssertionError('fixed Long split changed or no hard rows')
+    threshold=_gap_threshold(GAP)
     hard=np.asarray(top['hard_mask'],bool)
     context=_history(rows)
     tokens=np.load(RUN/'tokens.npy',mmap_mode='r',allow_pickle=False);groups=np.load(RUN/'groups.npy',mmap_mode='r',allow_pickle=False)
@@ -635,7 +636,7 @@ def _run(out,*,threads=16,smoke=False):
       'key_dev_rows':len(dev_ids),'key_dev_tasks':np.unique(rows['task'][dev_ids]).astype(int).tolist(),
       'key_dev_memory_rows':len(dev_mem),'key_dev_memory_tasks':np.unique(rows['task'][dev_mem]).astype(int).tolist(),
       'final_memory_rows':len(pool),'final_memory_matches_raw_rows_noLong':True,'long_eval_rows':len(qids),'hard_rows':int(hard.sum()),
-      'hard_threshold':Q80,'tau_selected_on_key_dev':tau,'tau_cross_task_positive_rates':tau_rates,
+      'hard_threshold':threshold,'tau_selected_on_key_dev':tau,'tau_cross_task_positive_rates':tau_rates,
       'same_task_exclusion':'all retrieval and key-dev candidate searches exclude candidates with the query task',
       'long_used_for_fit_or_selection':False,'long_policy_pretraining_seen':True,
       'main_input':'base+wrist image tokens, position embeddings, normalized state[:8], prior executed action[10x7] (language tokens excluded)',

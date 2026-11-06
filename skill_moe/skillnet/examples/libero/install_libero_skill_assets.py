@@ -148,7 +148,8 @@ def benchmark_registration_patch(text: str) -> str | None:
     if "register_benchmark" not in text or "Benchmark" not in text:
         return None
 
-    if "libero_skill_obj" not in patched and "task_maps = {}" in patched:
+    # Inspect the original text: the replacement above already mentions the suite name.
+    if "libero_skill_obj" not in text and "task_maps = {}" in patched:
         patched = patched.replace(
             "task_maps = {}",
             'if "libero_skill_obj" not in libero_suites:\n'

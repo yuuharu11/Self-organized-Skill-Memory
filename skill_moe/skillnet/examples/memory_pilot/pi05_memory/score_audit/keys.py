@@ -22,6 +22,7 @@ STATE = Path(os.environ.get('SKILLNET_STATE_DIR', REPO / '.skillnet-state')).exp
 PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 RUN = PI05_ROOT / 'run-01'
 OUT = PI05_ROOT / 'score-audit-01'
+CHECKPOINT = STATE / 'checkpoints/openpi-assets/checkpoints/pi05_libero'
 TOP_K = 64
 
 
@@ -183,7 +184,7 @@ def generate_pi05(run: Path = RUN, out: Path = OUT, checkpoint: Path | None = No
     sys.path.insert(0, str(PI05))
     from run import load_policy, obs_batch
     rows = load_rows(run)
-    checkpoint = checkpoint or REPO / '.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'
+    checkpoint = checkpoint or CHECKPOINT
     model, _ = load_policy(checkpoint)
     sample = module_jit(model.sample_actions, static_argnames=('num_steps',))
     qids = np.flatnonzero(rows['validation'])

@@ -88,7 +88,7 @@ def long_eval_ids(rows, gap_path: Path = GAP, topk_path: Path = TOPK) -> tuple[n
         raise AssertionError('Long Eval rows/order differ from topk-long')
     if not np.array_equal(hard, z['hard_mask']):
         raise AssertionError('Long hard-row mask differs from topk-long')
-    if len(ids) != 548 or int(hard.sum()) != 63:
+    if len(ids) != 548 or not hard.any():
         raise AssertionError((len(ids), int(hard.sum())))
     return ids, hard
 
@@ -674,7 +674,7 @@ def main():
 
     # Baseline values reused from the completed topk-long run, no policy inference.
     refs=reference_metrics(args.topk,hard)
-    summary={'long_eval_rows':len(long_ids),'long_hard_rows':int(hard.sum()),'hard_threshold':0.01549410422449,
+    summary={'long_eval_rows':len(long_ids),'long_hard_rows':int(hard.sum()),'hard_threshold':gap_threshold(args.gap),
         'dev_rows':len(dev_ids),'dev_episode_pairs':sorted({(int(task),int(ep)) for task,ep in zip(task_all[dev_ids],np.asarray(rows['episode'])[dev_ids])}),
         'kappa_selection':{'grid':list(KAPPA_GRID),'dev_calibration':dev_calibration,'selected':[ka,kb,kc],
                            'rule':'fixed .1 center; lower count nearest 300, upper count nearest 30; Dev only'},

@@ -44,3 +44,5 @@ pytest==8.3.5
 
 # BDDL imports future.utils but omits it from its own metadata.
 future==1.0.0
+# egl-probe's build backend does not support CMake 4 yet.
+cmake==3.31.6

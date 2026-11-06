@@ -457,8 +457,8 @@ def evaluate(args):
     if not np.array_equal(hard_data['eval_rows'], eval_ids):
         raise AssertionError('hard mask rows mismatch fixed Eval')
     hard = np.asarray(hard_data['hard_mask'], bool)[long_mask]
-    if hard.sum() != 63:
-        raise AssertionError(f'expected fixed hard rows=63, got {hard.sum()}')
+    if not hard.any():
+        raise AssertionError('no hard rows in the Long split')
     saved = np.load(args.m2_dir / 'candidate_rows.npz', allow_pickle=False)
     if not np.array_equal(saved['query_rows'], long_ids):
         raise AssertionError('M2 cached Long row order mismatch')

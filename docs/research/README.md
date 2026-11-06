@@ -40,7 +40,7 @@
 3. [03 の報告](03_anchor_flow/report.md)：スキルメモリの構想と、新しいタスクで効かなかった経緯（前提知識なしで読める）
 4. [06 の充足性の判断](06_memory_evidence/readiness.md)：発表に使える結果と、言えないこと
 
-別環境で動かす場合は [再現ガイド](../reproduction.md)、現行アルゴリズムを通す場合は [再現手順](../reproduce_core_path.md)、開発環境は [開発環境](../development_environment.md) を参照。
+別環境で動かす場合は [再現ガイド](../reproduction.md)、現行アルゴリズムを通す場合は [再現手順](../reproduce_core_path.md) を参照。
 
 ## 書き方の約束
 
