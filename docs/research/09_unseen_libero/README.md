@@ -6,5 +6,7 @@
 
 - [実行前計画](plan.md)：学習データ根拠、機械的選択規則、固定プロトコル。
 - [通常方策の結果](baseline_results.md)：Long照合、成功率・区間・失敗像。
+- [デモの切り出しの確認](segmentation_demo/README.md)：グリッパーの切替と DCT の復元誤差で切った区間を動画で確認。
+- [表現上限のオフライン比較](oracle_results.md)：正解行動で候補を選ぶ検索なしの診断。閉ループ結果ではない。
 
 コードは skill_moe/skillnet/examples/memory_pilot/unseen_libero/、出力は .skillnet-state/outputs/memory-pilot/unseen-libero/baseline-01/。
