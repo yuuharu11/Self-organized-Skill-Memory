@@ -182,3 +182,14 @@ def test_memory_round_trip_and_oracle_prefers_the_longer_unit(tmp_path):
     loaded = d.SkillMemory.load(tmp_path / "m.npz")
     np.testing.assert_array_equal(loaded.lengths, memory.lengths)
     assert d.oracle_selector(loaded, trace, .05)(0) == 1
+
+
+def test_stored_unit_plays_back_with_its_own_direction_and_size():
+    d = _draft_module()
+    trace = _smooth_trace(20)
+    v = d.vs.encode(trace, 0, 20, "as_is", 1)
+    memory = d.SkillMemory(v[None], np.array([20]), 1, "as_is")
+    planner = d.DraftPlanner(memory, lambda frame: 0)
+    far_away = np.full((10, 6), .9)
+    np.testing.assert_allclose(planner.draft(far_away), trace[:10], atol=1e-5)
+    assert d.oracle_selector(memory, trace, .05)(0) == 0

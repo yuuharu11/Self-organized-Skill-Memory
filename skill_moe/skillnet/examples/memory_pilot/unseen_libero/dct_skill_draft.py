@@ -32,28 +32,37 @@ class SkillMemory:
     values: np.ndarray  # [units, K*6 + grip_k], independent of length
     lengths: np.ndarray  # [units], the length of the real segment behind each unit
     grip_k: int
+    form: str = FORM  # 'as_is' keeps direction and size inside the unit
 
     @classmethod
-    def build(cls, traces, *, segment, tau):
-        """`traces` are normalized [T,7] demos; `segment` is 'fixed10' or 'e<epsilon>'."""
+    def segments(cls, traces, *, segment, form=FORM):
+        """Every memory segment as an unmerged memory, plus what merging needs."""
         grip_k = vs.grip_values(segment)
         values, matrices, lengths = [], [], []
         for trace in traces:
             for start, end in vs.spans_of(trace, segment):
-                values.append(vs.encode(trace, start, end, FORM, grip_k))
-                matrices.append(merge.pose_matrix(trace[start:end, :6], FORM))
+                values.append(vs.encode(trace, start, end, form, grip_k))
+                matrices.append(merge.pose_matrix(trace[start:end, :6], form))
                 lengths.append(end - start)
-        values, matrices, lengths = np.stack(values), np.stack(matrices), np.asarray(lengths)
-        units, _ = merge.greedy_cover(merge.rebuild_errors(values, matrices, grip_k) <= tau)
-        return cls(values[units], lengths[units], grip_k)
+        return cls(np.stack(values), np.asarray(lengths), grip_k, form), np.stack(matrices)
+
+    @classmethod
+    def build(cls, traces, *, segment, tau, form=FORM):
+        """`traces` are normalized [T,7] demos; `segment` is 'fixed10' or 'e<epsilon>'."""
+        memory, matrices = cls.segments(traces, segment=segment, form=form)
+        units, _ = merge.greedy_cover(merge.rebuild_errors(memory.values, matrices, memory.grip_k) <= tau)
+        return memory.subset(units)
+
+    def subset(self, units):
+        return SkillMemory(self.values[units], self.lengths[units], self.grip_k, self.form)
 
     def save(self, path):
-        np.savez_compressed(path, values=self.values, lengths=self.lengths, grip_k=self.grip_k)
+        np.savez_compressed(path, values=self.values, lengths=self.lengths, grip_k=self.grip_k, form=self.form)
 
     @classmethod
     def load(cls, path):
         z = np.load(path, allow_pickle=False)
-        return cls(z['values'], z['lengths'], int(z['grip_k']))
+        return cls(z['values'], z['lengths'], int(z['grip_k']), str(z['form']))
 
     def shape(self, unit):
         """The unit at its own length: [L,6] shape and [L] normalized gripper."""
@@ -111,7 +120,9 @@ class DraftPlanner:
                 continue
             shape, grip = self.memory.shape(unit)
             a, b = lo - self.frame, hi - self.frame
-            if self.unit_reference is None:
+            if self.memory.form == 'as_is':
+                out[a:b, :6] = shape[lo - first:hi - first]
+            elif self.unit_reference is None:
                 out[a:b, :6] = align(shape[lo - first:hi - first], reference[a:b, :6])
             else:
                 whole = self.unit_reference(first, len(shape))
@@ -138,8 +149,8 @@ def oracle_selector(memory, trace, tau, *, match_gripper=False):
             motion = trace[frame:frame + length]
             if not len(motion):
                 motion = trace[-1:]
-            pose = vs.pose_of(motion[:, :6], FORM)
-            drafts = vs.decode(memory.values[units], length, FORM, pose, memory.grip_k)[:, :len(motion)]
+            pose = None if memory.form == 'as_is' else vs.pose_of(motion[:, :6], memory.form)
+            drafts = vs.decode(memory.values[units], length, memory.form, pose, memory.grip_k)[:, :len(motion)]
             errors = np.mean((drafts - motion[None]) ** 2, axis=(1, 2))
             fits = errors <= tau
             if match_gripper:
