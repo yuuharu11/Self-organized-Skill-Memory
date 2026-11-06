@@ -27,6 +27,7 @@
 | 06 | [発表用のメモリ検証](06_memory_evidence/README.md) | 03 の結果は発表に使えるか | 材料は揃った。成功率の改善は主張しない |
 | 07 | [π0.5 LIBERO-40](07_pi05_memory40/README.md) | 修正 Expert で通常生成を上回るか | 進行中 |
 | 08 | [保留タスクへのメモリ追加](08_heldout_memory_addition/README.md) | 重みを固定した実演追加がLong評価を変えるか | 準備のみ。互換性・split・資源見積もりを整理 |
+| 09 | [未学習LIBEROタスクへの転移](09_unseen_libero/README.md) | LIBERO-40で作った運動を未学習タスクへ持ち込む余地があるか | 通常π0.5は32/100。表現の比較を実行中 |
 
 横断の文献調査は [surveys/](surveys/README.md)。
 
