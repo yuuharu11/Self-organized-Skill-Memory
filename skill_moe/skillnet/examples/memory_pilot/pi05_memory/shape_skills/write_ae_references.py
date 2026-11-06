@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Add Train-only Procrustes references to rebuilt AE bundles."""
+import os
 from pathlib import Path
 import numpy as np
 import ae
 
 def main():
-    root=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-02/representations')
+    root=Path(os.environ.get('SKILLNET_PI05_ROOT',ae.PI05_ROOT)).expanduser()/'shape-skills-02/representations'
     episodes,rows,_,segsets,_=ae._load_splits_and_segments()
     out=[]
     for segname in ae.SEGMENTATIONS:

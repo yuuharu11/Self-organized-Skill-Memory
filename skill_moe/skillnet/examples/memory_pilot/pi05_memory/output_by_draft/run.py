@@ -13,8 +13,10 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(os.environ.get('SKILL_MEMORY_ARTIFACTS',
-                           '/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104'))
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+ROOT = Path(os.environ.get('SKILL_MEMORY_ARTIFACTS', os.environ.get('SKILLNET_PI05_ROOT',
+                           STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104'))).expanduser()
 DRAFT_BINS = (0, .002, .02, .04, .08, 10.)
 T0S = (.2, .4, .6)
 PCA_K = (2, 4, 6, 8, 12, 16, 24, 32, 48)

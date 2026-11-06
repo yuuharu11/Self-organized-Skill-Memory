@@ -21,11 +21,14 @@ sys.path.insert(0, str(HERE))
 import data as shape_data
 import representations as shape_repr
 
-RUN_DIR = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-ROOT_OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-01')
-VARLEN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/varlen-01/final-04/segments.npz')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+RUN_DIR = PI05_ROOT / 'run-01'
+ROOT_OUT = PI05_ROOT / 'shape-skills-01'
+VARLEN = PI05_ROOT / 'varlen-01/final-04/segments.npz'
 VQ_REP = ROOT_OUT / 'representations'
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/compress-vs-raw-review-20261105-01/drafts_prepared.npz')
+GAP = PI05_ROOT / 'compress-vs-raw-review-20261105-01/drafts_prepared.npz'
 HELDOUT = set(shape_data.HELDOUT_TASKS)
 LONG = set(shape_data.LONG_TASKS)
 LATENT_DIMS = (8, 16, 24, 32)
@@ -135,7 +138,7 @@ def augment_physical(seq, rng, *, scale_range=(.7, 1.3)):
 
 def _load_splits_and_segments():
     """Build every segment split with the reviewed, rotation-corrected A code."""
-    checkpoint = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+    checkpoint = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
     episodes, rows, source_meta = shape_data.load_source(RUN_DIR, checkpoint)
     import run as shape_run
     segout = Path('/tmp/shape-skills-ae-segmentation-progress.jsonl')

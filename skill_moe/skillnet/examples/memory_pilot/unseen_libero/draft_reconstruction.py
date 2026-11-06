@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -17,11 +18,14 @@ from scipy.fft import dct, idct
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent / 'pi05_memory'
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot')
-RUN = ROOT / 'pi05-memory40-20261104' / 'run-01'
-UNSEEN = ROOT / 'unseen-libero' / 'oracle-01'
-CODECS = ROOT / 'pi05-memory40-20261104' / 'compress-vs-raw-01' / 'dimension-extension-01' / 'codecs'
-TOPK = ROOT / 'pi05-memory40-20261104' / 'topk-long-01' / 'production' / 'predictions_and_errors.npz'
+REPO_ROOT = Path(__file__).resolve().parents[5]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+ROOT = STATE_DIR / 'outputs/memory-pilot'
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', ROOT / 'pi05-memory40-20261104')).expanduser()
+RUN = PI05_ROOT / 'run-01'
+UNSEEN = Path(os.environ.get('UNSEEN_LIBERO_OUT', ROOT / 'unseen-libero' / 'oracle-01')).expanduser()
+CODECS = PI05_ROOT / 'compress-vs-raw-01' / 'dimension-extension-01' / 'codecs'
+TOPK = PI05_ROOT / 'topk-long-01' / 'production' / 'predictions_and_errors.npz'
 PCA_K = (4, 8, 12, 16, 24, 32, 48)
 DCT_K = (1, 2, 3, 4, 5)
 KEY_K = (2, 3, 4, 5, 6)

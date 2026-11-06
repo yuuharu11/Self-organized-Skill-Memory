@@ -18,7 +18,9 @@ import time
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 SOURCE = ROOT / 'compress-cluster-oracle-01'
 FAIR = ROOT / 'fair-expert-01'
 OUT = Path(os.environ.get('SECONDARY_FIX_OUT', SOURCE / 'secondary-correction-01'))
@@ -178,7 +180,7 @@ def main():
     from openpi.shared.nnx_utils import module_jit
     sys.path.insert(0, str(HERE.parent / 'skill_expert'))
     from skill_expert.run import load_expert
-    policy, _ = base.load_policy(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    policy, _ = base.load_policy(Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser())
     obs = base.obs_batch(rows, long)
     generated = {}
     predictions = {}

@@ -22,7 +22,9 @@ PI05 = HERE.parent
 sys.path.insert(0, str(PI05))
 from compress_vs_raw.common import base_module, fair_module, require_new_artifacts
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 RUN = ROOT / 'run-01'
 MEMORIES = ROOT / 'skill-memories-01'
 CODEC_DIR = ROOT / 'compress-vs-raw-01/dimension-extension-01'
@@ -71,7 +73,7 @@ def publish_pre_generation():
     lines += ['', 'Top-32候補絞り込みは代表の自己条件付き復元を使い、Long行で候補内をquery条件で厳密評価した。抜き取り全件照合のmiss数を各セルJSONに記録。','',
         '次段のExpert学習はこの表が確定した後に開始する。']
     (OUT/'results.md').write_text('\n'.join(lines)+'\n')
-    docs=Path('/work/docs/research/07_pi05_memory40/compress_cluster_oracle/results.md')
+    docs=REPO_ROOT/'docs/research/07_pi05_memory40/compress_cluster_oracle/results.md'
     docs.parent.mkdir(parents=True,exist_ok=True)
     if docs.exists(): raise FileExistsError(docs)
     docs.write_text('# 圧縮・クラスタリングの生成前表\n\n'+(OUT/'results.md').read_text()+'\nExpert生成前。正解行動を候補選択に使う上限診断である。\n')
@@ -486,7 +488,7 @@ def train_one(kind, level, *, threads=8, attempt=1):
     batch_drafts=np.asarray(train_cache['primary'],np.float32)
     if batch_drafts.shape!=(len(train),10,32): raise AssertionError(f'bad draft shape {batch_drafts.shape}')
     start=time.monotonic()
-    model,_=base.load_policy(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    model,_=base.load_policy(Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser())
     filt=nnx.All(nnx.Param,PathRegex(r'.*(llm.*_1|action_in_proj|time_mlp|action_out_proj).*'))
     state=nnx.state(model,filt)
     if sum(x.value.size for x in state.flat_state().values())<100_000_000:
@@ -581,7 +583,7 @@ def evaluate_one(kind, level, *, threads=8, batch=8, attempt=1):
     ez_best=json.loads((ROOT/'fair-expert-01/E-zero/best_bridge.json').read_text())
     refs['E-M2_M2_top1']=np.asarray(official[f"pred_E-M2_M2_top1_t0_{float(em2_best['t0']):.1f}"],np.float32)
     refs['E-zero_zero']=np.asarray(official[f"pred_E-zero_zero_t0_{float(ez_best['t0']):.1f}"],np.float32)
-    policy,_=base.load_policy(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    policy,_=base.load_policy(Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser())
     from_path=Path(best['path'])
     # The module's checked loader restores only the selected action expert leaves.
     sys.path.insert(0,str(PI05/'skill_expert'))
@@ -719,7 +721,7 @@ def aggregate():
     (OUT/'summary.md').write_text(final_text)
     with (OUT/'results.md').open('a') as f:
         f.write('\n\n---\n\n## Expert後の結果\n\n参照: `summary.md` と `summary.json`。\n')
-    docs_results=Path('/work/docs/research/07_pi05_memory40/compress_cluster_oracle/results.md')
+    docs_results=REPO_ROOT/'docs/research/07_pi05_memory40/compress_cluster_oracle/results.md'
     docs_results.parent.mkdir(parents=True,exist_ok=True)
     docs_results.write_text(final_text)
 
@@ -872,7 +874,7 @@ def _build(args):
     lines += ['', 'Top-32候補絞り込みは代表の自己条件付き復元を使い、Long行で候補内をquery条件で厳密評価した。抜き取り全件照合のmiss数を各セルJSONに記録。', '',
               '次段のExpert学習はこの表が確定した後に開始する。']
     (OUT/'results.md').write_text('\n'.join(lines)+'\n')
-    docs_pre=Path('/work/docs/research/07_pi05_memory40/compress_cluster_oracle/results.md')
+    docs_pre=REPO_ROOT/'docs/research/07_pi05_memory40/compress_cluster_oracle/results.md'
     docs_pre.parent.mkdir(parents=True,exist_ok=True)
     docs_pre.write_text('# 圧縮・クラスタリングの生成前表\n\n'+(OUT/'results.md').read_text()+'\nExpert生成前。正解行動を候補選択に使う上限診断である。\n')
     lock.unlink(missing_ok=True)

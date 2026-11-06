@@ -30,10 +30,14 @@ except ImportError:
         decode_original, dmp_encode, m6_fit_generic, medoid_generic, pca_decode,
         pca_encode, pca_fit, procrustes_rotation, raw_pca_input, resample, spline_encode)
 
-ROOT = Path(os.environ.get("SKILL_MEMORY_ARTIFACTS", "/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104"))
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get("SKILLNET_STATE_DIR", REPO_ROOT / ".skillnet-state")).expanduser()
+ROOT = Path(os.environ.get("SKILL_MEMORY_ARTIFACTS", os.environ.get("SKILLNET_PI05_ROOT",
+             STATE_DIR / "outputs/memory-pilot/pi05-memory40-20261104"))).expanduser()
 DEFAULT_RUN = ROOT / "run-01"
 DEFAULT_OUT = ROOT / "shape-skills-01"
-CHECKPOINT = Path("/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero")
+CHECKPOINT = Path(os.environ.get("SKILLNET_PI05_CHECKPOINT",
+                 STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_libero")).expanduser()
 KAPPAS = (.025, .05, .1, .2, .4, .8)
 
 

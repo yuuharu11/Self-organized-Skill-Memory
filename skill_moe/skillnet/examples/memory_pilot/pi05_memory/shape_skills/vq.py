@@ -21,9 +21,12 @@ sys.path.insert(0, str(HERE))
 import data as shape_data
 import representations as shape_repr
 
-RUN_DIR = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
-ROOT_OUT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-01')
-GAP = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/compress-vs-raw-review-20261105-01/drafts_prepared.npz')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+RUN_DIR = PI05_ROOT / 'run-01'
+ROOT_OUT = PI05_ROOT / 'shape-skills-01'
+GAP = PI05_ROOT / 'compress-vs-raw-review-20261105-01/drafts_prepared.npz'
 K_VALUES = (256, 1024)
 RESIDUAL_DIMS = (0, 4, 8)
 SEGMENT_CONFIGS = (
@@ -524,7 +527,7 @@ def run(*, output=ROOT_OUT, epochs=40, batch_size=128, threads=8, device=None, s
     out=Path(output); reps_dir=out/'representations'
     if out.exists() and (out/'vq_run_manifest.json').exists():raise FileExistsError(f'output already exists: {out}')
     out.mkdir(parents=True,exist_ok=True);reps_dir.mkdir(parents=True,exist_ok=True)
-    episodes,rows,srcmeta=_load_source_robust(RUN_DIR,Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    episodes,rows,srcmeta=_load_source_robust(RUN_DIR,Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser())
     dev_keys=[k for k,v in episodes.items() if k[0] in shape_data.HELDOUT_TASKS and v['meta']['validation']]
     vthr,vrec=shape_data.choose_velocity_threshold(episodes,dev_keys)
     segsets=_build_segments(episodes,rows,vthr)

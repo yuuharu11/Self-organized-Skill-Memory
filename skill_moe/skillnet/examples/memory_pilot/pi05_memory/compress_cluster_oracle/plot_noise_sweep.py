@@ -11,9 +11,12 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/compress-cluster-oracle-01')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
+ROOT = Path(os.environ.get('COMPRESS_CLUSTER_OUT', PI05_ROOT / 'compress-cluster-oracle-01')).expanduser()
 OUT = Path(os.environ.get('NOISE_SWEEP_OUT', ROOT / 'noise-sweep-03'))
-FIG = Path('/work/docs/research/07_pi05_memory40/compress_cluster_oracle/figures')
+FIG = REPO_ROOT / 'docs/research/07_pi05_memory40/compress_cluster_oracle/figures'
 T0 = np.asarray([.05, .1, .2, .3, .4, .5, .6, .8, 1.0])
 REPS = ('raw', 'b12', 'b24', 'b48', 'b96')
 LEVELS = ('none', 'fine', 'mid', 'coarse', 'm6default')

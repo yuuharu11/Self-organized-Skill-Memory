@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import h5py
@@ -24,6 +25,8 @@ COLORS = ('#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#6250d6')
 AXES = ('x', 'y', 'z')
 FRAME_STRIDE = 2  # the demos are 20 Hz; the rows used elsewhere are 10 Hz
 MIN_LENGTH = 5
+REPO_ROOT = Path(__file__).resolve().parents[5]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
 
 
 def normalize(a):
@@ -135,8 +138,8 @@ def contact_sheet(path, images, actions, table, title):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--data', type=Path, default=Path('/work/data/LIBERO'))
-    ap.add_argument('--output', type=Path, default=Path('/work/docs/research/09_unseen_libero/segmentation_demo'))
+    ap.add_argument('--data', type=Path, default=Path(os.environ.get('SKILLNET_LIBERO_HDF5', STATE_DIR / 'data/LIBERO')).expanduser())
+    ap.add_argument('--output', type=Path, default=REPO_ROOT / 'docs/research/09_unseen_libero/segmentation_demo')
     ap.add_argument('--epsilons', type=float, nargs='+', default=[.005, .01, .02, .04])
     ap.add_argument('--video-epsilon', type=float, default=.02)
     args = ap.parse_args()

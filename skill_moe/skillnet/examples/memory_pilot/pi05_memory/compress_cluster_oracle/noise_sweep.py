@@ -17,13 +17,15 @@ import time
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104')
+REPO_ROOT = Path(__file__).resolve().parents[6]
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', REPO_ROOT / '.skillnet-state')).expanduser()
+ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 RUN = ROOT / 'run-01'
 EXPERIMENT = HERE / 'experiment.py'
 EXISTING = ROOT / 'compress-cluster-oracle-01'
 FAIR = ROOT / 'fair-expert-01'
 OUT = Path(os.environ.get('NOISE_SWEEP_OUT', EXISTING / 'noise-sweep-01'))
-DOC_FIG = Path('/work/docs/research/07_pi05_memory40/compress_cluster_oracle/figures')
+DOC_FIG = REPO_ROOT / 'docs/research/07_pi05_memory40/compress_cluster_oracle/figures'
 T0S = (.05, .1, .2, .3, .4, .5, .6, .8, 1.0)
 OLD_T0S = (.2, .4, .6)
 REPS = 5000
@@ -116,7 +118,7 @@ def main():
 
     # Restore public weights once; each checkpoint only replaces the declared
     # action-expert leaves, matching the original evaluation loader.
-    policy, _ = base.load_policy(Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero'))
+    policy, _ = base.load_policy(Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser())
     obs = base.obs_batch(rows, long)
     ref_normal = np.asarray(official['pred_official_normal'], np.float32)
     ref_normal_mse = _active_mse(ref_normal, target)
