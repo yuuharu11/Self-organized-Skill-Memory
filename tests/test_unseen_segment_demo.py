@@ -231,3 +231,13 @@ def test_stretching_keeps_the_path_in_physical_units():
     full = vs.to_physical(drafts[20][0, :, :6]).sum(0)
     for length in (10, 40):
         np.testing.assert_allclose(vs.to_physical(drafts[length][0, :, :6]).sum(0), full, atol=1e-6)
+
+
+def test_cover_units_keeps_one_of_two_identical_items():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import compression_compare as cc
+    a = np.zeros((3, 10, 7)); a[1] = .001; a[2] = 1.
+    units = cc.cover_units(a, .01)
+    assert len(units) == 2
+    assert 2 in units
