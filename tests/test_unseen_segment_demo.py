@@ -69,3 +69,29 @@ def test_segment_values_round_trip_at_its_own_length_and_stretch():
     np.testing.assert_allclose(vm.decode(v, 30)[0], a, atol=1e-6)
     assert vm.decode(v, 60).shape == (1, 60, 7)
     assert abs(vm.decode(v, 60)[0, :, 0].mean() - .2) < 1e-6
+
+
+def test_shape_round_trip_restores_the_motion_with_its_own_pose():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import variable_shape_memory as vs
+    t = np.arange(30) + .5
+    a = _actions(30)
+    a[:, 0] = .3 + .1 * np.cos(np.pi * t / 30)
+    a[:, 1] = -.2 + .1 * np.cos(2 * np.pi * t / 30)
+    a[:, 2] = .1
+    a[:, 3:6] = vs.to_normalized(np.zeros((30, 6)))[:, 3:6]
+    for form in ("as_is", "net", "rms"):
+        pose = None if form == "as_is" else vs.pose_of(a[:, :6], form)
+        out = vs.decode(vs.encode(a, 0, 30, form, 1), 30, form, pose, 1)[0]
+        np.testing.assert_allclose(out, a, atol=1e-5)
+
+
+def test_shape_pose_differs_but_the_shape_matches_after_rotation_and_scale():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import variable_shape_memory as vs
+    p = np.zeros((20, 6)); p[:, 0] = .1 + .05 * np.sin(np.arange(20) / 3)
+    q = np.zeros((20, 6)); q[:, 1] = -2 * p[:, 0]
+    for form in ("net", "rms"):
+        np.testing.assert_allclose(vs.to_shape(vs.to_normalized(p), form), vs.to_shape(vs.to_normalized(q), form), atol=1e-4)
