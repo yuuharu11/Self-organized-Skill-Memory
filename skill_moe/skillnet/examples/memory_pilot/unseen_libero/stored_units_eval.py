@@ -70,10 +70,8 @@ def run_one(config):
     return entry, np.mean((pred - ev.Shared.target) ** 2, axis=(1, 2))
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--output', type=Path, default=ROOT / 'unseen-libero' / 'draft-reconstruction-01' / 'stored_units.json')
-    args = ap.parse_args()
+def load_data():
+    """Fill ev.Shared; returns the raw row table and the eval rows' episode keys."""
     rows = {k: np.load(RUN / 'rows' / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'memory')}
     memory = np.flatnonzero(np.asarray(rows['memory'], bool))
     key = np.stack([np.asarray(rows['task'])[memory], np.asarray(rows['episode'])[memory]], 1)
@@ -90,7 +88,15 @@ def main():
     S.traces, _ = stitch(np.asarray(un['actions'])[rows_ev], ukey, frame)
     S.rows_of = {k: np.flatnonzero((ukey == k).all(1))[np.argsort(frame[(ukey == k).all(1)])] for k in S.traces}
     S.target = np.asarray(un['actions'])[rows_ev][:, :, :7].astype(np.float64)
+    return ukey
 
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--output', type=Path, default=ROOT / 'unseen-libero' / 'draft-reconstruction-01' / 'stored_units.json')
+    args = ap.parse_args()
+    ukey = load_data()
+    S = ev.Shared
     caches, base = {}, {}
     for name in FIXED_CACHES:
         for level in ('none', 'm6default'):
@@ -111,7 +117,7 @@ def main():
         entry['minus_raw_m6_all'] = paired_interval(error, base['raw m6default'], ukey)
         entry['minus_raw_m6_hard'] = paired_interval(error[S.hard], base['raw m6default'][S.hard], ukey[S.hard])
         results.append(entry)
-    args.output.write_text(json.dumps({'rows': len(rows_ev), 'hard_rows': int(S.hard.sum()), 'caches': caches, 'results': results}, ensure_ascii=False, indent=2) + '\n')
+    args.output.write_text(json.dumps({'rows': len(S.target), 'hard_rows': int(S.hard.sum()), 'caches': caches, 'results': results}, ensure_ascii=False, indent=2) + '\n')
     print(args.output)
 
 

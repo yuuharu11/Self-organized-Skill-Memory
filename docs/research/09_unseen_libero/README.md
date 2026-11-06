@@ -13,6 +13,7 @@
 - [DCTの誤差基準でまとめる](dct_tolerance_merge.md)：切り出しと同じ誤差基準で統合。単位数は τ から決まり、区間を捨てない。
 - [デノイズ前までの下書き](skill_draft.md)：単位の長さで進む仕組みと評価。可変長は固定10窓より良くならなかった。
 - [保存した単位だけで戻す](stored_units.md)：正解は選択と採点だけに使う主な比較。上の3つは正解の向きと大きさや切れ目を使う診断。
+- [選ぶ回数を揃えた最適な並び](optimal_units.md)：動的計画法で最適に選ぶ比較。20フレームに1回では可変長が良い。
 - [表現上限のオフライン比較](oracle_results.md)：正解行動で候補を選ぶ検索なしの診断。閉ループ結果ではない。
 
 コードは skill_moe/skillnet/examples/memory_pilot/unseen_libero/、出力は .skillnet-state/outputs/memory-pilot/unseen-libero/baseline-01/。

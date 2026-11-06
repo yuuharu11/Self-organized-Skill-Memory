@@ -193,3 +193,41 @@ def test_stored_unit_plays_back_with_its_own_direction_and_size():
     far_away = np.full((10, 6), .9)
     np.testing.assert_allclose(planner.draft(far_away), trace[:10], atol=1e-5)
     assert d.oracle_selector(memory, trace, .05)(0) == 0
+
+
+def _optimal_module():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import optimal_units_eval
+    return optimal_units_eval
+
+
+def test_best_sequence_covers_every_frame_within_the_budget():
+    m = _optimal_module()
+    trace = _smooth_trace(20)
+    drafts = {10: trace[None, :10], 5: np.zeros((1, 5, 7))}
+    drafts[10] = np.stack([trace[:10], trace[10:20]])
+    table = m.best_cost_table(trace, drafts)
+    cost, sequence = m.best_sequence(table, [5, 10], 20, 2)
+    assert sequence == [(0, 10), (10, 10)] and cost < 1e-12
+    cost, sequence = m.best_sequence(table, [5, 10], 20, 1)
+    assert sequence == [(0, 10)] or not sequence
+
+
+def test_dtw_forgives_a_small_time_shift_but_not_a_wrong_motion():
+    m = _optimal_module()
+    trace = _smooth_trace(40)
+    shifted = np.roll(trace, 2, axis=0); shifted[:2] = trace[0]
+    assert m.dtw_frame_errors(shifted, trace).mean() < np.mean((shifted - trace) ** 2) / 3
+    assert m.dtw_frame_errors(-trace, trace).mean() > .01
+
+
+def test_stretching_keeps_the_path_in_physical_units():
+    m = _optimal_module(); vs = m.vs
+    trace = _smooth_trace(20)
+    v = vs.encode(trace, 0, 20, "as_is", 1)
+    memory = _draft_module().SkillMemory(v[None], np.array([20]), 1, "as_is")
+    drafts = m.stretched_units(memory, (.5, 1., 2.))
+    full = vs.to_physical(drafts[20][0, :, :6]).sum(0)
+    for length in (10, 40):
+        np.testing.assert_allclose(vs.to_physical(drafts[length][0, :, :6]).sum(0), full, atol=1e-6)
