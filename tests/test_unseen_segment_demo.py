@@ -95,3 +95,37 @@ def test_shape_pose_differs_but_the_shape_matches_after_rotation_and_scale():
     q = np.zeros((20, 6)); q[:, 1] = -2 * p[:, 0]
     for form in ("net", "rms"):
         np.testing.assert_allclose(vs.to_shape(vs.to_normalized(p), form), vs.to_shape(vs.to_normalized(q), form), atol=1e-4)
+
+
+def _merge_module():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import dct_tolerance_merge
+    return dct_tolerance_merge
+
+
+def test_rebuild_error_equals_the_decoded_error():
+    m = _merge_module(); vs = m.vs
+    rng = np.random.default_rng(0)
+    t = np.arange(30) + .5
+    traces = []
+    for _ in range(3):
+        a = _actions(30)
+        for d in range(6):
+            a[:, d] = rng.uniform(-.3, .3) + rng.uniform(-.2, .2) * np.cos(np.pi * t / 30) + rng.uniform(-.2, .2) * np.cos(2 * np.pi * t / 30)
+        traces.append(a)
+    for form in ("as_is", "rms"):
+        values = np.stack([vs.encode(a, 0, 30, form, 1) for a in traces])
+        matrices = np.stack([m.pose_matrix(a[:, :6], form) for a in traces])
+        errors = m.rebuild_errors(values, matrices, 1)
+        pose = None if form == "as_is" else vs.pose_of(traces[0][:, :6], form)
+        decoded = vs.decode(values[1], 30, form, pose, 1)[0]
+        assert abs(errors[0, 1] - np.mean((decoded - traces[0]) ** 2)) < 1e-4
+
+
+def test_greedy_cover_reaches_every_row_and_counts_each_once():
+    m = _merge_module()
+    within = np.array([[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]], bool)
+    units, sizes = m.greedy_cover(within)
+    assert sizes.sum() == 4 and within[:, units].any(1).all()
+    assert units[0] == 1 and sizes[0] == 3
