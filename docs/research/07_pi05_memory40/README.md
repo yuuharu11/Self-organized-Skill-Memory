@@ -39,4 +39,5 @@
 - [Skill ExpertのLong閉ループ](skill_expert/results.md)：スキルbを復元した下書きから直すExpertと、写像b̂の信頼度でt0を変える条件、各100試行。
 - [局所キーの検索](local_key/README.md)：手先まわりのキーがLong以外の実演から未知タスクの動きを検索できるかのオフライン評価。
 - [キー選択機構](key_mechanism/README.md)：アテンション型のキー・候補判定器で単一実演を選び、Longの生成前後MSEとK1–K4を評価。
+- [圧縮とクラスタリングの上限診断](compress_cluster_oracle/results.md)：正解を必ず含むメモリから正解で選び、検索の影響を除いて、圧縮とクラスタリングの損失とノイズ強度ごとのデノイズ後MSEを比較。
 - [移植用アルゴリズムCore](../../../skill_memory_core/README.md)：生行動メモリ＋M2検索＋bridge Expertの自己完結パッケージと保存済み実験へのparity表。
