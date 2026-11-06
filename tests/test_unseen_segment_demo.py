@@ -129,3 +129,56 @@ def test_greedy_cover_reaches_every_row_and_counts_each_once():
     units, sizes = m.greedy_cover(within)
     assert sizes.sum() == 4 and within[:, units].any(1).all()
     assert units[0] == 1 and sizes[0] == 3
+
+
+def _draft_module():
+    import sys
+    sys.path[:0] = [str(CODE.parent), str(CODE.parent.parent / "pi05_memory"), str(CODE.parent.parent / "pi05_memory" / "shape_skills")]
+    import dct_skill_draft
+    return dct_skill_draft
+
+
+def _smooth_trace(n, phase=0.):
+    a = _actions(n)
+    t = np.arange(n) + .5
+    a[:, 0] = .3 + .2 * np.cos(np.pi * t / n + phase)
+    a[:, 1] = -.2 + .1 * np.cos(2 * np.pi * t / n)
+    a[:, 2] = .1
+    a[:, 3:6] = .05
+    return a
+
+
+def test_align_restores_a_motion_from_its_own_shape():
+    d = _draft_module()
+    a = _smooth_trace(20)[:, :6]
+    np.testing.assert_allclose(d.align(d.vs.to_shape(a, "rms"), a), a, atol=1e-5)
+
+
+def test_planner_follows_a_unit_past_the_horizon_before_selecting_again():
+    d = _draft_module()
+    trace = _smooth_trace(25)
+    v = d.vs.encode(trace, 0, 25, "rms", 1)
+    memory = d.SkillMemory(v[None], np.array([25]), 1)
+    calls = []
+    def select(frame):
+        calls.append(frame)
+        return 0
+    planner = d.DraftPlanner(memory, select)
+    first = planner.draft(trace[:10, :6]); planner.advance(10)
+    planner.draft(trace[10:20, :6]); planner.advance(10)
+    assert calls == [0]
+    planner.draft(np.vstack([trace[20:25, :6], trace[20:25, :6]]))
+    assert calls == [0, 25]
+    np.testing.assert_allclose(first, trace[:10], atol=1e-2)
+
+
+def test_memory_round_trip_and_oracle_prefers_the_longer_unit(tmp_path):
+    d = _draft_module()
+    trace = _smooth_trace(30)
+    short = d.vs.encode(trace, 0, 10, "rms", 1)
+    long = d.vs.encode(trace, 0, 30, "rms", 1)
+    memory = d.SkillMemory(np.stack([short, long]), np.array([10, 30]), 1)
+    memory.save(tmp_path / "m.npz")
+    loaded = d.SkillMemory.load(tmp_path / "m.npz")
+    np.testing.assert_array_equal(loaded.lengths, memory.lengths)
+    assert d.oracle_selector(loaded, trace, .05)(0) == 1

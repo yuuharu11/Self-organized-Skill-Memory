@@ -11,6 +11,7 @@
 - [固定長のクラスタリングと可変長の比較](variable_memory_oracle.md)：LIBERO-40のメモリから正解に一番近い代表で戻す誤差。
 - [向きと大きさを除いてまとめる](variable_shape_memory.md)：形だけでまとめ、正解の向きと大きさを与えた上限。
 - [DCTの誤差基準でまとめる](dct_tolerance_merge.md)：切り出しと同じ誤差基準で統合。単位数は τ から決まり、区間を捨てない。
+- [デノイズ前までの下書き](skill_draft.md)：単位の長さで進む仕組みと評価。可変長は固定10窓より良くならなかった。
 - [表現上限のオフライン比較](oracle_results.md)：正解行動で候補を選ぶ検索なしの診断。閉ループ結果ではない。
 
 コードは skill_moe/skillnet/examples/memory_pilot/unseen_libero/、出力は .skillnet-state/outputs/memory-pilot/unseen-libero/baseline-01/。
