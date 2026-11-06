@@ -130,14 +130,8 @@ def deterministic_cross_task_from_pool(candidate_pool_ids, query_task, candidate
     from scipy.optimize import linear_sum_assignment
     ids=np.unique(np.asarray(candidate_pool_ids,np.int64));qt=np.asarray(query_task);ct=np.asarray(candidate_task)[ids]
     if not len(ids):raise ValueError('empty candidate pool')
+    if len(ids)<len(qt):raise ValueError(f'candidate pool has {len(ids)} rows for {len(qt)} queries; unique candidates are impossible')
     rng=np.random.default_rng(seed)
-    if len(ids)<len(qt):
-        out=np.empty(len(qt),np.int64)
-        for i,t in enumerate(qt):
-            eligible=ids[ct!=t]
-            if not len(eligible):raise ValueError(f'candidate pool has no cross-task rows for task {t}')
-            out[i]=rng.choice(eligible)
-        return out
     cost=rng.random((len(qt),len(ids)))
     cost[qt[:,None]==ct[None,:]]=1e6
     r,c=linear_sum_assignment(cost)
