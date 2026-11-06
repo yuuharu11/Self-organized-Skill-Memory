@@ -52,7 +52,7 @@ python skill_moe/skillnet/examples/libero/install_libero_skill_assets.py \
   --libero-root "$SKILLNET_LIBERO_SOURCE/libero/libero" --install
 ```
 
-再構築にはCMake・コンパイラ、GLVND/EGL・GLib・OpenGL等の共有ライブラリも必要です。
+再構築にはCMake 3系（`cmake<4`）・make・コンパイラ、GLVND/EGL・GLib・OpenGL等の共有ライブラリも必要です。
 現在検証済みの環境を移動するだけで新しいvenvになるとは扱いません。
 
 データ・重み・キャッシュ・実験結果は `.skillnet-state/` に保持します。

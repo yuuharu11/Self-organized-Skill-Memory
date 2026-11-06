@@ -188,6 +188,13 @@ class Policy(BasePolicy):
         except Exception as exc:  # pragma: no cover - visualization is best-effort.
             logging.warning("Failed to write subtask trace PNG: %s", exc)
 
+    def _subtask_generation_enabled(self) -> bool:
+        """SKILLNET_SUBTASK_GENERATE overrides the model's default."""
+        value = _get_skillnet_env("SUBTASK_GENERATE")
+        if value is not None:
+            return value.strip().lower() not in {"", "0", "false", "no"}
+        return bool(getattr(self._model, "subtask_generation_default", True))
+
     def _maybe_generate_subtask(
         self,
         observation: _model.Observation,
@@ -201,6 +208,8 @@ class Policy(BasePolicy):
         if observation.token_loss_mask is not None:
             return observation
         if not hasattr(self._model, "generate_subtask") or not hasattr(self._model, "build_full_observation"):
+            return observation
+        if not self._subtask_generation_enabled():
             return observation
 
         trace_dir = _get_skillnet_env("SUBTASK_TRACE_DIR")

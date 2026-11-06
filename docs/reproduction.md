@@ -15,7 +15,7 @@
 | 現行アルゴリズムの通し実行 | 全エピソードを保持した LIBERO-40、π0.5 重み、GPU | データ変換から修正 Expert の判定まで。[再現手順](reproduce_core_path.md) |
 
 公開重みの評価スモークは、スキルメモリの改善や論文の成功率を再現する実験とは別に報告してください。
-元のコンテナでは Spatial の各1試行が10/10成功しましたが、各50試行の論文評価ではありません。
+元のコンテナの記録は Spatial の各1試行で10/10成功です。新規 clone の現行コードでは2回とも9/10で、同じタスク（top drawer の black bowl）が失敗しました。いずれも各50試行の論文評価ではありません。
 必要 VRAM の下限・別 GPU での速度は測定していません。
 
 ## 2. 別環境でのセットアップ
@@ -41,7 +41,8 @@ Git はソース・設定・小さな注釈を管理します。データ・重�
 ### Python と LIBERO
 
 固定リストの対象は **Linux x86_64 / Python 3.10** です。
-事前に Python 3.10、Git、uv 0.8.22、CMake と C/C++ コンパイラを用意してください。
+事前に Python 3.10、Git、uv 0.8.22、CMake 3系（`cmake<4`）、make、C/C++ コンパイラを用意してください。
+固定している `egl-probe==1.0.2` は CMake 4 ではビルドできません。
 GPU 実験には CUDA 対応 NVIDIA ドライバが必要です。コンテナでは GPU とドライバの共有も設定します。
 描画には `libGL.so.1`・`libEGL.so.1`・GLib と、ドライバの EGL 実装が必要です。
 Python の依存導入だけでは OS ライブラリや GPU の設定は完了しません。
@@ -119,6 +120,7 @@ bash env/eval_smoke.sh
 本数を増やす場合は `NUM_TRIALS=20 bash env/eval_smoke.sh` のように明示します。
 このスモークの標準設定は `libero_spatial`、各1試行、seed 7、`ZERO_SHOT=0` です。
 LIBERO-Skill のゼロショット評価とは条件が異なります。
+公開 Skill-MoE 重みの推論では、サブタスクの逐次生成を既定で行いません。有効にする場合は `SKILLNET_SUBTASK_GENERATE=1` を設定します。動作が変わり、実行も遅くなるので、結果には設定を併記してください。
 全スイートや SkillNet 自体の学習は [既存の学習・評価手順](training_and_evaluation.md) を参照してください。
 
 ## 4. 研究実験の入力と実行

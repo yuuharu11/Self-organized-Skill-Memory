@@ -235,8 +235,9 @@ def run(out: Path, *, smoke_rows: int | None = None, batch_size: int = 4,
     if not np.array_equal(hard_source['eval_rows'], eval_rows):
         raise AssertionError('retrieval-4b Eval row order differs from memory-gap')
     threshold = float(hard_source['hard_threshold'])
-    if not np.isclose(threshold, .01549410422449, atol=1e-10, rtol=0):
-        raise AssertionError(f'hard threshold changed: {threshold}')
+    gap_threshold = float(json.loads((GAP / 'protocol.json').read_text())['dev_threshold']['dev_episode_normal_mse_q80'])
+    if not np.isclose(threshold, gap_threshold, atol=1e-10, rtol=0):
+        raise AssertionError(f'retrieval-4b hard threshold {threshold} differs from memory-gap {gap_threshold}')
     hard_all = np.asarray(hard_source['hard_mask'], bool)
     hard_map = {int(q): bool(h) for q, h in zip(eval_rows, hard_all, strict=True)}
     hard = np.asarray([hard_map[int(q)] for q in long_rows], bool)

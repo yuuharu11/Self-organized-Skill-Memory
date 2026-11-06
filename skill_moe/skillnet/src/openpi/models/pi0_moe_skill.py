@@ -107,6 +107,10 @@ def subtask_generated_lengths(tokens: at.Int[at.Array, "b n"], eos_token: int = 
 
 
 class Pi0(_model.BaseModel):
+    # Released Skill-MoE checkpoints act from the instruction and skill annotations.
+    # Subtask decoding at inference is opt-in: SKILLNET_SUBTASK_GENERATE=1.
+    subtask_generation_default = False
+
     def __init__(self, config: pi0_config_moe_skill.Pi0Config, rngs: nnx.Rngs):
         super().__init__(config.action_dim, config.action_horizon, config.max_token_len)
         self.pi05 = config.pi05
@@ -269,7 +273,7 @@ class Pi0(_model.BaseModel):
             token_position = prefix_lengths + step
             valid_keys = key_positions < (token_position + 1)[:, None]
             decode_mask = valid_keys[:, None, :]
-            (_, decoded), cache, _ = self.PaliGemma.llm(
+            (decoded, _), cache, _ = self.PaliGemma.llm(
                 [token_embed, None],
                 skill_embeds=None,
                 skill_mask=None,

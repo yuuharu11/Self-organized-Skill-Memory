@@ -49,7 +49,7 @@ PI05=skill_moe/skillnet/examples/memory_pilot/pi05_memory
 
 ### 1. データと重み
 
-公開データと公式の重みを取得します。
+公開データと公式の重みを取得します。`gcloud`（Google Cloud CLI）が必要です。ログインを求められた場合は `gcloud auth login` を実行してください。
 
 ```bash
 huggingface-cli download openvla/modified_libero_rlds --repo-type dataset \
@@ -165,6 +165,8 @@ SKILL_MEMORY_ARTIFACTS="$SKILLNET_PI05_ROOT" python -m pytest -q -s skill_memory
 
 - **閉ループは未検証です。** Core 経由の閉ループ評価はまだなく、実行時の検索サーバーも未実装です。
 - **保存値との差が残っています。** 生成結果は保存済みの予測と最大 .00185 ずれており、原因は特定できていません。
+- **難しい行の閾値は保存値と完全には一致しません。** 同じ GPU・重み・乱数シードで再計算すると `.015507` になり、保存値は `.015494` です。再実行どうしは一致するため、乱数のゆらぎではなく、原因は特定できていません。各段は固定値でなく前段の出力を使います。保存済みの誤差では、この差で難しい行の数は変わりません（Long 63行）。
+- **再学習で最良のステップが変わると止まります。** 段階 4〜7 は `run-01/best_bridge.json` が 1,500 ステップを指すことを確認しています。保存時の設計どおりの検査で、再学習で一致するかは未確認です。
 - **`_history` に既知の不具合があります。** 既存の重みとの互換性のため `as_trained` として残しています（[ALGORITHM.md](../skill_memory_core/ALGORITHM.md)）。
 - **学習済みの M2 と Expert は公開していません。** 手順どおりに再学習が必要で、同じ値になる保証はありません。
 - **Long は未知タスクではありません。** 公開 π0.5 のモデルと VLM は Long タスクを事前学習で見ています。

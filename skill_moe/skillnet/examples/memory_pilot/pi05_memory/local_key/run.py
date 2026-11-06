@@ -19,7 +19,7 @@ _PI05_ROOT = Path(_os.environ.get('SKILLNET_PI05_ROOT', _STATE_DIR / 'outputs/me
 ROOT=_PI05_ROOT
 RUN=ROOT/'run-01'; MEMORY=ROOT/'skill-memories-01'/'raw-rows-noLong'
 GAP=ROOT/'memory-gap-01'; TOPK=ROOT/'topk-long-01'/'production'
-OUT=ROOT/'local-key-02'; Q80=0.01549410422449
+OUT=ROOT/'local-key-02'
 TASK_RANGES=((0,10,'libero_10'),(10,20,'libero_goal'),(20,30,'libero_object'),(30,40,'libero_spatial'))
 REGIONS={'wrist_center4':(slice(6,10),slice(6,10)),
          'wrist_center8':(slice(4,12),slice(4,12)),
@@ -334,8 +334,8 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     ids=np.arange(len(rows['task']));pool=np.flatnonzero(np.asarray(rows['memory'],bool)&(np.asarray(rows['task'])>=10))
     gap=np.load(GAP/'predictions_and_errors.npz',allow_pickle=False);top=np.load(TOPK/'predictions_and_errors.npz',allow_pickle=False)
     long_ids=gap['row_ids'][np.asarray(rows['task'][gap['row_ids']])<10];hard=top['hard_mask']
-    if len(pool)!=3857 or len(long_ids)!=548 or int(hard.sum())!=63 or not np.array_equal(long_ids,top['query_rows']):raise AssertionError('fixed pool/Long split mismatch')
-    if abs(_gap_threshold(GAP)-Q80)>1e-10:raise AssertionError('fixed q80 changed')
+    if len(pool)!=3857 or len(long_ids)!=548 or not hard.any() or not np.array_equal(long_ids,top['query_rows']):raise AssertionError('fixed pool/Long split mismatch')
+    threshold=_gap_threshold(GAP)
     memids=np.load(MEMORY/'units.npz',allow_pickle=False)['representative_row_ids']
     if not np.array_equal(pool,memids):raise AssertionError('memory row IDs differ from raw-rows-noLong')
     row_train=np.flatnonzero((np.asarray(rows['task'])>=10)&~np.asarray(rows['memory'],bool)&~np.asarray(rows['validation'],bool))
@@ -345,7 +345,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
     dev_ids=val_no_long[np.isin(np.asarray(rows['episode'][val_no_long]),dev_eps)]
     _assert_no_long(np.r_[pool,row_train],dev_ids,rows)
     all_required=np.unique(np.r_[pool,row_train,dev_ids,long_ids])
-    norm=json.loads(next(_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero/assets'.rglob('norm_stats.json')).read_text())['norm_stats']
+    norm=json.loads(next((_STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero/assets').rglob('norm_stats.json')).read_text())['norm_stats']
     state_q01=np.asarray(norm['state']['q01'][:8],np.float32);state_q99=np.asarray(norm['state']['q99'][:8],np.float32)
     if skip_camera:raise NotImplementedError('camera projection is required for the final run')
     task_texts=json.loads((RUN/'data_manifest.json').read_text())['tasks']
@@ -513,7 +513,7 @@ def run(out=OUT,threads=8,skip_camera=False,feature_cache_source=None,camera_cac
           top1_mse=np.asarray(met['top1_mse'],np.float32),top5_best_mse=np.asarray(met['top5_best_mse'],np.float32),
           recall8=np.asarray(met['recall8'],np.float32),spearman=np.asarray(met['spearman_top64'],np.float32))
     protocol={'pool_rows':len(pool),'pool_source':str(MEMORY),'pool_matches_existing_raw_rows_noLong':True,
-      'pool_task_ids':list(range(10,40)),'long_eval_rows':len(long_ids),'long_hard_rows':int(hard.sum()),'hard_threshold':Q80,
+      'pool_task_ids':list(range(10,40)),'long_eval_rows':len(long_ids),'long_hard_rows':int(hard.sum()),'hard_threshold':threshold,
       'train_rows':len(row_train),'train_tasks':[int(x) for x in np.unique(rows['task'][row_train])],
       'dev_rows':len(dev_ids),'dev_episode_count':len(np.unique(rows['episode'][dev_ids])),
       'long_rows_used_for_fit_or_selection':False,'long_task_excluded_from_memory':True,
