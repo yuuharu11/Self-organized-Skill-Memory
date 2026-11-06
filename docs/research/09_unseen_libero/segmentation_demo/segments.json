@@ -1,0 +1,506 @@
+{
+  "long_moka_pot": {
+    "file": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_demo.hdf5",
+    "frames": 136,
+    "segments": {
+      "0.005": [
+        {
+          "start": 0,
+          "end": 26,
+          "length": 26,
+          "reason": "error",
+          "error": 0.004294738091559091
+        },
+        {
+          "start": 26,
+          "end": 31,
+          "length": 5,
+          "reason": "gripper",
+          "error": 6.556794949754864e-05
+        },
+        {
+          "start": 31,
+          "end": 48,
+          "length": 17,
+          "reason": "error",
+          "error": 0.004450021039643573
+        },
+        {
+          "start": 48,
+          "end": 55,
+          "length": 7,
+          "reason": "gripper",
+          "error": 0.001506431247955455
+        },
+        {
+          "start": 55,
+          "end": 71,
+          "length": 16,
+          "reason": "error",
+          "error": 0.0045128723861483375
+        },
+        {
+          "start": 71,
+          "end": 87,
+          "length": 16,
+          "reason": "error",
+          "error": 0.004915849335812023
+        },
+        {
+          "start": 87,
+          "end": 102,
+          "length": 15,
+          "reason": "gripper",
+          "error": 0.004127838438984861
+        },
+        {
+          "start": 102,
+          "end": 119,
+          "length": 17,
+          "reason": "error",
+          "error": 0.004783135015840649
+        },
+        {
+          "start": 119,
+          "end": 131,
+          "length": 12,
+          "reason": "gripper",
+          "error": 0.001226508991067036
+        },
+        {
+          "start": 131,
+          "end": 136,
+          "length": 5,
+          "reason": "end",
+          "error": 0.00034527684944152487
+        }
+      ],
+      "0.01": [
+        {
+          "start": 0,
+          "end": 31,
+          "length": 31,
+          "reason": "gripper",
+          "error": 0.008848483927458125
+        },
+        {
+          "start": 31,
+          "end": 50,
+          "length": 19,
+          "reason": "error",
+          "error": 0.008186695615611122
+        },
+        {
+          "start": 50,
+          "end": 55,
+          "length": 5,
+          "reason": "gripper",
+          "error": 0.00018456405843044873
+        },
+        {
+          "start": 55,
+          "end": 79,
+          "length": 24,
+          "reason": "error",
+          "error": 0.0094981285623542
+        },
+        {
+          "start": 79,
+          "end": 102,
+          "length": 23,
+          "reason": "gripper",
+          "error": 0.009848005092371104
+        },
+        {
+          "start": 102,
+          "end": 122,
+          "length": 20,
+          "reason": "error",
+          "error": 0.009258540066571916
+        },
+        {
+          "start": 122,
+          "end": 131,
+          "length": 9,
+          "reason": "gripper",
+          "error": 0.0009571715882384276
+        },
+        {
+          "start": 131,
+          "end": 136,
+          "length": 5,
+          "reason": "end",
+          "error": 0.00034527684944152487
+        }
+      ],
+      "0.02": [
+        {
+          "start": 0,
+          "end": 31,
+          "length": 31,
+          "reason": "gripper",
+          "error": 0.008848483927458125
+        },
+        {
+          "start": 31,
+          "end": 55,
+          "length": 24,
+          "reason": "gripper",
+          "error": 0.017889781009154844
+        },
+        {
+          "start": 55,
+          "end": 87,
+          "length": 32,
+          "reason": "error",
+          "error": 0.018618635807644116
+        },
+        {
+          "start": 87,
+          "end": 102,
+          "length": 15,
+          "reason": "gripper",
+          "error": 0.004127838438984861
+        },
+        {
+          "start": 102,
+          "end": 131,
+          "length": 29,
+          "reason": "gripper",
+          "error": 0.015565092351234945
+        },
+        {
+          "start": 131,
+          "end": 136,
+          "length": 5,
+          "reason": "end",
+          "error": 0.00034527684944152487
+        }
+      ],
+      "0.04": [
+        {
+          "start": 0,
+          "end": 31,
+          "length": 31,
+          "reason": "gripper",
+          "error": 0.008848483927458125
+        },
+        {
+          "start": 31,
+          "end": 55,
+          "length": 24,
+          "reason": "gripper",
+          "error": 0.017889781009154844
+        },
+        {
+          "start": 55,
+          "end": 102,
+          "length": 47,
+          "reason": "gripper",
+          "error": 0.03556669587249068
+        },
+        {
+          "start": 102,
+          "end": 131,
+          "length": 29,
+          "reason": "gripper",
+          "error": 0.015565092351234945
+        },
+        {
+          "start": 131,
+          "end": 136,
+          "length": 5,
+          "reason": "end",
+          "error": 0.00034527684944152487
+        }
+      ]
+    }
+  },
+  "unseen_bowl_on_cabinet": {
+    "file": "KITCHEN_SCENE1_put_the_black_bowl_on_top_of_the_cabinet_demo.hdf5",
+    "frames": 81,
+    "segments": {
+      "0.005": [
+        {
+          "start": 0,
+          "end": 12,
+          "length": 12,
+          "reason": "error",
+          "error": 0.004457187803016667
+        },
+        {
+          "start": 12,
+          "end": 29,
+          "length": 17,
+          "reason": "gripper",
+          "error": 0.0036477900358401504
+        },
+        {
+          "start": 29,
+          "end": 47,
+          "length": 18,
+          "reason": "error",
+          "error": 0.0036961556525203724
+        },
+        {
+          "start": 47,
+          "end": 65,
+          "length": 18,
+          "reason": "error",
+          "error": 0.004947202849999103
+        },
+        {
+          "start": 65,
+          "end": 74,
+          "length": 9,
+          "reason": "gripper",
+          "error": 0.0025357646381635826
+        },
+        {
+          "start": 74,
+          "end": 81,
+          "length": 7,
+          "reason": "end",
+          "error": 0.00026654402721513646
+        }
+      ],
+      "0.01": [
+        {
+          "start": 0,
+          "end": 25,
+          "length": 25,
+          "reason": "error",
+          "error": 0.009021389346807946
+        },
+        {
+          "start": 25,
+          "end": 29,
+          "length": 4,
+          "reason": "gripper",
+          "error": 2.018161430841446e-05
+        },
+        {
+          "start": 29,
+          "end": 52,
+          "length": 23,
+          "reason": "error",
+          "error": 0.009928622632415141
+        },
+        {
+          "start": 52,
+          "end": 68,
+          "length": 16,
+          "reason": "error",
+          "error": 0.008713227974018873
+        },
+        {
+          "start": 68,
+          "end": 74,
+          "length": 6,
+          "reason": "gripper",
+          "error": 0.0013926179678953915
+        },
+        {
+          "start": 74,
+          "end": 81,
+          "length": 7,
+          "reason": "end",
+          "error": 0.00026654402721513646
+        }
+      ],
+      "0.02": [
+        {
+          "start": 0,
+          "end": 29,
+          "length": 29,
+          "reason": "gripper",
+          "error": 0.016868766901804798
+        },
+        {
+          "start": 29,
+          "end": 63,
+          "length": 34,
+          "reason": "error",
+          "error": 0.019104025326357958
+        },
+        {
+          "start": 63,
+          "end": 74,
+          "length": 11,
+          "reason": "gripper",
+          "error": 0.0038183579514912734
+        },
+        {
+          "start": 74,
+          "end": 81,
+          "length": 7,
+          "reason": "end",
+          "error": 0.00026654402721513646
+        }
+      ],
+      "0.04": [
+        {
+          "start": 0,
+          "end": 29,
+          "length": 29,
+          "reason": "gripper",
+          "error": 0.016868766901804798
+        },
+        {
+          "start": 29,
+          "end": 69,
+          "length": 40,
+          "reason": "error",
+          "error": 0.03703803420709931
+        },
+        {
+          "start": 69,
+          "end": 74,
+          "length": 5,
+          "reason": "gripper",
+          "error": 0.0006469887706259377
+        },
+        {
+          "start": 74,
+          "end": 81,
+          "length": 7,
+          "reason": "end",
+          "error": 0.00026654402721513646
+        }
+      ]
+    }
+  },
+  "unseen_red_mug": {
+    "file": "STUDY_SCENE3_pick_up_the_red_mug_and_place_it_to_the_right_of_the_caddy_demo.hdf5",
+    "frames": 60,
+    "segments": {
+      "0.005": [
+        {
+          "start": 0,
+          "end": 20,
+          "length": 20,
+          "reason": "error",
+          "error": 0.00478124415388474
+        },
+        {
+          "start": 20,
+          "end": 27,
+          "length": 7,
+          "reason": "gripper",
+          "error": 0.00027085403110518733
+        },
+        {
+          "start": 27,
+          "end": 41,
+          "length": 14,
+          "reason": "error",
+          "error": 0.0041195965403976065
+        },
+        {
+          "start": 41,
+          "end": 57,
+          "length": 16,
+          "reason": "error",
+          "error": 0.0035062493000636414
+        },
+        {
+          "start": 57,
+          "end": 59,
+          "length": 2,
+          "reason": "gripper",
+          "error": 4.3413670829728944e-33
+        },
+        {
+          "start": 59,
+          "end": 60,
+          "length": 1,
+          "reason": "end",
+          "error": 3.375016687048908e-33
+        }
+      ],
+      "0.01": [
+        {
+          "start": 0,
+          "end": 24,
+          "length": 24,
+          "reason": "error",
+          "error": 0.00919188642166692
+        },
+        {
+          "start": 24,
+          "end": 27,
+          "length": 3,
+          "reason": "gripper",
+          "error": 2.575931300617928e-33
+        },
+        {
+          "start": 27,
+          "end": 50,
+          "length": 23,
+          "reason": "error",
+          "error": 0.009887263306070173
+        },
+        {
+          "start": 50,
+          "end": 59,
+          "length": 9,
+          "reason": "gripper",
+          "error": 0.00163557420988522
+        },
+        {
+          "start": 59,
+          "end": 60,
+          "length": 1,
+          "reason": "end",
+          "error": 3.375016687048908e-33
+        }
+      ],
+      "0.02": [
+        {
+          "start": 0,
+          "end": 27,
+          "length": 27,
+          "reason": "gripper",
+          "error": 0.011502041514623133
+        },
+        {
+          "start": 27,
+          "end": 59,
+          "length": 32,
+          "reason": "gripper",
+          "error": 0.019013572738820147
+        },
+        {
+          "start": 59,
+          "end": 60,
+          "length": 1,
+          "reason": "end",
+          "error": 3.375016687048908e-33
+        }
+      ],
+      "0.04": [
+        {
+          "start": 0,
+          "end": 27,
+          "length": 27,
+          "reason": "gripper",
+          "error": 0.011502041514623133
+        },
+        {
+          "start": 27,
+          "end": 59,
+          "length": 32,
+          "reason": "gripper",
+          "error": 0.019013572738820147
+        },
+        {
+          "start": 59,
+          "end": 60,
+          "length": 1,
+          "reason": "end",
+          "error": 3.375016687048908e-33
+        }
+      ]
+    }
+  }
+}

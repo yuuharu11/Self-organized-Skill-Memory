@@ -344,7 +344,7 @@ def evaluate_one(name,out=OUT,*,batch=8,threads=8):
         decoded_drafts=drafts,**{f'pred_{k}':v for k,v in pred.items()},**{f'mse_{k}':v for k,v in mse.items()})
     write_json(out/f'eval_{name}.json',{'dimension':name,'selected':spec,'metrics':{k:{'all_mean':float(v.mean()),'hard_mean':float(v[hard].mean())} for k,v in mse.items()},
         'paired_bootstrap':diffs,'noise':'same reviewed fixed noise bank','rows':len(q),'hard_rows':int(hard.sum())})
-    print(json.dumps({'stage':'evaluate','dimension':name,'selected_t0':chosen_t0,'m2_all':float(mse[f'm2_t0{chosen_t0:.1f}'].mean())},flush=True))
+    print(json.dumps({'stage':'evaluate','dimension':name,'selected_t0':chosen_t0,'m2_all':float(mse[f'm2_t0{chosen_t0:.1f}'].mean())}),flush=True)
 
 
 def _summ(x, mask=None):
@@ -356,6 +356,14 @@ def _direction(ci):
     if ci['ci95'][1]<0:return 'raw_better'
     if ci['ci95'][0]>0:return 'compressed_better'
     return 'no_detected_difference'
+
+
+def _contrast_direction(name, ci):
+    if name == 'C3':
+        if ci['ci95'][1] < 0: return 'M2_better_than_shuffle'
+        if ci['ci95'][0] > 0: return 'shuffle_better_than_M2'
+        return 'no_detected_difference'
+    return _direction(ci)
 
 
 def _cluster_signflip_p(diff,clusters,mask,reps=5000,seed=20261106):
@@ -459,7 +467,7 @@ def aggregate(out=OUT):
             for n in DIMS:
                 differences[n][f'{ckey}_{subset}']['p_holm_4dims']=adj[n]
                 differences[n][f'{ckey}_{subset}']['holm_significant_05']=bool(adj[n]<.05)
-                differences[n][f'{ckey}_{subset}']['direction_unadjusted_ci']=_direction(differences[n][f'{ckey}_{subset}'])
+                differences[n][f'{ckey}_{subset}']['direction_unadjusted_ci']=_contrast_direction(ckey,differences[n][f'{ckey}_{subset}'])
                 dimension_decisions[n]['contrasts'][f'{ckey}_{subset}']=differences[n][f'{ckey}_{subset}']
     metrics={k:{'all':_summ(v),'hard':_summ(v,hard)} for k,v in all_mse.items()}
     baseline_old=json.load(open(REVIEW/'summary.json'))
@@ -477,8 +485,9 @@ def aggregate(out=OUT):
         **{f'mse_{k.replace("/","_").replace("=","_")}':v for k,v in all_mse.items()},
         **{f'pred_{k.replace("/","_").replace("=","_")}':v for k,v in all_pred.items()})
     write_json(out/'summary.json',result)
-    decision={n:{'C1':{s:differences[n][f'C1_{s}']['direction_unadjusted_ci'],'holm_significant':differences[n][f'C1_{s}']['holm_significant_05']}
-                    for s in ('all','hard') } for n in DIMS}
+    decision={n:{'C1':{s:{'direction':differences[n][f'C1_{s}']['direction_unadjusted_ci'],
+                           'holm_significant':differences[n][f'C1_{s}']['holm_significant_05']}
+                         for s in ('all','hard')}} for n in DIMS}
     for n in DIMS:
         decision[n]['C2']={s:{'direction':differences[n][f'C2_{s}']['direction_unadjusted_ci'],'holm_significant':differences[n][f'C2_{s}']['holm_significant_05']} for s in ('all','hard')}
         decision[n]['C3']={s:{'direction':differences[n][f'C3_{s}']['direction_unadjusted_ci'],'holm_significant':differences[n][f'C3_{s}']['holm_significant_05']} for s in ('all','hard')}

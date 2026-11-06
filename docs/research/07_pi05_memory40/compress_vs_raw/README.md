@@ -10,3 +10,4 @@
 - [results.md](results.md)：実測結果と限界
 - 実行スクリプト：[`compress_vs_raw/run.py`](../../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/compress_vs_raw/run.py)
 - 出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/compress-vs-raw-01/`
+- 次元拡張：`dimension-extension-01`（b12m/b24/b48/b96）
