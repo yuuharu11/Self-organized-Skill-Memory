@@ -36,3 +36,25 @@ def test_smooth_motion_stays_in_one_segment_at_large_epsilon():
 def test_smaller_epsilon_never_gives_fewer_segments_on_rough_motion():
     a = _actions(); a[:, 0] = np.sin(np.arange(60))
     assert len(demo.cut(a, epsilon=.001)) >= len(demo.cut(a, epsilon=.5))
+
+
+def _error_module():
+    import sys
+    sys.path.insert(0, str(CODE.parent))
+    import variable_length_error
+    return variable_length_error
+
+
+def test_equal_cuts_keep_gripper_switches_and_reach_the_count():
+    a = _actions(); a[20:, 6] = 1.
+    spans = _error_module().equal_cuts(a, 4)
+    assert len(spans) == 4 and any(s == 20 for s, _ in spans)
+    assert spans[0][0] == 0 and spans[-1][1] == 60
+    assert all(x[1] == y[0] for x, y in zip(spans, spans[1:]))
+
+
+def test_rebuild_counts_values_and_keeps_a_smooth_motion():
+    a = _actions(); a[:, 0] = np.linspace(-1, 1, 60)
+    out, values = _error_module().rebuild(a, [(0, 30), (30, 60)], 3)
+    assert values == 2 * (6 * 3 + 2)
+    assert np.mean((out[:, 0] - a[:, 0]) ** 2) < 2e-3 and np.all(out[:, 6] == -1.)
