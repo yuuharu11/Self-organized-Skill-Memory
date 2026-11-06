@@ -20,6 +20,28 @@
 
 ## 2. 別環境でのセットアップ
 
+Linux x86_64 で Python 3.10、Git、uv 0.8.22 を用意したら、clone したリポジトリのルートから次を実行します。
+ホスト側には NVIDIA ドライバ、CMake 3系、make、C/C++ コンパイラ、EGL/OpenGL の共有ライブラリが必要です。
+Ubuntu 22.04 では、たとえば次で OS 依存を用意できます。
+
+```bash
+sudo apt-get update
+sudo apt-get install -y cmake make build-essential libgl1 libegl1 libglib2.0-0 libopengl0
+python3.10 -m pip install uv==0.8.22
+```
+
+```bash
+bash env/setup.sh
+source env/activate.sh
+python env/smoke_test.py
+```
+
+`env/setup.sh` は固定依存を `.venv` に導入し、固定リビジョンの LIBERO を
+`.skillnet-state/sources/LIBERO` に取得して SkillNet-Skill の登録を行います。
+保存先や仮想環境を変える場合は、実行前に `SKILLNET_STATE_DIR` と `SKILLNET_VENV` を設定します。
+スクリプトは大容量データや重みをダウンロードしません。
+ホストの依存を含む詳しい条件と、手動での環境構築は後述の「Python と LIBERO」を参照してください。
+
 ### コード版と保存先
 
 [README の取得手順](../README.md#コードを取得する) で対象のコード版を選び、リポジトリのルートで実行します。
@@ -47,23 +69,13 @@ GPU 実験には CUDA 対応 NVIDIA ドライバが必要です。コンテナ�
 描画には `libGL.so.1`・`libEGL.so.1`・GLib と、ドライバの EGL 実装が必要です。
 Python の依存導入だけでは OS ライブラリや GPU の設定は完了しません。
 
+上の `env/setup.sh` がこの手順を実行します。個別に構築する場合は次の順序を使います。
+
 ```bash
 uv --version
 uv venv --python 3.10 "$SKILLNET_VENV"
-cd "$SKILLNET_REPO_ROOT/env"
-uv pip sync --python "$SKILLNET_VENV/bin/python" requirements.lock
+cd "$SKILLNET_REPO_ROOT/env" && uv pip sync --python "$SKILLNET_VENV/bin/python" requirements.lock
 cd "$SKILLNET_REPO_ROOT"
-
-mkdir -p "$SKILLNET_STATE_DIR/sources"
-git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git "$SKILLNET_LIBERO_SOURCE"
-git -C "$SKILLNET_LIBERO_SOURCE" checkout 8f1084e3132a39270c3a13ebe37270a43ece2a01
-uv pip install --python "$SKILLNET_VENV/bin/python" --no-deps -e "$SKILLNET_LIBERO_SOURCE"
-
-unset LEROBOT_HOME
-source env/activate.sh
-python skill_moe/skillnet/examples/libero/install_libero_skill_assets.py \
-  --libero-root "$SKILLNET_LIBERO_SOURCE/libero/libero" --install
-uv pip check --python "$SKILLNET_VENV/bin/python"
 ```
 
 ロック内の相対 editable パスを解決するため、`uv pip sync` は `env/` から実行します。
@@ -121,9 +133,12 @@ bash env/eval_smoke.sh
 このスモークの標準設定は `libero_spatial`、各1試行、seed 7、`ZERO_SHOT=0` です。
 LIBERO-Skill のゼロショット評価とは条件が異なります。
 公開 Skill-MoE 重みの推論では、サブタスクの逐次生成を既定で行いません。有効にする場合は `SKILLNET_SUBTASK_GENERATE=1` を設定します。動作が変わり、実行も遅くなるので、結果には設定を併記してください。
-全スイートや SkillNet 自体の学習は [既存の学習・評価手順](training_and_evaluation.md) を参照してください。
+全スイートや SkillNet 自体の学習は[学習・評価](training_and_evaluation.md)、データ変換は[LIBERO データ処理](libero_data_processing.md)を参照してください。
 
 ## 4. 研究実験の入力と実行
+
+π0.5 LIBERO-40 の現行アルゴリズムを、公開データから評価まで通す場合は[現行アルゴリズムの実験手順](reproduce_core_path.md)へ進んでください。
+この実験は追加データと重みを必要とし、`SKILLNET_PI05_ROOT` 以下で約92 GBを使用します。
 
 現行アルゴリズムの入力は、**元のデモ1本を LeRobot の1エピソードとして保持した LIBERO-40** です（40タスク・1,693エピソード・273,465フレーム）。
 タスク番号は `0–9 = LIBERO-10`、`10–19 = goal`、`20–29 = object`、`30–39 = spatial` です。
@@ -140,7 +155,7 @@ LIBERO-Skill のゼロショット評価とは条件が異なります。
 
 | 症状 | 確認する箇所 |
 | --- | --- |
-| `source env/activate.sh` で環境がない | `.venv` を作成し、`SKILLNET_VENV` を指定する。スクリプト自体は依存を導入しない |
+| `source env/activate.sh` で環境がない | `bash env/setup.sh` を完了し、必要なら `SKILLNET_VENV` を指定する |
 | LIBERO のアセット・benchmark が見つからない | 完全ソースの固定リビジョン、editable install、アセット登録を確認する |
 | `libGL.so.1` がない・EGL 初期化失敗 | OS の OpenGL/EGL ライブラリ、NVIDIA ドライバ、コンテナの GPU 共有を確認する |
 | TFDS import 時の Protobuf エラー | 固定リストの `tensorflow-metadata==1.21.0` と Protobuf 5.29.6 の生成コード互換性に問題がある。データ変換前に import を確認し、互換環境を別途検証する。元の変換処理はローカルの互換 overlay を使用していた |

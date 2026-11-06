@@ -5,90 +5,17 @@ configs and the LIBERO-Skill OOD evaluation entrypoint.
 
 ## Prepare SkillNet
 
-Clone this repository and use `skill_moe/skillnet` as the runnable source root:
+Use the single setup flow in [the reproduction guide](reproduction.md): clone
+the repository, install the pinned environment with `bash env/setup.sh`, then
+activate it from the repository root with `source env/activate.sh`. That setup
+also installs the editable SkillNet packages and registers the bundled
+LIBERO-Skill assets. GPU training still requires a CUDA/JAX installation that
+matches the host.
 
-```bash
-git -c core.longpaths=true clone --depth 1 https://github.com/yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
-cd Self-organized-Skill-Memory/skill_moe/skillnet
-git -C ../.. config core.longpaths true
-```
-
-If HTTPS cloning is blocked by your network, clone over
-SSH:
-
-```bash
-git -c core.longpaths=true clone --depth 1 git@github.com:yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
-cd Self-organized-Skill-Memory/skill_moe/skillnet
-git -C ../.. config core.longpaths true
-```
-
-For prerequisites such as Python 3.10, `uv`, and Hugging Face Hub CLI, see
-`docs/quick_start.md` from the repository root. From this runtime root, that
-file is `../../docs/quick_start.md`. GPU training also needs a CUDA/JAX
-installation that matches your machine.
-
-Install the editable SkillNet runtime package and bundled client package:
-
-```bash
-uv venv --python 3.10 .venv
-source .venv/bin/activate
-uv pip install -e .
-uv pip install -e packages/skillnet-client
-export PYTHONPATH="${PWD}/src:${PWD}/packages/skillnet-client/src:${PWD}/third_party/libero:${PYTHONPATH:-}"
-```
-
-For a native Windows venv, use `.venv/Scripts/activate` instead of
-`.venv/bin/activate`. LIBERO simulator evaluation remains Linux/WSL-oriented.
-
-The distribution name and public workflow name are `skillnet`. A few internal
-package names are retained only for pi0.5 checkpoint/runtime and policy-client
-compatibility, so release commands should still be documented and launched as
-SkillNet workflows.
-
-For GPU training, install the JAX wheel that matches your CUDA setup in this
-same environment.
-
-Prepare SkillNet LIBERO-Skill registration in the environment that runs the
-client:
-
-```bash
-# Reuses the currently active venv by default. Set SKILLNET_VENV_PATH to create
-# a separate LIBERO environment.
-bash install_libero.sh
-source examples/libero/skillnet_env.sh
-```
-
-`install_libero.sh` installs the editable `skillnet` and `skillnet-client`
-packages, installs bundled LIBERO requirement files when they are available,
-writes `examples/libero/skillnet_env.sh` for the repo-local source paths, and
-checks LIBERO-Skill benchmark registration. It is not a full simulator
-installer: install LIBERO, MuJoCo, Robosuite, BDDL, and any machine-specific
-rendering dependencies in the same environment. Set `SKILLNET_SKIP_CORE_INSTALL=1`
-if the core packages are already installed.
-
-Use the public LIBERO project as the simulator source of truth:
-
-- Repository: <https://github.com/Lifelong-Robot-Learning/LIBERO>
-- Documentation: <https://lifelong-robot-learning.github.io/LIBERO/html/index.html>
-
-When an external LIBERO package is importable but does not register
-`libero_skill_obj`, the setup script attempts:
-
-```bash
-python examples/libero/install_libero_skill_assets.py --install
-```
-
-The helper copies SkillNet's bundled bddl/init files into the active LIBERO
-package and patches benchmark registration with `.skillnet.bak` backups where
-text files are changed. Use `--dry-run` first to inspect planned changes, or set
-`SKILLNET_SKIP_LIBERO_SKILL_ASSET_INSTALL=1` to skip the automatic attempt.
-To fail early instead of warning, run setup with `SKILLNET_REQUIRE_LIBERO=1`.
-
-If MuJoCo EGL fails on your machine, retry with:
-
-```bash
-export MUJOCO_GL=glx
-```
+This document starts after environment setup and covers dataset checks,
+checkpoints, and public training/evaluation launch commands. LIBERO simulator
+details are in the [official project](https://github.com/Lifelong-Robot-Learning/LIBERO)
+and its [documentation](https://lifelong-robot-learning.github.io/LIBERO/html/index.html).
 
 ## Data and Assets
 

@@ -21,7 +21,7 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 現行アルゴリズムをデータから評価まで通す | [現行アルゴリズムの再現手順](docs/reproduce_core_path.md) |
 | アルゴリズムを別プロジェクトへ移植する | [Skill Memory Core](skill_memory_core/README.md)、[アルゴリズム仕様](skill_memory_core/ALGORITHM.md) |
-| ベースの SkillNet の学習・データ処理 | [Quick Start](docs/quick_start.md)、[学習と評価](docs/training_and_evaluation.md) |
+| ベースの SkillNet の学習・データ処理 | [学習と評価](docs/training_and_evaluation.md)、[LIBERO データ処理](docs/libero_data_processing.md) |
 
 コードと小さな設定・注釈は Git に含まれます。完了した過去の実験のコードは Git タグ `archive/before-cleanup` にあります。データセット、重み、特徴キャッシュ、実験出力は別途用意します。
 研究ノートに書かれた `.skillnet-state/` 以下のパスは測定時のローカル記録で、公開ダウンロード先ではありません。
@@ -54,7 +54,7 @@ SkillNet 由来の構成（`skill_moe/`, `data_process/` など）に、次を�
 | `skill_moe/skillnet/examples/emergent/light/methods/` | スキル表現の実装（M0〜M6）。現行の実験は M1 を圧縮器に使います |
 | `skill_moe/skillnet/examples/memory_pilot/` | 現行の実験コード。[一覧](skill_moe/skillnet/examples/memory_pilot/README.md) |
 | `skill_moe/skillnet/src/openpi/models/pi0_anchor_flow.py` ほか | デノイズ開始点の注入（anchor flow）とスキル潜在を持つ π0 の変種 |
-| `env/` | 現在のコンテナ用の環境設定・スモークテスト・依存の固定リスト |
+| `env/` | 新規環境のセットアップ・スモークテスト・依存の固定リスト |
 | `skill_memory_core/` | 現行アルゴリズム（生行動メモリ＋M2検索＋修正Expert）の移植用パッケージ |
 | `tests/` | 追加コードのテスト |
 
@@ -75,15 +75,14 @@ git switch --detach FETCH_HEAD
 git rev-parse HEAD
 ```
 
-続いて [再現ガイドの環境構築](docs/reproduction.md#2-別環境でのセットアップ) へ進んでください。
-`env/activate.sh` はインストール済みの環境を有効化するスクリプトです。新規 clone には依存の導入が必要です。
+続いて `bash env/setup.sh` を実行してください。固定依存と LIBERO ソースの準備後、`source env/activate.sh` で実験環境を有効にできます。必要条件と実験手順は [再現ガイド](docs/reproduction.md) にまとめています。
 元のコンテナの検証記録は [docs/environment_validation.md](docs/environment_validation.md) にあります。
 
 ## ベースの SkillNet
 
 SkillNet の学習・評価（LIBERO-40/90、LIBERO-Skill、RoboTwin few-shot）の手順は、元の README を
 [docs/skillnet.md](docs/skillnet.md) に移して残しています。データ処理・チェックポイント・評価の詳細は
-[docs/quick_start.md](docs/quick_start.md) と [docs/training_and_evaluation.md](docs/training_and_evaluation.md) にあります。
+[docs/training_and_evaluation.md](docs/training_and_evaluation.md) にあります。初期セットアップは [再現ガイド](docs/reproduction.md) に統合しました。
 
 SkillNet を使う場合は、次を引用してください。
 

@@ -26,7 +26,7 @@ compositional out-of-domain evaluation, and RoboTwin few-shot transfer.
 - `data_process/skill_hierarchy/`: motion-code annotation, clustering, and tokenization utilities.
 - `data_process/libero/`: LIBERO-40 and LIBERO-90 source-download and LeRobot conversion scripts.
 - `data_process/robotwin/`: RoboTwin-2.0 few-shot task download, conversion, metadata, and collection helpers.
-- `docs/quick_start.md`: installation, environment setup, checkpoint download, and smoke checks.
+- `docs/reproduction.md`: installation, environment setup, checkpoint download, and smoke checks.
 - `docs/skill_hierarchy.md`: SkillNet hierarchy construction and tokenization notes.
 - `docs/libero_data_processing.md`: complete notes for reproducing the LIBERO LeRobot datasets used by the SkillNet training configs.
 - `docs/training_and_evaluation.md`: public launch instructions for LIBERO-40/90 Skill-MoE training and LIBERO-Skill evaluation.
@@ -78,7 +78,7 @@ If HTTPS cloning is blocked by your network, clone over SSH:
 git -c core.longpaths=true clone --depth 1 git@github.com:yuuharu11/Self-organized-Skill-Memory.git Self-organized-Skill-Memory
 ```
 
-Follow `docs/quick_start.md` for installation, smoke checks, checkpoint
+Follow `docs/reproduction.md` for installation, smoke checks, checkpoint
 download, normalization-stat computation, training launchers, and evaluation
 commands. The runnable SkillNet source root used by training commands is
 `skill_moe/skillnet`.

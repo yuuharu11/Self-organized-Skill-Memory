@@ -2,7 +2,7 @@
 
 検証日: 2026-10-25（日本時間）。
 対象ソース: `52e3caf52bb183413bbdda83c359f76bb41250eb` に今回の環境・互換性修正を適用した作業ツリー。
-現在のコンテナで使う手順は [development_environment.md](development_environment.md) を参照してください。
+新しい環境の構築手順は [再現ガイド](reproduction.md) を参照してください。この文書は既存コンテナでの検証記録です。
 
 ## 検証した環境
 
