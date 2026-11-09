@@ -8,6 +8,8 @@ to the config assets directory.
 import numpy as np
 import tqdm
 import tyro
+import os
+import torch
 
 import openpi.models.model as _model
 import openpi.shared.normalize as normalize
@@ -86,6 +88,7 @@ def create_rlds_dataloader(
 
 
 def main(config_name: str, max_frames: int | None = None):
+    torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
     config = _config.get_config(config_name)
     data_config = config.data.create(config.assets_dirs, config.model)
 
@@ -103,9 +106,18 @@ def main(config_name: str, max_frames: int | None = None):
 
     for batch in tqdm.tqdm(data_loader, total=num_batches, desc="Computing stats"):
         for key in keys:
-            stats[key].update(np.asarray(batch[key]))
+            values = np.asarray(batch[key])
+            # Chunked action labels are [B, horizon, dim]; aggregate each
+            # timestep as a sample while preserving the feature axis.
+            if values.ndim > 2:
+                values = values.reshape(-1, values.shape[-1])
+            stats[key].update(values)
 
     norm_stats = {key: stats.get_statistics() for key, stats in stats.items()}
+    if isinstance(config.data, _config.RoboCasaAtomicDataConfig):
+        # Save the guarded quantiles so training (data config) and serving
+        # (checkpoint assets) normalize nearly constant channels identically.
+        norm_stats = _config._widen_degenerate_quantiles(norm_stats)
 
     output_path = config.assets_dirs / data_config.repo_id
     print(f"Writing stats to: {output_path}")

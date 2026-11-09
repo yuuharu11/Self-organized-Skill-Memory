@@ -14,6 +14,7 @@
 | 公開 SkillNet-LIBERO-40 の評価スモーク | 公開重み、LIBERO 完全ソースとアセット、GPU、描画環境 | 公開方策の読込から環境実行まで |
 | 現行アルゴリズムの通し実行 | 全エピソードを保持した LIBERO-40、π0.5 重み、GPU | データ変換から修正 Expert の判定まで。[再現手順](reproduce_core_path.md) |
 | 未学習 LIBERO タスクでの表現上限比較 | LIBERO-40 の run-01、LIBERO-90 のデモ、π0.5 重み、GPU | 固定メモリ候補のオフライン上限比較。[事前計画](research/09_unseen_libero/oracle_plan.md) |
+| RoboCasa365 の atomic→Composite-Unseen 準備 | RoboCasa 固定版、Python 3.11 専用 venv、smoke データ | 3カメラ環境・LeRobotデータ・websocket配線のスモーク。[手順](robocasa365.md) |
 
 公開重みの評価スモークは、スキルメモリの改善や論文の成功率を再現する実験とは別に報告してください。
 元のコンテナの記録は Spatial の各1試行で10/10成功です。新規 clone の現行コードでは2回とも9/10で、同じタスク（top drawer の black bowl）が失敗しました。いずれも各50試行の論文評価ではありません。
