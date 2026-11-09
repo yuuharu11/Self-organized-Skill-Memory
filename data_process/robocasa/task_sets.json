@@ -1,0 +1,416 @@
+{
+  "robocasa_commit": "3443cdf3dd20f9ae8ed41adba442059b506891d0",
+  "task_sets": {
+    "atomic_seen": [
+      "CloseBlenderLid",
+      "CloseFridge",
+      "CloseToasterOvenDoor",
+      "CoffeeSetupMug",
+      "NavigateKitchen",
+      "OpenCabinet",
+      "OpenDrawer",
+      "OpenStandMixerHead",
+      "PickPlaceCounterToCabinet",
+      "PickPlaceCounterToStove",
+      "PickPlaceDrawerToCounter",
+      "PickPlaceSinkToCounter",
+      "PickPlaceToasterToCounter",
+      "SlideDishwasherRack",
+      "TurnOffStove",
+      "TurnOnElectricKettle",
+      "TurnOnMicrowave",
+      "TurnOnSinkFaucet"
+    ],
+    "composite_seen": [
+      "DeliverStraw",
+      "GetToastedBread",
+      "KettleBoiling",
+      "LoadDishwasher",
+      "PackIdenticalLunches",
+      "PreSoakPan",
+      "PrepareCoffee",
+      "RinseSinkBasin",
+      "ScrubCuttingBoard",
+      "SearingMeat",
+      "SetUpCuttingStation",
+      "StackBowlsCabinet",
+      "SteamInMicrowave",
+      "StirVegetables",
+      "StoreLeftoversInBowl",
+      "WashLettuce"
+    ],
+    "composite_unseen": [
+      "ArrangeBreadBasket",
+      "ArrangeTea",
+      "BreadSelection",
+      "CategorizeCondiments",
+      "CuttingToolSelection",
+      "GarnishPancake",
+      "GatherTableware",
+      "HeatKebabSandwich",
+      "MakeIceLemonade",
+      "PanTransfer",
+      "PortionHotDogs",
+      "RecycleBottlesByType",
+      "SeparateFreezerRack",
+      "WaffleReheat",
+      "WashFruitColander",
+      "WeighIngredients"
+    ],
+    "target50": [
+      "CloseBlenderLid",
+      "CloseFridge",
+      "CloseToasterOvenDoor",
+      "CoffeeSetupMug",
+      "NavigateKitchen",
+      "OpenCabinet",
+      "OpenDrawer",
+      "OpenStandMixerHead",
+      "PickPlaceCounterToCabinet",
+      "PickPlaceCounterToStove",
+      "PickPlaceDrawerToCounter",
+      "PickPlaceSinkToCounter",
+      "PickPlaceToasterToCounter",
+      "SlideDishwasherRack",
+      "TurnOffStove",
+      "TurnOnElectricKettle",
+      "TurnOnMicrowave",
+      "TurnOnSinkFaucet",
+      "DeliverStraw",
+      "GetToastedBread",
+      "KettleBoiling",
+      "LoadDishwasher",
+      "PackIdenticalLunches",
+      "PreSoakPan",
+      "PrepareCoffee",
+      "RinseSinkBasin",
+      "ScrubCuttingBoard",
+      "SearingMeat",
+      "SetUpCuttingStation",
+      "StackBowlsCabinet",
+      "SteamInMicrowave",
+      "StirVegetables",
+      "StoreLeftoversInBowl",
+      "WashLettuce",
+      "ArrangeBreadBasket",
+      "ArrangeTea",
+      "BreadSelection",
+      "CategorizeCondiments",
+      "CuttingToolSelection",
+      "GarnishPancake",
+      "GatherTableware",
+      "HeatKebabSandwich",
+      "MakeIceLemonade",
+      "PanTransfer",
+      "PortionHotDogs",
+      "RecycleBottlesByType",
+      "SeparateFreezerRack",
+      "WaffleReheat",
+      "WashFruitColander",
+      "WeighIngredients"
+    ]
+  },
+  "tasks": {
+    "CloseBlenderLid": {
+      "horizon": 900,
+      "dataset_path": "v1.0/target/atomic/CloseBlenderLid/20250822/lerobot",
+      "split": "target"
+    },
+    "CloseFridge": {
+      "horizon": 900,
+      "dataset_path": "v1.0/target/atomic/CloseFridge/20250816/lerobot",
+      "split": "target"
+    },
+    "CloseToasterOvenDoor": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/CloseToasterOvenDoor/20250818/lerobot",
+      "split": "target"
+    },
+    "CoffeeSetupMug": {
+      "horizon": 600,
+      "dataset_path": "v1.0/target/atomic/CoffeeSetupMug/20250813/lerobot",
+      "split": "target"
+    },
+    "NavigateKitchen": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/NavigateKitchen/20250821/lerobot",
+      "split": "target"
+    },
+    "OpenCabinet": {
+      "horizon": 1050,
+      "dataset_path": "v1.0/target/atomic/OpenCabinet/20250813/lerobot",
+      "split": "target"
+    },
+    "OpenDrawer": {
+      "horizon": 750,
+      "dataset_path": "v1.0/target/atomic/OpenDrawer/20250816/lerobot",
+      "split": "target"
+    },
+    "OpenStandMixerHead": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/OpenStandMixerHead/20250818/lerobot",
+      "split": "target"
+    },
+    "PickPlaceCounterToCabinet": {
+      "horizon": 750,
+      "dataset_path": "v1.0/target/atomic/PickPlaceCounterToCabinet/20250811/lerobot",
+      "split": "target"
+    },
+    "PickPlaceCounterToStove": {
+      "horizon": 600,
+      "dataset_path": "v1.0/target/atomic/PickPlaceCounterToStove/20250818/lerobot",
+      "split": "target"
+    },
+    "PickPlaceDrawerToCounter": {
+      "horizon": 750,
+      "dataset_path": "v1.0/target/atomic/PickPlaceDrawerToCounter/20250820/lerobot",
+      "split": "target"
+    },
+    "PickPlaceSinkToCounter": {
+      "horizon": 900,
+      "dataset_path": "v1.0/target/atomic/PickPlaceSinkToCounter/20250813/lerobot",
+      "split": "target"
+    },
+    "PickPlaceToasterToCounter": {
+      "horizon": 600,
+      "dataset_path": "v1.0/target/atomic/PickPlaceToasterToCounter/20250817/lerobot",
+      "split": "target"
+    },
+    "SlideDishwasherRack": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/SlideDishwasherRack/20250820/lerobot",
+      "split": "target"
+    },
+    "TurnOffStove": {
+      "horizon": 750,
+      "dataset_path": "v1.0/target/atomic/TurnOffStove/20250812/lerobot",
+      "split": "target"
+    },
+    "TurnOnElectricKettle": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/TurnOnElectricKettle/20250817/lerobot",
+      "split": "target"
+    },
+    "TurnOnMicrowave": {
+      "horizon": 450,
+      "dataset_path": "v1.0/target/atomic/TurnOnMicrowave/20250813/lerobot",
+      "split": "target"
+    },
+    "TurnOnSinkFaucet": {
+      "horizon": 600,
+      "dataset_path": "v1.0/target/atomic/TurnOnSinkFaucet/20250812/lerobot",
+      "split": "target"
+    },
+    "DeliverStraw": {
+      "horizon": 2550,
+      "dataset_path": "v1.0/target/composite/DeliverStraw/20250813/lerobot",
+      "split": "target"
+    },
+    "GetToastedBread": {
+      "horizon": 3000,
+      "dataset_path": "v1.0/target/composite/GetToastedBread/20250812/lerobot",
+      "split": "target"
+    },
+    "KettleBoiling": {
+      "horizon": 1500,
+      "dataset_path": "v1.0/target/composite/KettleBoiling/20250814/lerobot",
+      "split": "target"
+    },
+    "LoadDishwasher": {
+      "horizon": 1800,
+      "dataset_path": "v1.0/target/composite/LoadDishwasher/20250811/lerobot",
+      "split": "target"
+    },
+    "PackIdenticalLunches": {
+      "horizon": 3900,
+      "dataset_path": "v1.0/target/composite/PackIdenticalLunches/20250815/lerobot",
+      "split": "target"
+    },
+    "PreSoakPan": {
+      "horizon": 2400,
+      "dataset_path": "v1.0/target/composite/PreSoakPan/20250809/lerobot",
+      "split": "target"
+    },
+    "PrepareCoffee": {
+      "horizon": 1800,
+      "dataset_path": "v1.0/target/composite/PrepareCoffee/20250812/lerobot",
+      "split": "target"
+    },
+    "RinseSinkBasin": {
+      "horizon": 1350,
+      "dataset_path": "v1.0/target/composite/RinseSinkBasin/20250816/lerobot",
+      "split": "target"
+    },
+    "ScrubCuttingBoard": {
+      "horizon": 1200,
+      "dataset_path": "v1.0/target/composite/ScrubCuttingBoard/20250816/lerobot",
+      "split": "target"
+    },
+    "SearingMeat": {
+      "horizon": 4350,
+      "dataset_path": "v1.0/target/composite/SearingMeat/20250812/lerobot",
+      "split": "target"
+    },
+    "SetUpCuttingStation": {
+      "horizon": 2400,
+      "dataset_path": "v1.0/target/composite/SetUpCuttingStation/20250817/lerobot",
+      "split": "target"
+    },
+    "StackBowlsCabinet": {
+      "horizon": 2100,
+      "dataset_path": "v1.0/target/composite/StackBowlsCabinet/20250815/lerobot",
+      "split": "target"
+    },
+    "SteamInMicrowave": {
+      "horizon": 2100,
+      "dataset_path": "v1.0/target/composite/SteamInMicrowave/20250814/lerobot",
+      "split": "target"
+    },
+    "StirVegetables": {
+      "horizon": 2400,
+      "dataset_path": "v1.0/target/composite/StirVegetables/20250814/lerobot",
+      "split": "target"
+    },
+    "StoreLeftoversInBowl": {
+      "horizon": 2550,
+      "dataset_path": "v1.0/target/composite/StoreLeftoversInBowl/20250813/lerobot",
+      "split": "target"
+    },
+    "WashLettuce": {
+      "horizon": 1650,
+      "dataset_path": "v1.0/target/composite/WashLettuce/20250814/lerobot",
+      "split": "target"
+    },
+    "ArrangeBreadBasket": {
+      "horizon": 4350,
+      "dataset_path": "v1.0/target/composite/ArrangeBreadBasket/20250809/lerobot",
+      "split": "target"
+    },
+    "ArrangeTea": {
+      "horizon": 2250,
+      "dataset_path": "v1.0/target/composite/ArrangeTea/20250812/lerobot",
+      "split": "target"
+    },
+    "BreadSelection": {
+      "horizon": 1950,
+      "dataset_path": "v1.0/target/composite/BreadSelection/20250815/lerobot",
+      "split": "target"
+    },
+    "CategorizeCondiments": {
+      "horizon": 1650,
+      "dataset_path": "v1.0/target/composite/CategorizeCondiments/20250814/lerobot",
+      "split": "target"
+    },
+    "CuttingToolSelection": {
+      "horizon": 1200,
+      "dataset_path": "v1.0/target/composite/CuttingToolSelection/20250814/lerobot",
+      "split": "target"
+    },
+    "GarnishPancake": {
+      "horizon": 2700,
+      "dataset_path": "v1.0/target/composite/GarnishPancake/20250815/lerobot",
+      "split": "target"
+    },
+    "GatherTableware": {
+      "horizon": 2250,
+      "dataset_path": "v1.0/target/composite/GatherTableware/20250815/lerobot",
+      "split": "target"
+    },
+    "HeatKebabSandwich": {
+      "horizon": 2700,
+      "dataset_path": "v1.0/target/composite/HeatKebabSandwich/20250813/lerobot",
+      "split": "target"
+    },
+    "MakeIceLemonade": {
+      "horizon": 3000,
+      "dataset_path": "v1.0/target/composite/MakeIceLemonade/20250813/lerobot",
+      "split": "target"
+    },
+    "PanTransfer": {
+      "horizon": 1800,
+      "dataset_path": "v1.0/target/composite/PanTransfer/20250817/lerobot",
+      "split": "target"
+    },
+    "PortionHotDogs": {
+      "horizon": 2250,
+      "dataset_path": "v1.0/target/composite/PortionHotDogs/20250816/lerobot",
+      "split": "target"
+    },
+    "RecycleBottlesByType": {
+      "horizon": 2850,
+      "dataset_path": "v1.0/target/composite/RecycleBottlesByType/20250812/lerobot",
+      "split": "target"
+    },
+    "SeparateFreezerRack": {
+      "horizon": 2400,
+      "dataset_path": "v1.0/target/composite/SeparateFreezerRack/20250815/lerobot",
+      "split": "target"
+    },
+    "WaffleReheat": {
+      "horizon": 4050,
+      "dataset_path": "v1.0/target/composite/WaffleReheat/20250817/lerobot",
+      "split": "target"
+    },
+    "WashFruitColander": {
+      "horizon": 3150,
+      "dataset_path": "v1.0/target/composite/WashFruitColander/20250811/lerobot",
+      "split": "target"
+    },
+    "WeighIngredients": {
+      "horizon": 3000,
+      "dataset_path": "v1.0/target/composite/WeighIngredients/20250812/lerobot",
+      "split": "target"
+    }
+  },
+  "action_fields": {
+    "dataset_order": {
+      "base_motion": [
+        0,
+        4
+      ],
+      "control_mode": [
+        4,
+        5
+      ],
+      "end_effector_position": [
+        5,
+        8
+      ],
+      "end_effector_rotation": [
+        8,
+        11
+      ],
+      "gripper_close": [
+        11,
+        12
+      ]
+    },
+    "policy_command_order": {
+      "end_effector_position": [
+        0,
+        3
+      ],
+      "end_effector_rotation": [
+        3,
+        6
+      ],
+      "gripper_close": [
+        6,
+        7
+      ],
+      "base_motion": [
+        7,
+        11
+      ],
+      "control_mode": [
+        11,
+        12
+      ]
+    }
+  },
+  "cameras": [
+    "robot0_agentview_left",
+    "robot0_agentview_right",
+    "robot0_eye_in_hand"
+  ]
+}

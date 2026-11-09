@@ -11,6 +11,7 @@ import pathlib
 from typing import Any, Literal, Protocol, TypeAlias
 import etils.epath as epath
 import flax.nnx as nnx
+import numpy as np
 from typing_extensions import override
 import tyro
 
@@ -20,6 +21,7 @@ import openpi.models.pi0_config_moe_skill as pi0_config
 import openpi.models.tokenizer as _tokenizer
 import openpi.policies.libero_policy as libero_policy
 import openpi.policies.robotwin_policy as robotwin_policy
+import openpi.policies.robocasa_policy as robocasa_policy
 import openpi.shared.download as _download
 import openpi.shared.normalize as _normalize
 import openpi.shared.nnx_utils as nnx_utils
@@ -144,7 +146,9 @@ class ModelTransformFactory(GroupFactory):
                     ],
                 )
             case _model.ModelType.PI05:
-                assert isinstance(model_config, pi0_config.Pi0Config)
+                # The same prompt/state transforms serve the MoE-skill model and the
+                # plain pi0.5 model (e.g. pi05_robocasa_atomic).
+                assert isinstance(model_config, (pi0_config.Pi0Config, plain_pi0_config.Pi0Config))
                 return _transforms.Group(
                     inputs=[
                         _transforms.InjectDefaultPrompt(self.default_prompt),
@@ -381,6 +385,50 @@ class LeRobotLiberoDataConfig(DataConfigFactory):
             data_transforms=data_transforms,
             model_transforms=model_transforms,
         )
+
+def _widen_degenerate_quantiles(norm_stats, min_range: float = 1e-2, pad: float = 1.0):
+    """Keep quantile normalization finite for nearly constant RoboCasa channels.
+
+    In atomic RoboCasa data the mobile-base and control-mode action channels are
+    constant in >98% of frames, so q99 == q01 and the shared quantile transform
+    would divide by 1e-6 whenever the rare value occurs (losses ~1e11). For those
+    channels only, widen [q01, q99] by ``pad`` on each side; other channels keep
+    their statistics unchanged.
+    """
+    if norm_stats is None:
+        return None
+    out = {}
+    for key, stats in norm_stats.items():
+        if stats.q01 is None or stats.q99 is None:
+            out[key] = stats
+            continue
+        q01 = np.asarray(stats.q01, dtype=np.float64).copy()
+        q99 = np.asarray(stats.q99, dtype=np.float64).copy()
+        narrow = (q99 - q01) < min_range
+        q01[narrow] -= pad
+        q99[narrow] += pad
+        out[key] = dataclasses.replace(stats, q01=q01.astype(np.float32), q99=q99.astype(np.float32))
+    return out
+
+
+@dataclasses.dataclass(frozen=True)
+class RoboCasaAtomicDataConfig(DataConfigFactory):
+    """Data factory for locally downloaded target/atomic_seen RoboCasa tasks."""
+    repo_id: str = "robocasa:atomic_seen"
+    dataset_base: str | None = None
+    @override
+    def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
+        base=self.dataset_base or os.environ.get('SKILLNET_ROBOCASA_DATA',str(pathlib.Path(os.environ.get('SKILLNET_STATE_DIR','.'))/'data'/'robocasa'))
+        base_config=self.create_base_config(assets_dirs,model_config)
+        norm_stats=_widen_degenerate_quantiles(base_config.norm_stats)
+        return dataclasses.replace(base_config,root=base,use_quantile_norm=True,norm_stats=norm_stats,
+            repack_transforms=_transforms.Group(inputs=[_transforms.RepackTransform({
+                'observation/image':'observation.images.robot0_agentview_left',
+                'observation/right_image':'observation.images.robot0_agentview_right',
+                'observation/wrist_image':'observation.images.robot0_eye_in_hand',
+                'observation/state':'observation.state','actions':'action','prompt':'prompt'})]),
+            data_transforms=_transforms.Group(inputs=[robocasa_policy.RobocasaInputs(action_dim=model_config.action_dim,model_type=model_config.model_type)],outputs=[robocasa_policy.RobocasaOutputs()]),
+            model_transforms=ModelTransformFactory()(model_config))
 
 @dataclasses.dataclass(frozen=True)
 class LeRobotLiberoSkillDataConfig(DataConfigFactory):
@@ -751,6 +799,19 @@ def emergent_z_train_config(
 
 
 _RESEARCH_CONFIGS = [
+    TrainConfig(
+        name="pi05_robocasa_atomic",
+        exp_name="pi05_robocasa_atomic",
+        # Plain pi0.5 (dense gemma_300m action expert), matching the model used by
+        # the skill-memory experiments. No skill IDs or MoE router are involved.
+        model=plain_pi0_config.Pi0Config(pi05=True, action_horizon=10, discrete_state_input=False),
+        data=RoboCasaAtomicDataConfig(),
+        weight_loader=weight_loaders.CheckpointWeightLoader(PI05_BASE_PARAMS),
+        assets_base_dir=os.path.join(os.environ.get("SKILLNET_STATE_DIR", ".skillnet-state"), "assets"),
+        checkpoint_base_dir=os.path.join(os.environ.get("SKILLNET_STATE_DIR", ".skillnet-state"), "checkpoints"),
+        batch_size=32,
+        num_train_steps=30_000,
+    ),
     # Main: no skill IDs, z -> router + one suffix token.
     emergent_z_train_config("pi05_libero90_emergent_z"),
     # Comparison: z -> router only (the SkillNet skill-ID path).
