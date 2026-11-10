@@ -13,7 +13,7 @@
 | 研究コードの単体確認 | Python 依存、合成入力 | スキル表現・検索・修正 Expert の実装。データ・重み・GPU は不要 |
 | 公開 SkillNet-LIBERO-40 の評価スモーク | 公開重み、LIBERO 完全ソースとアセット、GPU、描画環境 | 公開方策の読込から環境実行まで |
 | 現行アルゴリズムの通し実行 | 全エピソードを保持した LIBERO-40、π0.5 重み、GPU | データ変換から修正 Expert の判定まで。[再現手順](reproduce_core_path.md) |
-| 未学習 LIBERO タスクでの表現上限比較 | LIBERO-40 の run-01、LIBERO-90 のデモ、π0.5 重み、GPU | 固定メモリ候補のオフライン上限比較。[事前計画](research/09_unseen_libero/oracle_plan.md) |
+| 未学習 LIBERO タスクでの運動単位メモリ | LIBERO-40 の run-01、LIBERO-90・LIBERO-10 のデモ、π0.5 重み、GPU | 表現の上限比較、型の選び方、θ のデノイズ、単位メモリの閉ループ。[09 の再現手順](research/09_unseen_libero/reproduce.md) |
 | RoboCasa365 の atomic→Composite-Unseen 準備 | RoboCasa 固定版、Python 3.11 専用 venv、smoke データ | 3カメラ環境・LeRobotデータ・websocket配線のスモーク。[手順](robocasa365.md) |
 
 公開重みの評価スモークは、スキルメモリの改善や論文の成功率を再現する実験とは別に報告してください。
@@ -25,6 +25,8 @@
 Linux x86_64 で Python 3.10、Git、uv 0.8.22 を用意したら、clone したリポジトリのルートから次を実行します。
 ホスト側には NVIDIA ドライバ、CMake 3系、make、C/C++ コンパイラ、EGL/OpenGL の共有ライブラリが必要です。
 Ubuntu 22.04 では、たとえば次で OS 依存を用意できます。
+
+sudo が使えない場合は、先に `bash env/check_host.sh` を実行してください。何もインストールせずに不足を調べ、足りないものごとに sudo なしで入れる方法を表示します（uv、Python 3.10、cmake 3系はユーザー空間で入ります）。
 
 ```bash
 sudo apt-get update
@@ -102,6 +104,12 @@ OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 \
 ```
 
 トークナイザの例では `tokens: [1, 7, 57]` が出力されます。
+すべてのテストをまとめて確かめる場合は次を使います（CPU で数分。保存済みの出力がない環境では、出力に依存する数件が skip になります）。
+
+```bash
+OMP_NUM_THREADS=4 CUDA_VISIBLE_DEVICES='' JAX_PLATFORMS=cpu python -m pytest -q tests skill_memory_core/tests
+```
+
 続くテストの成功は終了コード0で確認します。各テストは合成入力を使います。
 続いて GPU と描画を個別に確認します。
 
