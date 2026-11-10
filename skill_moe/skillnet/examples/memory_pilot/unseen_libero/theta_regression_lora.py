@@ -24,7 +24,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import theta_regression as tr  # noqa: E402
 
-OUT = Path(os.environ.get("THETA_LORA_OUT", tr.OUT / "lora"))
+OUT = Path(os.environ.get("THETA_LORA_OUT", tr.OUT / "lora" / "production"))
 REPRESENTATIONS = ("C_vm_none", "C_vm_08")
 SPLITS = ("train", "dev", "eval")
 STEPS = 4000

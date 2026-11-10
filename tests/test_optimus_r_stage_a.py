@@ -13,11 +13,16 @@ for _path in (str(EXAMPLES), str(OPTIMUS_R)):
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
+# optimus_r/data.py shares the top-level name "data" with shape_skills/data.py.
+# Drop any cached copy before and after importing so test order does not matter.
+sys.modules.pop("data", None)
 from bank import build_initial_bank, retrieve_numpy
 from data import official_task_ids
 from openpi.models.pi0_optimus_r import Pi0OptimusR, query_contrastive_loss
 from openpi.models.pi0_optimus_r_config import Pi0OptimusRConfig
 from train_stage_a import mask_earlier_vlm_layers
+
+sys.modules.pop("data", None)
 
 
 def _tiny_model(batch=2):
