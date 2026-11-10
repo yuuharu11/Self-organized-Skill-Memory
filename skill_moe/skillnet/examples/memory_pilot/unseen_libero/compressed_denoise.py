@@ -20,17 +20,18 @@ import time
 from pathlib import Path
 
 import numpy as np
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', Path(__file__).resolve().parents[5] / '.skillnet-state')).expanduser()
 
 os.environ.setdefault('XLA_PYTHON_CLIENT_PREALLOCATE', 'false')
 os.environ.setdefault('XLA_PYTHON_CLIENT_MEM_FRACTION', '.25')
 
 HERE = Path(__file__).resolve().parent
 PI05 = HERE.parent / 'pi05_memory'
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
+ROOT = (STATE_DIR / 'outputs/memory-pilot/unseen-libero')
+RUN = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser() / 'run-01'
 UNSEEN = ROOT / 'oracle-01'
 OUT = ROOT / 'compressed-denoise-01'
-CHECKPOINT = Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+CHECKPOINT = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 SEED = 20261104
 NOISE_SEED = 4101
 STEPS = 4000
@@ -1073,13 +1074,17 @@ def run_all(*,smoke_mode=False):
 
 
 def main():
+    global OUT
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('stage',choices=['prepare','smoke','train','evaluate','run'])
     p.add_argument('--condition',choices=CONDS)
     p.add_argument('--smoke',action='store_true')
     p.add_argument('--steps',type=int,default=STEPS)
     p.add_argument('--threads',type=int,default=8)
+    p.add_argument('--output',type=Path,default=None,
+                   help='output directory (default: compressed-denoise-01/production, read by later steps)')
     a=p.parse_args()
+    OUT=a.output or OUT/'production'
     if a.stage=='prepare':print(json.dumps(prepare(smoke=a.smoke),ensure_ascii=False))
     elif a.stage=='smoke':print(json.dumps(smoke(),ensure_ascii=False))
     elif a.stage=='train':

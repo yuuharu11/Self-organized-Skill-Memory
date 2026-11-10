@@ -20,6 +20,7 @@ Vision-Language-Action モデル（π0.5）の未学習の場面・タスクへ�
 | スキルメモリが新しいタスクで効かなかった経緯 | [開始点デノイズの報告](docs/research/03_anchor_flow/report.md)、[発表用のメモリ検証](docs/research/06_memory_evidence/readiness.md) |
 | 別環境でコードを動かす・公開重みを評価する | [再現ガイド](docs/reproduction.md) |
 | 現行アルゴリズムをデータから評価まで通す | [現行アルゴリズムの再現手順](docs/reproduce_core_path.md) |
+| 未学習 LIBERO タスクの実験（運動単位メモリ、型の選び方、閉ループ）を作り直す | [09 の再現手順](docs/research/09_unseen_libero/reproduce.md) |
 | アルゴリズムを別プロジェクトへ移植する | [Skill Memory Core](skill_memory_core/README.md)、[アルゴリズム仕様](skill_memory_core/ALGORITHM.md) |
 | RoboCasa365 の環境・データ・評価を準備する | [RoboCasa365 セットアップ](docs/robocasa365.md)、[研究計画](docs/research/10_robocasa365/README.md) |
 | ベースの SkillNet の学習・データ処理 | [学習と評価](docs/training_and_evaluation.md)、[LIBERO データ処理](docs/libero_data_processing.md) |

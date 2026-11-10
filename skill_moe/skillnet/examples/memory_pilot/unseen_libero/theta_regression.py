@@ -4,18 +4,19 @@ from __future__ import annotations
 import argparse, importlib.util, json, os, sys, time
 from pathlib import Path
 import numpy as np
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', Path(__file__).resolve().parents[5] / '.skillnet-state')).expanduser()
 
 os.environ.setdefault('XLA_PYTHON_CLIENT_PREALLOCATE','false')
 os.environ.setdefault('XLA_PYTHON_CLIENT_MEM_FRACTION','.35')
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 PI05=HERE.parent/'pi05_memory'
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
-RUN=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
+ROOT=(STATE_DIR / 'outputs/memory-pilot/unseen-libero')
+RUN = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser() / 'run-01'
 SOURCE=ROOT/'compressed-denoise-01'/'production'
 UNSEEN=ROOT/'oracle-01'
 OUT=ROOT/'theta-regression-01'
-CHECKPOINT=Path('/work/.skillnet-state/checkpoints/openpi-assets/checkpoints/pi05_libero')
+CHECKPOINT = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 SPLITS=('train','dev','eval')
 CACHES=('C_vm_none','C_vm_08')
 VARIANTS=('R-aa-theta','R-6d-theta','R-6d-act','R-6d-act-nowrist','R-6d-act-wristonly')
@@ -568,8 +569,11 @@ def run_all(*,threads=8,device='cuda'):
     return {'status':'complete','conditions':len(conditions),'shape_runs':len(shape_results)}
 
 def main():
+    global OUT
     p=argparse.ArgumentParser();p.add_argument('stage',choices=['features','smoke','train','evaluate','shape-select','run']);p.add_argument('--condition');p.add_argument('--split',choices=('dev','eval'),default='eval');p.add_argument('--threads',type=int,default=8);p.add_argument('--batch',type=int,default=8);p.add_argument('--device',default='cuda');p.add_argument('--smoke',action='store_true')
+    p.add_argument('--output',type=Path,default=None,help='output directory (default: theta-regression-01/production, read by later steps)')
     a=p.parse_args()
+    OUT=a.output or OUT/'production'
     if a.stage=='features':print(json.dumps(extract_features(batch=a.batch,threads=a.threads,smoke=a.smoke)))
     elif a.stage=='smoke':print(json.dumps(run_smoke()))
     elif a.stage=='evaluate':

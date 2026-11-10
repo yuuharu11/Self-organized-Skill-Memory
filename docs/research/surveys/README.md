@@ -10,5 +10,6 @@
 | [retrieval_init_methods_check.md](retrieval_init_methods_check.md) | OptimusVLA・RTSの本文確認：検索キー、開始点、重み固定の追加、対照条件と未確認仕様 |
 | [what_to_store.md](what_to_store.md) | 生の行動列・潜在コード・運動の型の保存形式、圧縮と制御性能、重み固定の追加に関する先行研究 |
 | [optimus_r_reproduction.md](optimus_r_reproduction.md) | Optimus-R の公開状況、再現仕様、独自実装の範囲 |
+| [motion_query_survey.md](motion_query_survey.md) | 「この場面でどの運動が欲しいか」を取り出す注目機構（RL token、読み出しトークン、中間層）の調査。09 の型の選び方の背景 |
 
 その他の関連研究：[開始点デノイズの新規性](../03_anchor_flow/novelty.md)、[可変長の行動単位](../04_segment_skills_dmp/related_action_units.md)、[DMP ルーティング](../04_segment_skills_dmp/related_dmp_routing.md)、[指示介入](../05_skillnet_diagnosis/instruction_update/related_work.md)、[表現学習](../02_emergent_skills/representation_survey.md)、[LIBERO 生涯学習](../01_memory_gates/libero_lifelong_protocol.md)。

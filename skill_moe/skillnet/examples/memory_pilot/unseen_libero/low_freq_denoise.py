@@ -29,9 +29,10 @@ from pathlib import Path
 
 import numpy as np
 from scipy.fft import dct
+STATE_DIR = Path(os.environ.get('SKILLNET_STATE_DIR', Path(__file__).resolve().parents[5] / '.skillnet-state')).expanduser()
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/compressed-denoise-01')
+ROOT = (STATE_DIR / 'outputs/memory-pilot/unseen-libero/compressed-denoise-01')
 WHITE = ROOT / 'production'          # white-noise A results and the shared drafts (read only)
 OUT = ROOT / 'production-lowfreq'
 HORIZON = 10
