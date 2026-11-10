@@ -6,6 +6,7 @@ from pathlib import Path
 import jax
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "skill_moe" / "skillnet" / "examples"
 OPTIMUS_R = EXAMPLES / "memory_pilot" / "optimus_r"
@@ -77,6 +78,7 @@ def test_query_nce_uses_task_progress_and_nearby_trajectory_pairs():
 
 
 def test_official_task_id_uses_source_filename_when_instruction_is_ambiguous():
+    pytest.importorskip('libero.libero.benchmark')
     ids = official_task_ids(np.asarray([
         "KITCHEN_SCENE1_open_the_top_drawer_of_the_cabinet_demo.hdf5",
         "KITCHEN_SCENE2_open_the_top_drawer_of_the_cabinet_demo.hdf5",

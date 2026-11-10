@@ -25,7 +25,9 @@ def test_scene_strata_deterministic_and_input_order_independent():
     assert not {M.scene(x['name']) for x in a}&M.LONG_SCENES
 
 def test_actual_benchmark_has_no_training_or_long_overlap():
-    pytest.importorskip('libero')
+    # Require the real submodule: with examples/ on sys.path, bare 'libero'
+    # resolves to an empty namespace stub and must not count as available.
+    pytest.importorskip('libero.libero.benchmark')
     from libero.libero import benchmark
     rows=[];training=[]
     for name in ['libero_spatial','libero_object','libero_goal','libero_10']:
