@@ -278,6 +278,9 @@ def test_k_is_selected_on_dev_only():
 # ── Cross-attention query ─────────────────────────────────────────────────────────────────────────
 
 def test_l90x_task_split_excludes_fixed_dev_eval_and_disjoint():
+    # Needs the real LIBERO benchmark; a bare 'libero' namespace stub
+    # (e.g. examples/ on sys.path) must not count as available.
+    pytest.importorskip('libero.libero.benchmark')
     tasks,fit,select=lr.choose_tasks(smoke=True)
     ids={int(t['task_id']) for t in tasks}
     assert len(tasks)==4 and len(fit)==len(select)==2
