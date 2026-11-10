@@ -17,7 +17,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from dct_skill_draft import DraftPlanner, SkillMemory, oracle_selector  # noqa: E402
-from draft_reconstruction import ROOT, RUN, UNSEEN, summarize  # noqa: E402
+from draft_reconstruction import ROOT, RUN, UNSEEN, UNSEEN_ROWS, summarize  # noqa: E402
 from variable_length_error import stitch  # noqa: E402
 
 HORIZON = 10
@@ -86,7 +86,7 @@ def main():
     memory = np.flatnonzero(np.asarray(rows['memory'], bool))
     key = np.stack([np.asarray(rows['task'])[memory], np.asarray(rows['episode'])[memory]], 1)
     Shared.memory, _ = stitch(np.asarray(rows['actions'][memory]), key, np.asarray(rows['frame'])[memory])
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
     ev = np.flatnonzero(~np.asarray(un['is_dev']))
     raw = np.load(UNSEEN / 'drafts' / 'raw_none_eval.npz', allow_pickle=False)
     if not np.array_equal(raw['query_ids'], ev + len(rows['task'])):

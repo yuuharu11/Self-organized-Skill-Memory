@@ -11,6 +11,7 @@ import argparse
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +25,8 @@ ROOT = STATE_DIR / 'outputs/memory-pilot'
 PI05_ROOT = Path(os.environ.get('SKILLNET_PI05_ROOT', ROOT / 'pi05-memory40-20261104')).expanduser()
 RUN = PI05_ROOT / 'run-01'
 UNSEEN = Path(os.environ.get('UNSEEN_LIBERO_OUT', ROOT / 'unseen-libero' / 'oracle-01')).expanduser()
+if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)
 CODECS = PI05_ROOT / 'compress-vs-raw-01' / 'dimension-extension-01' / 'codecs'
 TOPK = PI05_ROOT / 'topk-long-01' / 'production' / 'predictions_and_errors.npz'
 PCA_K = (4, 8, 12, 16, 24, 32, 48)
@@ -96,8 +99,8 @@ def main():
     task, val = np.asarray(rows['task']), np.asarray(rows['validation'], bool)
     z = np.load(TOPK, allow_pickle=False)
     long_ids, long_hard = z['query_rows'], z['hard_mask'].astype(bool)
-    unseen_is_dev = np.load(UNSEEN / 'unseen_rows' / 'is_dev.npy')
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('actions', 'state', 'pooled')}
+    unseen_is_dev = np.load(UNSEEN_ROWS / 'is_dev.npy')
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('actions', 'state', 'pooled')}
     raw = np.load(UNSEEN / 'drafts' / 'raw_none_eval.npz', allow_pickle=False)
     ev = np.flatnonzero(~unseen_is_dev)
     # The draft cache numbers unseen rows after the 26,581 LIBERO-40 rows.

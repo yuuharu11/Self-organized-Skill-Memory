@@ -84,7 +84,7 @@ def build():
     train_ids = np.flatnonzero(~val)
     segs = segments_from(actions, task, ep, fr, state, train_ids, 'libero40')
     np.savez(OUT / 'segments_libero40.npz', **segs)
-    U = cd.UNSEEN / 'unseen_rows'; lu = lambda k: np.load(U / f'{k}.npy', mmap_mode='r', allow_pickle=False)
+    U = cd.UNSEEN_ROWS; lu = lambda k: np.load(U / f'{k}.npy', mmap_mode='r', allow_pickle=False)
     ut, ue, uf, dev = (np.asarray(lu(k)) for k in ('task', 'episode', 'frame', 'is_dev'))
     segs = segments_from(lu('actions'), ut, ue, uf, lu('state'), np.flatnonzero(~dev), 'unseen')
     np.savez(OUT / 'segments_unseen.npz', **segs)

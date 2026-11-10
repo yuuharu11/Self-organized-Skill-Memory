@@ -24,6 +24,8 @@ PI05_ROOT = Path(os.environ.get("SKILLNET_PI05_ROOT", STATE_DIR / "outputs/memor
 ROOT = STATE_DIR / "outputs/memory-pilot"
 RUN = PI05_ROOT / "run-01"
 UNSEEN = Path(os.environ.get("UNSEEN_LIBERO_OUT", ROOT / "unseen-libero/oracle-01")).expanduser()
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)  # noqa: E402
 TOPK = PI05_ROOT / "topk-long-01/production/predictions_and_errors.npz"
 BUNDLES = PI05_ROOT / "shape-skills-02/corrected-v5"
 CHECKPOINT = Path(os.environ.get("SKILLNET_PI05_CHECKPOINT", STATE_DIR / "checkpoints/openpi-assets/checkpoints/pi05_libero")).expanduser()
@@ -407,7 +409,7 @@ def main():
     if len(long_ids) != 548 or int(hard_long.sum()) != 63:
         raise AssertionError("Long query selection differs from draft_reconstruction.py")
 
-    unroot = UNSEEN / "unseen_rows"
+    unroot = UNSEEN_ROWS
     un = {p.stem: np.load(p, mmap_mode="r", allow_pickle=False)
           for p in unroot.glob("*.npy")}
     dev = np.asarray(un["is_dev"], bool)

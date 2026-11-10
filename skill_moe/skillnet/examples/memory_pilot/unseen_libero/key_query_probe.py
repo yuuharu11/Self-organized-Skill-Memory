@@ -16,7 +16,9 @@ ROOT=(STATE_DIR / 'outputs/memory-pilot/unseen-libero')
 THETA=ROOT/'theta-regression-01'
 OUT=ROOT/'key-query-01'
 POOL_DIR=ROOT/'compressed-denoise-01'/'production'/'drafts'
-UNSEEN=ROOT/'oracle-01'/'unseen_rows'
+if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)
+UNSEEN=UNSEEN_ROWS
 RUN = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser() / 'run-01'
 CHECKPOINT = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 RUN_SCRIPT=HERE.parent/'pi05_memory'/'run.py'
