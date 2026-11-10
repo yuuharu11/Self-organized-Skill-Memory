@@ -99,7 +99,7 @@ MSE≤0.01の候補があるクエリでは、候補は中央値で**6窓・4つ
 
 - [可搬な全数値JSON](evidence/vlm_action_geometry/summary.json)
 - 詳細配列・query/reference行ID・task別再集計用情報：`.skillnet-state/outputs/memory-pilot/vlm-action-geometry-20261104/run-03/diagnostic_arrays.npz`。
-- コード：`scripts/analyze_vlm_action_geometry.py`。4テスト通過：`tests/test_vlm_action_geometry.py`。
+- コード：`scripts/analyze_vlm_action_geometry.py`。4テスト通過：`tests/test_vlm_action_geometry.py`（コードは `d7cbd7e` で削除。`git show d7cbd7e^:<パス>` で取り出せる）。
 - CPU 1スレッド・nice 19・GPU不可視。最終の解析は約38秒。元のキャッシュや並行ジョブの設定・実行状態は変更していない。
 - 元キャッシュの画像は読み込まず、numeric/string配列のみ`allow_pickle=False`で取得。使用配列のSHAをJSONに記録。
 - 初回の集計でboolの分位点計算に型エラーが出たため修正し、欠損条件も含むテストを追加した。最終結果は修正後のrun-03。
