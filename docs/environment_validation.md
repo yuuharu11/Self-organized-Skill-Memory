@@ -32,7 +32,7 @@
 - LIBERO-Skillの9タスクが公開manifestと同順で登録され、タスク定義・初期状態を参照できることを確認。
 - 外部LIBEROへの登録修正は、新規適用と再適用時の冪等性を確認。
 - WebSocketの要求と応答がずれる重複送信を修正。
-  `tests/test_websocket_policy_server.py` で8回の連続推論要求がそれぞれ自身の行動を受信する回帰テストに成功。
+  `tests/test_skillnet_model.py` で8回の連続推論要求がそれぞれ自身の行動を受信する回帰テストに成功。
 - NVIDIA EGLで環境を作成し、初期状態設定・reset・行動step・128×128 RGB画像取得に成功。
 
 既存コンテナはNVIDIAのEGL実装を備えていましたが、GLVNDローダー、GLib等が不足していました。

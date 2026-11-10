@@ -105,4 +105,4 @@ Dev選択にLongを使用していない。最大6件の粒度候補に加え、
 
 ## テスト
 
-`PYTHONPATH=/work OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 pytest -q tests/test_pi05_shape_skills.py`：14 passed。
+`PYTHONPATH=/work OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 pytest -q tests/pi05_memory/test_shape_skills.py`：14 passed。

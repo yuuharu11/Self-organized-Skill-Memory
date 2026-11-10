@@ -93,11 +93,11 @@ python skill_moe/skillnet/examples/skill_conditioning/summarize_rollout_diagnost
   docs/research/05_skillnet_diagnosis/evidence/skillnet_prompt.jsonl
 ```
 
-CPUの構造検査と集計テストは、依存が導入済みの環境で実行する。公開重みは不要。
+CPUの構造検査と集計テストは、依存が導入済みの環境で実行する。公開重みは不要。`tests/test_skill_conditioning_diagnostics.py` は今のリポジトリにはない（コードは `d7cbd7e` で削除。`git show d7cbd7e^:<パス>` で取り出せる）。
 
 ```bash
 JAX_PLATFORMS=cpu OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
-  python -m pytest -q tests/test_skill_conditioning_diagnostics.py tests/test_skill_conditioning_router.py
+  python -m pytest -q tests/test_skill_conditioning_diagnostics.py tests/test_skillnet_model.py
 ```
 
 新規2ファイルと既存の評価プロトコルテストを合わせて20件通過。新規の集計テストは、欠損・行政的中断を失敗にしないこと、重複・初期状態の不一致の拒否、タスク等重み、公式目標と把持proxyの区別を確認した。小型ルーターのFlax依存で既存ライブラリのdeprecation warningは出る。

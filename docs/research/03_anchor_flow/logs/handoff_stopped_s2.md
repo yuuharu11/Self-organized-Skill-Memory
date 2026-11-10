@@ -49,7 +49,7 @@ Training-free anchoring with a frozen head does not help on new tasks; forcing t
 - Expansion stopped at the user's request on 2026-10-30 01:30 UTC. Recorded trials: ordinary policy 81 (48 successes), dynamic gate 37, fixed gate 37, ungated 41. Trial counts differ by task and favor early-finishing trials; do not report the ordinary policy's pooled fraction as an eight-task success-rate estimate. No automatic continuation is requested by this handoff.
 
 ## Pending decisions for the owner
-- Drop the training-free constraint? Recommended next: fine-tune only the action head with the fixed anchor loss (target (x_t − A)/t, anchor-row t ∈ [0.05,1]; tests/test_memory_pilot_anchor_loss.py) plus the wrong-skill curriculum (correct / wrong phase / near / random / none, τ and n from confidence), evaluated first offline with whole tasks held out; then segment-level skills with a scene-conditioned decoder (architecture_v2.md v3).
+- Drop the training-free constraint? Recommended next: fine-tune only the action head with the fixed anchor loss (target (x_t − A)/t, anchor-row t ∈ [0.05,1]; tests/test_skillnet_model.py) plus the wrong-skill curriculum (correct / wrong phase / near / random / none, τ and n from confidence), evaluated first offline with whole tasks held out; then segment-level skills with a scene-conditioned decoder (architecture_v2.md v3).
 
 ## Key files
 - docs/research/03_anchor_flow/logs/morning_report_s2.md (overnight report), review_external_s2_pipeline.md (external review + checks), docs/research/03_anchor_flow/architecture_v2.md, anchor_flow_skill_memory.md, baselines_success_rates.md

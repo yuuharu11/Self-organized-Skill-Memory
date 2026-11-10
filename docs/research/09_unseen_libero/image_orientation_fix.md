@@ -24,7 +24,7 @@
 - 直した行は新しい場所 `.skillnet-state/outputs/memory-pilot/unseen-libero/unseen-rows-02/` に書いた。旧い行 `oracle-01/unseen_rows/` は監査用にそのまま残した。
 - 置き場所は `unseen_paths.py` の `UNSEEN_ROWS` 一か所にまとめ、未学習行を読む全スクリプトがそこを読むようにした。
 - 直した行は、旧い行の画像をちょうど180度回したものと全画素一致し、画像以外の配列は旧い行と完全に一致した。
-  テスト `tests/test_unseen_image_orientation.py` は、直した行が「生の HDF5 フレームに閉ループと同じ変換をかけたもの」と一致することを確かめる。
+  テスト `tests/unseen_libero/test_data.py` は、直した行が「生の HDF5 フレームに閉ループと同じ変換をかけたもの」と一致することを確かめる。
 - 取り直しは `orientation_fix.py`（出力 `orientation-fix-01/`）。旧い行で同じ計算をすると、保存済みの K1 の π0.5 予測（差 5e-4 以内、float16 の丸め）と θ 回帰の VLM 平均（差 0）を再現した。
   π0.5 の固定ノイズは以前と同じ（K1 の鍵 `fold_in(4101, 行番号)` と、`official_normal_eval` の鍵 `fold_in(4101, 26581 + 行番号)` の両方）。
 - S1 は `scale_only_query.py refresh` で新しい実行 `scale-only-02/` を作った。LIBERO-40 側（プール、学習入力、教師、学習済みクエリ、保留タスクでの選択）は `scale-only-01` のまま写し、Dev/Eval の VLM 平均と π0.5 の入力だけを差し替えた。

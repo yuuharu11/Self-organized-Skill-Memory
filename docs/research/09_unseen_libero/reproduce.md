@@ -251,7 +251,7 @@ python $UL/segment_demo.py     # 切り出しの動画（segmentation_demo/）
 
 ```bash
 CUDA_VISIBLE_DEVICES='' JAX_PLATFORMS=cpu python -m pytest -q \
-  tests/test_unseen_*.py
+  tests/unseen_libero/
 ```
 
 保存済みの出力がない環境では、出力に依存する一部のテストは skip になります。

@@ -227,4 +227,4 @@ R-so3（回転も消す型）を P5 で選ぶと .199 / .317。U でも順位は
 
 ---
 
-出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/test_unseen_*.py`。
+出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/unseen_libero/`。
