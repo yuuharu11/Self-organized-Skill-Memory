@@ -1,0 +1,14 @@
+{
+  "action_feature": "action",
+  "dimension": 12,
+  "components": [
+    {"name":"base_motion","slice":[0,4]},
+    {"name":"control_mode","slice":[4,5]},
+    {"name":"end_effector_position_command","slice":[5,8]},
+    {"name":"end_effector_rotation_command","slice":[8,11]},
+    {"name":"gripper_close","slice":[11,12]}
+  ],
+  "policy_command_order": {"end_effector_position":[0,3],"end_effector_rotation":[3,6],"gripper_close":[6,7],"base_motion":[7,11],"control_mode":[11,12]},
+  "state_order": {"base_position":[0,3],"base_rotation_quaternion":[3,7],"end_effector_position_relative":[7,10],"end_effector_rotation_relative_quaternion":[10,14],"gripper_qpos":[14,16]},
+  "source": "PandaOmron_modality.json and robocasa.utils.env_utils.convert_action at pinned RoboCasa revision"
+}

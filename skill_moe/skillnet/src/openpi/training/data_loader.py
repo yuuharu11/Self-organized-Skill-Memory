@@ -234,6 +234,8 @@ def create_torch_dataset(
     repo_id = data_config.repo_id
     if repo_id is None:
         raise ValueError("Repo ID is not set. Cannot create dataset.")
+    if repo_id == "robocasa:atomic_seen":
+        return _create_robocasa_atomic_dataset(data_config, action_horizon)
     if repo_id == "fake":
         return FakeDataset(model_config, num_samples=1024)
 
@@ -303,6 +305,58 @@ def create_torch_dataset(
         dataset = SubtaskScheme1MixedDataset(dataset)
 
     return dataset
+
+
+class _PromptedRoboCasaConcat(torch.utils.data.Dataset):
+    """Concatenate local per-task LeRobot datasets and attach their text prompt."""
+    def __init__(self, datasets, prompts):
+        self.datasets=datasets; self.prompts=prompts
+        self.ends=np.cumsum([len(x) for x in datasets]).tolist()
+    def __len__(self): return self.ends[-1] if self.ends else 0
+    def __getitem__(self,index):
+        index=int(index); dataset_idx=next(i for i,end in enumerate(self.ends) if index<end)
+        start=0 if dataset_idx==0 else self.ends[dataset_idx-1]
+        sample=dict(self.datasets[dataset_idx][index-start]); sample['prompt']=self.prompts[dataset_idx]
+        return sample
+
+
+def _validate_robocasa_task_coverage(expected_tasks, present_tasks, *, allow_partial=False):
+    expected=set(expected_tasks);present=set(present_tasks)
+    missing=sorted(expected-present)
+    if not present:raise FileNotFoundError('No atomic_seen RoboCasa datasets are available')
+    if missing and not allow_partial:
+        raise FileNotFoundError('atomic_seen dataset is incomplete; missing '+', '.join(missing)+
+            '. Download the full target atomic_seen set before training. For smoke statistics only, set '
+            'SKILLNET_ROBOCASA_ALLOW_PARTIAL=1 explicitly.')
+    if missing:logging.warning('Using partial RoboCasa atomic_seen dataset (%d/%d tasks); missing: %s',
+        len(present),len(expected),', '.join(missing))
+    return missing
+
+
+def _create_robocasa_atomic_dataset(data_config, action_horizon):
+    """Resolve task paths from the checked-in task_sets.json without importing RoboCasa."""
+    manifest=pathlib.Path(__file__).resolve().parents[5]/'data_process'/'robocasa'/'task_sets.json'
+    if not manifest.is_file(): raise FileNotFoundError(f"Run env/robocasa/export_task_sets.py first: {manifest}")
+    registry=json.loads(manifest.read_text()); base=pathlib.Path(data_config.root)
+    datasets=[]; prompts=[]; present=[]
+    for task in registry['task_sets']['atomic_seen']:
+        task_meta=registry['tasks'][task]; root=base/task_meta['dataset_path']
+        if not (root/'meta/info.json').is_file(): continue
+        present.append(task)
+        meta=lerobot_dataset.LeRobotDatasetMetadata(f'robocasa/{task}',root=root)
+        # PyAV ships its own FFmpeg libraries, so decoding does not depend on
+        # system FFmpeg packages (which need root to install).
+        datasets.append(lerobot_dataset.LeRobotDataset(f'robocasa/{task}',root=root,delta_timestamps={'action':[t/meta.fps for t in range(action_horizon)]},
+            video_backend=os.environ.get('SKILLNET_ROBOCASA_VIDEO_BACKEND','pyav')))
+        task_file=root/'meta/tasks.jsonl'
+        task_label=task
+        if task_file.exists():
+            rows=[json.loads(line) for line in task_file.read_text().splitlines() if line]
+            if rows and isinstance(rows[0].get('task'),str): task_label=rows[0]['task']
+        prompts.append(task_label)
+    _validate_robocasa_task_coverage(registry['task_sets']['atomic_seen'],present,
+        allow_partial=os.environ.get('SKILLNET_ROBOCASA_ALLOW_PARTIAL')=='1')
+    return _PromptedRoboCasaConcat(datasets,prompts)
 
 
 def create_rlds_dataset(
