@@ -319,7 +319,6 @@ class MemoryOnlyPolicy:
                 if not len(unit):
                     raise ValueError(f"empty memory unit {selected}")
                 scale = self._scale(rank_query, selected, q_context)
-                unit[:, :6] *= scale
                 grip_context = np.concatenate(((prefix - self.grip_norm["feature_mean"]) / self.grip_norm["feature_std"],
                                                (state - self.grip_norm["state_mean"]) / self.grip_norm["state_std"])).astype(np.float32)
                 grip = self._gripper(grip_context)
@@ -359,6 +358,7 @@ class MemoryOnlyPolicy:
                     num_steps=self.bridge_steps, noise=noise)
                 refined = np.asarray(refined, np.float32)[0] * (std[None, :] + 1e-6) + mean[None, :]
                 returned = refined[:, :12].astype(np.float32)
+                self.action_expert_calls += 1
                 bridge_seconds = time.perf_counter() - bridge_start
             history_obj.set_pending(returned[:int(self.args.replan_steps)])
             elapsed = time.perf_counter() - start

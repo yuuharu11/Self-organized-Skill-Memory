@@ -58,7 +58,7 @@ def prepare_full_cache(out=OUT, *, threads=8):
     selected=np.unique(np.r_[train_ids,val_ids]); tasks=np.asarray(data['task']); eps=np.asarray(data['episode']); frames=np.asarray(data['frame'])
     manifest=json.loads((SOURCE/'manifest.json').read_text()); info={(int(r['task_id']),int(r['episode'])):r for r in manifest['demos']}
     cache_dir=out/'obs_cache'; cache_dir.mkdir(parents=True,exist_ok=True)
-    reuse_dirs=[Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02/train/attempt-02/obs_cache'),PREP/'train/obs_cache']
+    reuse_dirs=[Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02/train/attempt-03/obs_cache'),Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02/train/attempt-02/obs_cache'),PREP/'train/obs_cache']
     report={'train_rows':len(train_ids),'validation_rows':len(val_ids),'validation_rows_per_task':50,'reused_rows':0,'extracted_rows':0,'tasks':{}}
     for task in sorted(np.unique(tasks[selected]).tolist()):
         ids=selected[tasks[selected]==task]
@@ -158,6 +158,7 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
     def make_batch(ids):
         leaves=[jnp.asarray(np.stack([cache_map[int(i)][j] for i in ids])) for j in range(len(cache_map[int(ids[0])]))]
         return jax.tree.unflatten(tree_def,leaves)
+    training_started=time.monotonic(); actual_steps=0; hit_budget=False
     for step0 in range(steps):
         ids=np.asarray(order[step0]); accum=None; losses=[]
         for start in range(0,effective_batch,microbatch):
@@ -166,6 +167,7 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
             accum=grads if accum is None else jax.tree.map(lambda a,b:a+b,accum,grads); losses.append(float(loss))
         accum=jax.tree.map(lambda g:g/(effective_batch//microbatch),accum)
         state=nnx.state(model,filt); updates,opt=tx.update(accum,opt,state); nnx.update(model,optax.apply_updates(state,updates))
+        actual_steps=step0+1
         rec={'step':step0+1,'train_loss':float(np.mean(losses)),'t0':T0,'microbatch':microbatch,'effective_batch':effective_batch}; logs.append(rec)
         if (step0+1)%500==0 or step0+1==steps:
             preds=[]; truth=[]; unit_lengths=[]
@@ -188,8 +190,16 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
         elif (step0+1)%100==0:
             _json(expdir/'progress.json',{'status':'running','latest_step':step0+1,'steps':steps,'best_step':best_step,'best_val_first5_mse6':best,'logs':logs,'t0':T0})
             print(json.dumps(rec),flush=True)
+        if time.monotonic()-training_started >= 3600:
+            hit_budget=True
+            print(json.dumps({'stage':'train','status':'one_hour_budget_reached','latest_step':actual_steps}),flush=True)
+            break
+    if actual_steps%500 and actual_steps>0:
+        last=expdir/f'expert_{actual_steps:06d}.msgpack'
+        if not last.exists(): last.write_bytes(serialization.to_bytes(nnx.state(model,filt).to_pure_dict()))
+    status='time_budget_reached' if hit_budget else 'complete'
     _json(expdir/'best.json',{'checkpoint':f'expert_{best_step:06d}.msgpack','steps':best_step,'t0':T0,'val_first5_mse6':best,'selection':'fixed 300 memory validation rows, first 5 steps MSE6'})
-    _json(expdir/'progress.json',{'status':'complete','latest_step':steps,'steps':steps,'best_step':best_step,'best_val_first5_mse6':best,'logs':logs,'t0':T0})
+    _json(expdir/'progress.json',{'status':status,'latest_step':actual_steps,'steps_requested':steps,'best_step':best_step,'best_val_first5_mse6':best,'logs':logs,'t0':T0,'training_seconds':time.monotonic()-training_started})
     return expdir/f'expert_{best_step:06d}.msgpack'
 
 
