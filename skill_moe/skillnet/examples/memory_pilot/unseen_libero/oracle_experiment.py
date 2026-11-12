@@ -14,6 +14,8 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.decomposition import PCA
 
 HERE=Path(__file__).resolve().parent
+if str(HERE) not in sys.path:sys.path.insert(0,str(HERE))
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)
 PI05=HERE.parent/'pi05_memory'
 REPO_ROOT=Path(__file__).resolve().parents[5]
 STATE_DIR=Path(os.environ.get('SKILLNET_STATE_DIR',REPO_ROOT/'.skillnet-state')).expanduser()
@@ -30,7 +32,7 @@ def load_module(path,name):
     spec=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(spec);sys.modules[name]=m;spec.loader.exec_module(m);return m
 def save_json(path,obj):
     p=Path(path);p.parent.mkdir(parents=True,exist_ok=True);t=p.with_suffix(p.suffix+'.tmp');t.write_text(json.dumps(obj,indent=2,ensure_ascii=False,allow_nan=True)+'\n');t.replace(p)
-def load_unseen():return {p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (OUT/'unseen_rows').glob('*.npy')}
+def load_unseen():return {p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
 def full_action(a):
     a=np.asarray(a,np.float32)
     if a.shape[-2:]!=(10,32):raise ValueError(a.shape)
@@ -105,7 +107,7 @@ def _write_draft_cache(rep,level,split,query_ids,candidate_rows,draft,pre_mse,ta
     return p
 
 def build_drafts():
-    if not (OUT/'unseen_rows/features.json').exists():raise FileNotFoundError('VLM extraction must finish first')
+    if not (UNSEEN_ROWS/'features.json').exists():raise FileNotFoundError('VLM extraction must finish first')
     sys.path.insert(0,str(PI05));from oracle_repr import encode_fixed,decode_fixed,RepresentationMetric,m6_default_medoids
     base=load_module(PI05/'run.py','unseen_oracle_base');fair=load_module(PI05/'fair_expert'/'run.py','unseen_oracle_fair')
     import torch

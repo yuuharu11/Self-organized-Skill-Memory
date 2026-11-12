@@ -19,7 +19,7 @@ from scipy.fft import dct, idct
 
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE), str(HERE.parent / 'pi05_memory')]
-from draft_reconstruction import ROOT, RUN, UNSEEN, summarize  # noqa: E402
+from draft_reconstruction import ROOT, RUN, UNSEEN, UNSEEN_ROWS, summarize  # noqa: E402
 from oracle_repr import m6_default_medoids  # noqa: E402
 from segment_demo import cut  # noqa: E402
 from variable_length_error import paired_interval, rows_from, stitch  # noqa: E402
@@ -84,7 +84,7 @@ def main():
     key = np.stack([np.asarray(rows['task'])[memory], np.asarray(rows['episode'])[memory]], 1)
     memory_traces, _ = stitch(np.asarray(rows['actions'][memory]), key, np.asarray(rows['frame'])[memory])
 
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
     ev = np.flatnonzero(~np.asarray(un['is_dev']))
     raw = np.load(UNSEEN / 'drafts' / 'raw_none_eval.npz', allow_pickle=False)
     if not np.array_equal(raw['query_ids'], ev + len(rows['task'])):

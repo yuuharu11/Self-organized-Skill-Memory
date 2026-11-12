@@ -40,7 +40,7 @@ def main():
     best, keys = chosen_drafts()
     d = np.load(FLOW / 'eval_drafts.npz')
     base = cd._module(cd.PI05 / 'run.py', 'refine_base'); rows = base.load_rows(cd.RUN)
-    unseen = {p.stem: np.load(p, mmap_mode='r', allow_pickle=False) for p in (cd.UNSEEN / 'unseen_rows').glob('*.npy')}
+    unseen = {p.stem: np.load(p, mmap_mode='r', allow_pickle=False) for p in cd.UNSEEN_ROWS.glob('*.npy')}
     ids = np.asarray(d['row_ids'], np.int64)
     obs = base.obs_batch(unseen, ids)
     eps = np.stack([np.asarray(jax.random.normal(jax.random.fold_in(jax.random.key(cd.NOISE_SEED), int(i)), (10, 32)))

@@ -18,7 +18,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from draft_reconstruction import ROOT, RUN, TOPK, UNSEEN, summarize  # noqa: E402
+from draft_reconstruction import ROOT, RUN, TOPK, UNSEEN, UNSEEN_ROWS, summarize  # noqa: E402
 from segment_demo import cut, low_freq  # noqa: E402
 
 EPSILONS = (.005, .01, .02, .04)
@@ -134,7 +134,7 @@ def main():
     groups = np.stack([np.asarray(rows['task'])[ids], np.asarray(rows['episode'])[ids]], 1)
     result = {'long': {'rows': len(ids), 'hard_rows': int(hard.sum()), **evaluate(traces, all_where, ids, groups, hard)}}
 
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('actions', 'task', 'episode', 'frame', 'is_dev')}
     ev = np.flatnonzero(~np.asarray(un['is_dev']))
     raw = np.load(UNSEEN / 'drafts' / 'raw_none_eval.npz', allow_pickle=False)
     if not np.array_equal(raw['query_ids'], ev + len(rows['task'])):

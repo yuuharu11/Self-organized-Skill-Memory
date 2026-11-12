@@ -67,5 +67,5 @@ MSEは正規化 active7（10×7）で平均。生成後は bridge/001500、t0=.2
 
 - 最終結果：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/varlen-01/final-04`（`DONE`あり、境界・候補・下書き・bridge予測・集計を保存）
 - 実装：`skill_moe/skillnet/examples/memory_pilot/pi05_memory/varlen/run.py`
-- CPU tests：`tests/test_pi05_varlen.py`（4 passed）
+- CPU tests：`tests/test_pi05_varlen.py`（4 passed）（コードは `d7cbd7e` で削除。`git show d7cbd7e^:<パス>` で取り出せる）
 - 実行はCPU 8 thread / taskset 8–15 / nice 10。生成後確認だけGPUを使用し、`XLA_PYTHON_CLIENT_PREALLOCATE=false`, `XLA_PYTHON_CLIENT_MEM_FRACTION=0.20` を指定。Expert学習なし。

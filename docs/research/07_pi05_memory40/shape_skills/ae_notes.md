@@ -66,7 +66,7 @@ Long Eval 548行（hard 63行）の10-step再構成MSEを表に示す。`Lmax=15
 ## 出力・確認
 
 - 全37 bundle・学習ログ・評価配列: `shape-skills-01/representations/ae_*/` および `shape-skills-01/ae_summary.json`。
-- テスト `tests/test_pi05_shape_skills_ae.py`: 7 passed。maskのパディング値不変性、Lmaxパディング、長さ入力、物理拡張、標準形のgripper保持を確認。
+- テスト `tests/pi05_memory/test_shape_skills.py`: 7 passed。maskのパディング値不変性、Lmaxパディング、長さ入力、物理拡張、標準形のgripper保持を確認。
 - GPUスモーク: Lmax=164で1条件・2 epoch、約5.6秒。最終本番はS2補完後にLmax=158。各モデルのfit時間合計は450秒、2回目の再開処理は193秒。中断・入力確認を含む最初の起動からの壁時計時間は約17分半。
 - 主な注意点: 1 seed、30 epoch、観測上限（Longの復元にqueryの正解区間poseを使う）、S2 Train境界は保存済みmemory境界からの補完、S1 DPは学習不成立。結果を閉ループ成功率と解釈しない。
 

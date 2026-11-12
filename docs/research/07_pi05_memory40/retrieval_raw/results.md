@@ -93,5 +93,5 @@ Task除外以外のepisode除外結果、各方式の全行/難行の生行動MS
 - `keys/*_task.npz` / `keys/*_episode.npz` は全query×Top-64とそのTop-8の`cand_actions[Q,8,10,32]`を格納。
 - `wrist_token_mean.npy`、正規化統計、`*_embedding.npy`、`*_learned/wrist_contrastive.pt`、`learned_fit.json`を保存。
 - `raw_draft_final_mse.npz` はEvalの2 seed×72条件の最終row MSE、hard mask、候補生行動誤差を保存。
-- 単体テスト: `tests/test_pi05_memory_retrieval_4b.py`。出力作成はCPU 8 thread・taskset 8-47・nice 10、JAX推論はXLA preallocation false・memory fraction .20。
+- 単体テスト: `tests/pi05_memory/test_retrieval.py`。出力作成はCPU 8 thread・taskset 8-47・nice 10、JAX推論はXLA preallocation false・memory fraction .20。
 - 実時間：キー生成/学習/Recall集計 116.6秒、最終推論 3,571.9秒。GPUの共有使用量は他プロセスを含むため、プロセス別ピークとしては報告しない。

@@ -30,6 +30,8 @@ PI05 = HERE.parent / 'pi05_memory'
 ROOT = (STATE_DIR / 'outputs/memory-pilot/unseen-libero')
 RUN = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser() / 'run-01'
 UNSEEN = ROOT / 'oracle-01'
+if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)
 OUT = ROOT / 'compressed-denoise-01'
 CHECKPOINT = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 SEED = 20261104
@@ -380,7 +382,7 @@ def prepare(*, smoke=False, limit_train=16, limit_dev=8, limit_eval=8):
         mem_ids=mem_ids[np.isin(task[mem_ids],np.array([0,1,2],np.int32))]
     train=np.flatnonzero(~np.asarray(rows['validation'],bool)).astype(np.int64)
     if len(train)!=23304 or np.any(task[train]>=40):raise AssertionError('Expert training rows are not LIBERO-40 train only')
-    un={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (UNSEEN/'unseen_rows').glob('*.npy')}
+    un={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
     dev=np.flatnonzero(np.asarray(un['is_dev'],bool)).astype(np.int64);ev=np.flatnonzero(~np.asarray(un['is_dev'],bool)).astype(np.int64)
     raw=np.load(UNSEEN/'drafts/raw_none_eval.npz',allow_pickle=False)
     if len(dev)!=113 or len(ev)!=619 or len(np.unique(un['task'][ev]))!=10:raise AssertionError('fixed unseen split changed')
@@ -780,7 +782,7 @@ def train_condition(condition, *, steps=STEPS, threads=8, smoke=False):
             for _ in range(start_step):key,_sub=jax.random.split(key)
     devcache=np.load(cache_root/f'{condition.replace("-","_")}_dev.npz',allow_pickle=False)
     devids=np.asarray(devcache['row_ids'],np.int64)
-    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (UNSEEN/'unseen_rows').glob('*.npy')}
+    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
     if len(devids):
         dev_obs=base.obs_batch(unseen,devids)
         dev_target=np.asarray(unseen['actions'][devids],np.float32)
@@ -895,7 +897,7 @@ def evaluate_condition(condition, *, threads=8):
     base=_module(PI05/'run.py','compressed_eval_base');skill=_module(PI05/'skill_expert'/'run.py','compressed_eval_skill')
     trained=json.loads((OUT/'experts'/condition/'trained.json').read_text())
     rows=base.load_rows(RUN)
-    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (UNSEEN/'unseen_rows').glob('*.npy')}
+    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
     cache_root=OUT/('predicted_b_drafts' if condition=='B-vm-08' else 'drafts')
     cache=np.load(cache_root/f'{condition.replace("-","_")}_eval.npz',allow_pickle=False)
     ids=np.asarray(cache['row_ids'],np.int64);target=np.asarray(unseen['actions'][ids],np.float32)
@@ -1005,7 +1007,7 @@ def materialize_b_drafts(*,threads=8,batch=8,smoke=False):
     wrapper.theta_std.value=jnp.asarray(trained['theta_std'],jnp.float32)
     velocity_fn=module_jit(wrapper.theta_velocity);prefix_fn=module_jit(wrapper.theta_prefix)
     rows=base.load_rows(RUN)
-    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (UNSEEN/'unseen_rows').glob('*.npy')}
+    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
     srcroot=OUT/('smoke_drafts' if smoke else 'drafts')
     dstroot=OUT/('smoke_predicted_b_drafts' if smoke else 'predicted_b_drafts');dstroot.mkdir(parents=True,exist_ok=True)
     for split,data in [('train',rows),('dev',unseen),('eval',unseen)]:

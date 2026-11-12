@@ -15,6 +15,7 @@ ROOT=(STATE_DIR / 'outputs/memory-pilot/unseen-libero')
 RUN = Path(os.environ.get('SKILLNET_PI05_ROOT', STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104')).expanduser() / 'run-01'
 SOURCE=ROOT/'compressed-denoise-01'/'production'
 UNSEEN=ROOT/'oracle-01'
+from unseen_paths import UNSEEN_ROWS  # corrected rows (image orientation fix)
 OUT=ROOT/'theta-regression-01'
 CHECKPOINT = Path(os.environ.get('SKILLNET_PI05_CHECKPOINT', STATE_DIR / 'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 SPLITS=('train','dev','eval')
@@ -65,7 +66,7 @@ def decode_theta(shape,theta,vs):
 
 def _splits():
     base=_module(PI05/'run.py','theta_regression_data');rows=base.load_rows(RUN)
-    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (UNSEEN/'unseen_rows').glob('*.npy')}
+    unseen={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in UNSEEN_ROWS.glob('*.npy')}
     train=np.flatnonzero(~np.asarray(rows['validation'],bool)).astype(np.int64)
     dev=np.flatnonzero(np.asarray(unseen['is_dev'],bool)).astype(np.int64)
     ev=np.flatnonzero(~np.asarray(unseen['is_dev'],bool)).astype(np.int64)

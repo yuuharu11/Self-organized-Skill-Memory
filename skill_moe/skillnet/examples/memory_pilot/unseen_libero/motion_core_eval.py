@@ -29,7 +29,7 @@ import dct_tolerance_merge as merge  # noqa: E402
 import optimal_units_eval as opt  # noqa: E402
 import stored_units_eval as stored  # noqa: E402
 import variable_shape_memory as vs  # noqa: E402
-from draft_reconstruction import ROOT, RUN, UNSEEN  # noqa: E402
+from draft_reconstruction import ROOT, RUN, UNSEEN, UNSEEN_ROWS  # noqa: E402
 from segment_demo import cut  # noqa: E402
 
 K = 3
@@ -268,7 +268,7 @@ def main():
     memory = np.flatnonzero(np.asarray(rows['memory'], bool))
     key = np.stack([np.asarray(rows['task'])[memory], np.asarray(rows['episode'])[memory]], 1)
     Data.memory_rotations = rotations_per_frame(S.memory, key, np.asarray(rows['frame'])[memory], np.asarray(rows['state'][memory], np.float64))
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('state', 'frame', 'is_dev')}
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('state', 'frame', 'is_dev')}
     ev_rows = np.flatnonzero(~np.asarray(un['is_dev']))
     Data.query_rotations = rotations_per_frame(S.traces, ukey, np.asarray(un['frame'])[ev_rows], np.asarray(un['state'][ev_rows], np.float64))
     jobs = [(c, l) for c in CONFIGS for l in LEVELS]

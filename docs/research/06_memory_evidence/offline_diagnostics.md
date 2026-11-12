@@ -38,7 +38,7 @@ b+rの比較は、この流れの補足として扱う。実装した初期表�
 
 検証は新規5テスト通過。入力の窓順・タスク順照合、重複検出、共有エピソードの拒否、重なる窓の等重み処理、評価タスクの誤差を変更してもそのタスクのルーターが変わらないことを確認した。
 
-[可搬な集計JSON](evidence/offline_diagnostics_summary.json) / 再集計・ルーター実験コード（`scripts/analyze_memory_slide_evidence.py`） / テスト（`tests/test_memory_slide_evidence.py`）
+[可搬な集計JSON](evidence/offline_diagnostics_summary.json) / 再集計・ルーター実験コード（`scripts/analyze_memory_slide_evidence.py`） / テスト（`tests/test_memory_slide_evidence.py`）（コードは `d7cbd7e` で削除。`git show d7cbd7e^:<パス>` で取り出せる）
 
 以下は生成した詳細報告。ローカル出力は `.skillnet-state/outputs/memory-pilot/slide-evidence-20261103/run-0840/`。
 

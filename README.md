@@ -59,7 +59,7 @@ SkillNet 由来の構成（`skill_moe/`, `data_process/` など）に、次を�
 | `env/` | 新規環境のセットアップ・スモークテスト・依存の固定リスト |
 | `skill_memory_core/` | 現行アルゴリズム（生行動メモリ＋M2検索＋修正Expert）の移植用パッケージ |
 | `env/robocasa/`、`data_process/robocasa/` | RoboCasa365 専用 Python 3.11 環境とデータ配線 |
-| `tests/` | 追加コードのテスト |
+| `tests/` | 追加コードのテスト。`emergent/`・`pi05_memory/`・`unseen_libero/` は同名のコードに対応、直下はモデル・RoboCasa・Optimus-R・再現手順。共通の読み込みは `tests/support.py` |
 
 ## コードを取得する
 
