@@ -807,6 +807,8 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
     for stage_rec in selection["stages"][1:]:
         stage_cfgs[stage_rec["stage"]]=[x["config"] for x in stage_rec["candidates"]]
         stage_cps[stage_rec["stage"]]=[x.get("checkpoint") for x in stage_rec["candidates"]]
+    partial_path=out/"noise_history_partial.json"
+    partial=json.loads(partial_path.read_text()) if partial_path.exists() else {"stages":{}}
     stage_rows={};history_rows={};seed_models={}
     for stage in ("R0","R1","R2","R3","R4","R5"):
         stage_rows[stage]=[]
@@ -814,6 +816,13 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
         for ci,cfg0 in enumerate(candidate_configs):
             cfg=dict(cfg0)
             stage_id=stage+(f"_c{ci}" if len(candidate_configs)>1 else "")
+            if stage_id in partial["stages"]:
+                saved=partial["stages"][stage_id]
+                stage_rows[stage_id]=saved["rows"]
+                history_rows[stage_id]=saved["history"]
+                stage_rows[stage_id+"_aggregate"]=aggregate_seed_metrics(stage_rows[stage_id])
+                seed_models[stage_id]={str(r["seed"]):r["checkpoint"] for r in stage_rows[stage_id]}
+                continue
             stage_rows[stage_id]=[]
             history_rows[stage_id]={}
             for seed in seeds:
@@ -838,6 +847,8 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
                 if hasattr(model,"cpu"):model.cpu()
                 del model
             stage_rows[stage_id+"_aggregate"]=aggregate_seed_metrics(stage_rows[stage_id])
+            partial["stages"][stage_id]={"rows":stage_rows[stage_id],"history":history_rows[stage_id]}
+            _atomic_json(partial_path,partial)
         if len(candidate_configs)==1:
             stage_rows[stage]=stage_rows.pop(stage)
             stage_rows[stage+"_aggregate"]=aggregate_seed_metrics(stage_rows[stage])
@@ -905,12 +916,12 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
             model,_=step1._torch_load(cp,device)
             logs=[]
         else:
-            model,logs=step1._train_once(out,"P5",seed=seed,tau=.01,k=1,layer="final",epochs=3,
+            model,logs=step1._train_once(out,"P5-L0",seed=seed,tau=.01,k=1,layer="final",epochs=3,
                 save_path=cp,device=device,batch_size=64,report_each=False,data_override=data)
         p5_history[str(seed)]={}
         for offset,name in enumerate(("true","zero","other_episode")):
             d=history_variant(data,ids,name,seed=seed*10+offset)
-            scores,rank,_=step1._score_model(model,"P5",d,ids,layer="final",device=device,batch=32)
+            scores,rank,_=step1._score_model(model,"P5-L0",d,ids,layer="final",device=device,batch=32)
             met=step1._step1_metrics(scores,d,ids);err=np.asarray(d["error"])[ids];ix=rank[:,0]
             row={"top1_type_error":float(err[np.arange(len(ix)),ix].mean()),
                 "recovery":float(met["recovery"]),"spearman_positive":float(met["spearman_mean"])}
