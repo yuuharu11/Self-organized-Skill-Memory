@@ -128,7 +128,7 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
     import flax.nnx as nnx
     import optax, torch
     from flax import serialization
-    from openpi.shared.nnx_utils import PathRegex,module_jit
+    from openpi.shared.nnx_utils import PathRegex
     torch.set_num_threads(threads)
     if effective_batch%microbatch: raise ValueError('effective batch must divide by microbatch')
     torch.cuda.set_per_process_memory_fraction(memory_fraction)
@@ -141,11 +141,19 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
         if payload['tree_def']!=tree_def: raise AssertionError('cached observation PyTrees differ')
         for pos,row in enumerate(payload['row_ids']): cache_map[int(row)]=[np.asarray(x[pos]) for x in payload['leaves']]
     if not set(map(int,np.r_[train_ids,val_ids])).issubset(cache_map): raise AssertionError('full observation cache incomplete')
+    print(json.dumps({'stage':'cache_loaded','train_rows':len(train_ids),'validation_rows':len(val_ids),'cached_rows':len(cache_map)}),flush=True)
     stats=__import__('openpi.shared.normalize',fromlist=['load']).load(CHECKPOINT/'assets')['actions']
     # Only drafts used for fitting are transformed; reserve validation is the 300-row fixed sample.
-    draft=np.stack([expert._draft_to_model(data['draft'][i],stats) for i in range(len(data['draft']))]).astype(np.float32)
-    target=np.stack([expert._draft_to_model(data['target'][i],stats) for i in range(len(data['target']))]).astype(np.float32)
+    # NpzFile.__getitem__ inflates the entire compressed member at each access;
+    # materialize once before the row-wise conversion.
+    raw_drafts=np.asarray(data['draft'],np.float32)
+    raw_targets=np.asarray(data['target'],np.float32)
+    unit_lengths_all=np.asarray(data['first_unit_length'],np.int32)
+    draft=np.stack([expert._draft_to_model(row,stats) for row in raw_drafts]).astype(np.float32)
+    target=np.stack([expert._draft_to_model(row,stats) for row in raw_targets]).astype(np.float32)
+    print(json.dumps({'stage':'draft_arrays_ready','rows':len(draft),'shape':list(draft.shape)}),flush=True)
     model,_=expert._load_expert_model(); filt=nnx.All(nnx.Param,PathRegex(r'.*(llm.*_1|action_in_proj|time_mlp|action_out_proj).*'))
+    print(json.dumps({'stage':'model_loaded'}),flush=True)
     state=nnx.state(model,filt); tx=optax.chain(optax.clip_by_global_norm(1.),optax.adamw(2.5e-5,b1=.9,b2=.95,weight_decay=1e-5)); opt=tx.init(state); grad=_fixed_grad(filt)
     fit=np.asarray(train_ids,np.int64); rng=np.random.default_rng(SEED); logs=[]; best=float('inf'); best_step=0
     expdir=out/'expert'; expdir.mkdir(parents=True,exist_ok=True)
@@ -154,7 +162,14 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
     if sample_path.exists(): order=np.load(sample_path,mmap_mode='r')
     else:
         order=rng.choice(fit,(steps,effective_batch),replace=True).astype(np.int32); np.save(sample_path,order)
-    eval_fn=module_jit(model.sample_bridge,static_argnames=('num_steps',))
+    print(json.dumps({'stage':'optimizer_ready','steps':steps,'effective_batch':effective_batch,'microbatch':microbatch}),flush=True)
+    # Do not use module_jit here: it freezes the NNX model state when the
+    # wrapper is created, so every validation checkpoint would be evaluated
+    # with the initial weights. Passing the model through nnx.jit keeps the
+    # current trainable state dynamic.
+    @nnx.jit(static_argnames=('num_steps',))
+    def eval_fn(m, rng, obs, dn, starts, noise, *, num_steps=10):
+        return m.sample_bridge(rng, obs, dn, starts, num_steps=num_steps, noise=noise)
     def make_batch(ids):
         leaves=[jnp.asarray(np.stack([cache_map[int(i)][j] for i in ids])) for j in range(len(cache_map[int(ids[0])]))]
         return jax.tree.unflatten(tree_def,leaves)
@@ -174,8 +189,8 @@ def train(out=OUT, *, steps=3000, effective_batch=32, microbatch=8, threads=8, m
             for st in range(0,len(val_ids),4):
                 bid=np.asarray(val_ids[st:st+4],np.int64); obs=make_batch(bid)
                 dn=jnp.asarray(draft[bid]); eps=np.stack([np.asarray(jax.random.normal(jax.random.fold_in(jax.random.key(4101),int(i)),(1,50,32)))[0] for i in bid])
-                pr=np.asarray(eval_fn(jax.random.key(0),obs,dn,jnp.full((len(bid),),T0,jnp.float32),num_steps=10,noise=jnp.asarray(eps)))
-                preds.extend(pr); truth.extend(target[bid]); unit_lengths.extend(np.clip(data['first_unit_length'][bid],1,50).tolist())
+                pr=np.asarray(eval_fn(model,jax.random.key(0),obs,dn,jnp.full((len(bid),),T0,jnp.float32),jnp.asarray(eps),num_steps=10))
+                preds.extend(pr); truth.extend(target[bid]); unit_lengths.extend(np.clip(unit_lengths_all[bid],1,50).tolist())
             pred=np.asarray(preds); tru=np.asarray(truth); mse5=float(np.mean((pred[:,:5,:6]-tru[:,:5,:6])**2))
             errs=[]
             for p,t,l in zip(pred,tru,unit_lengths,strict=True): errs.append(float(np.mean((p[:int(l),:6]-t[:int(l),:6])**2)))
