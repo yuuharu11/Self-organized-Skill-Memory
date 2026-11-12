@@ -1,4 +1,6 @@
 import os
+import tempfile
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -49,4 +51,30 @@ def test_episode_bootstrap_is_paired_and_reports_difference():
     assert result["mean_difference"] == 3.0
     assert result["episodes"] == 2
     assert 2.0 <= result["episode_bootstrap_95"][0] <= result["episode_bootstrap_95"][1] <= 4.0
+
+
+def test_eval_masks_short_units_that_have_no_first_five_action_score():
+    scores = np.array([[3., 2., 1.]])
+    valid = np.array([[True, True, False]])
+    eligible = np.array([[True, False, False]])
+    masked = latent._mask_eval_candidates(scores, valid, eligible)
+    assert masked[0, 0] == 3.
+    assert np.isneginf(masked[0, 1:]).all()
+
+
+def test_sharded_npy_matches_concatenated_indexing():
+    prefix = np.arange(24, dtype=np.float16).reshape(3, 2, 4)
+    suffix = (np.arange(32, dtype=np.float16) + 100).reshape(4, 2, 4)
+    joined = np.concatenate([prefix, suffix])
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "prefix.npy"
+        s = Path(d) / "suffix.npy"
+        np.save(p, prefix)
+        np.save(s, suffix)
+        sharded = latent._ShardedNpy(np.load(p, mmap_mode="r"), np.load(s, mmap_mode="r"), len(prefix))
+        assert sharded.shape == joined.shape
+        np.testing.assert_array_equal(sharded[2], joined[2])
+        np.testing.assert_array_equal(sharded[3:6], joined[3:6])
+        np.testing.assert_array_equal(sharded[[6, 0, 3]], joined[[6, 0, 3]])
+        np.testing.assert_array_equal(sharded[4, :, 1:3], joined[4, :, 1:3])
 

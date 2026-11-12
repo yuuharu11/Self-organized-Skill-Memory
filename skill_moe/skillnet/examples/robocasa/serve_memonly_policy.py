@@ -60,6 +60,7 @@ def _network_classes():
 
 def _prefix_feature_fn(model, *, return_tokens=False):
     """Return pooled and optionally per-token final VLM features; no action call."""
+    import jax
     import flax.nnx as nnx
     import jax.numpy as jnp
     from openpi.models import model as model_api
@@ -71,6 +72,16 @@ def _prefix_feature_fn(model, *, return_tokens=False):
             self.base = base
 
         def __call__(self, observation):
+            original_batch = observation.state.shape[0]
+            if return_tokens and original_batch == 1:
+                # The token cache was extracted in batches of four. Matching
+                # that prefix batch shape avoids backend-dependent attention
+                # rounding differences between batch-1 serving and batch-4
+                # extraction; only the first identical copy is returned.
+                observation = jax.tree.map(
+                    lambda x: jnp.repeat(x, 4, axis=0) if hasattr(x, "ndim") and x.ndim else x,
+                    observation,
+                )
             obs = model_api.preprocess_observation(None, observation, train=False)
             tokens, valid, ar = self.base.embed_prefix(obs)
             positions = jnp.cumsum(valid, axis=1) - 1
@@ -80,7 +91,8 @@ def _prefix_feature_fn(model, *, return_tokens=False):
             weights = valid.astype(hidden.dtype)[..., None]
             pooled = jnp.sum(hidden * weights, axis=1) / jnp.maximum(jnp.sum(weights, axis=1), 1)
             if return_tokens:
-                return pooled.astype(jnp.float16), hidden.astype(jnp.float16), valid
+                return (pooled[:original_batch].astype(jnp.float16),
+                        hidden[:original_batch].astype(jnp.float16), valid[:original_batch])
             return pooled.astype(jnp.float16)
 
     return module_jit(PrefixFeature(model).__call__)
