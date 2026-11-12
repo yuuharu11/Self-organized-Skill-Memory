@@ -257,7 +257,7 @@ class MemoryOnlyPolicy:
             flat_policy = expert_api.ex.action_storage_to_policy(np.asarray(self.pool["actions_flat"], np.float32))
             offsets = np.asarray(self.pool["action_offsets"], np.int64)
             self.rerank_actions5 = np.stack([
-                expert_api.ex.resample_rows(flat_policy[offsets[i]:offsets[i+1]], 5)
+                expert_api.ex.first_rows(flat_policy[offsets[i]:offsets[i+1]], 5)
                 for i in range(len(offsets)-1)
             ]).astype(np.float32)
         # History-free magnitude heads consume the normalized Context query

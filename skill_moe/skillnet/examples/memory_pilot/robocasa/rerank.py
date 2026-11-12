@@ -3,7 +3,9 @@
 Training candidates are generated from the fixed Context+history ranker and
 magnitude/gripper heads. The reranker is validated on episode-disjoint memory
 queries. Task identifiers are never features. This is an offline diagnostic;
-its ranker is not wired into the live server.
+its ranker checkpoint is consumed by the live rerank server
+(serve_rerank_policy --reranker-checkpoint), which rebuilds the same
+candidate batch from the current history-augmented query.
 """
 from __future__ import annotations
 import json, os, sys, time
@@ -186,8 +188,9 @@ def run():
     flat=ex.action_storage_to_policy(np.asarray(pool['actions_flat'],np.float32));offs=np.asarray(pool['action_offsets'],np.int64);lens=np.diff(offs)
     actions5=np.empty((len(pool['length']),5,12),np.float32)
     for u in range(len(actions5)):
-        a=flat[offs[u]:offs[u+1]]
-        actions5[u]=ex.resample_rows(a,5)
+        # Executed prefix, not a whole-unit interpolation: the closed loop
+        # runs the unit from its own first step (see experiment.first_rows).
+        actions5[u]=ex.first_rows(flat[offs[u]:offs[u+1]],5)
     qn=len(qfeat);candidate_feat=np.empty((qn,50,38),np.float32);candidate_action=np.empty((qn,50,5,7),np.float32);candidate_scale=np.empty((qn,50),np.float32);labels=np.empty((qn,50),np.float32)
     targetp=ex.action_storage_to_policy(np.asarray(z['memory_target'],np.float32));mean=np.asarray(stats.mean,np.float32)[:7];std=np.asarray(stats.std,np.float32)[:7]
     targetn=((targetp[:,:5,:7]-mean)/(std+1e-6)).astype(np.float32)
@@ -224,6 +227,9 @@ def run():
     ranknet,_=__import__('run_key_lite').RankNet, None
     # query scores as in policy-order-v2 runtime, excluding the source episode.
     Rank,Context,Mag=_network_classes();rnet=Rank(rck['q_dim'],rck['k_dim']);rnet.load_state_dict(rck['state']);rnet.eval()
+    # Candidate features carry the learned scale (training scores come from
+    # predict_ranker, which multiplies by log_scale.exp()).
+    kscale=float(rnet.log_scale.exp())
     cctx=np.asarray(z['candidate_context'],np.int64);cx=np.concatenate(((feat[cctx]-rck['norm'][0])/rck['norm'][1],(np.asarray(z['candidate_state'])-rck['norm'][2])/rck['norm'][3]),axis=1).astype(np.float32)
     with torch.no_grad():kemb=torch.nn.functional.normalize(rnet.key(torch.as_tensor(cx)),dim=-1).numpy()
     scores_h=np.empty((len(rowids),len(pool['length'])),np.float32)
@@ -231,7 +237,7 @@ def run():
         hn=(polhist[i]-np.asarray(rck['hist_norm']['mean'],np.float32))/np.asarray(rck['hist_norm']['std'],np.float32);hn*=hmask[i,:,None]
         qr=np.concatenate((qctx[i],hn.reshape(-1),hmask[i].astype(np.float32))).astype(np.float32)
         with torch.no_grad():qe=torch.nn.functional.normalize(rnet.query(torch.as_tensor(qr[None])),dim=-1).numpy()[0]
-        scores_h[i]=kemb@qe;scores_h[i,np.asarray(pool['global_episode'])==int(qheld['global_episode'][rowids[i]])]=-np.inf
+        scores_h[i]=kemb@qe*kscale;scores_h[i,np.asarray(pool['global_episode'])==int(qheld['global_episode'][rowids[i]])]=-np.inf
     top_h,score_h=_top_order(scores_h,np.asarray(qheld['global_episode'])[rowids],pool,50)
     pre_hold=np.asarray(pre,np.float32);gxh=np.concatenate(((pre_hold-feature_mean)/feature_std,(states-state_mean)/state_std),axis=1).astype(np.float32)
     with torch.no_grad():grip_h=np.where(gripnet.grip(torch.as_tensor(gxh)).numpy()[:,:5]>=0,1.,-1.).astype(np.float32)
@@ -254,12 +260,12 @@ def run():
             hn=((hist-np.asarray(rck['hist_norm']['mean'],np.float32))/np.asarray(rck['hist_norm']['std'],np.float32))*mask[:,None]
             qr=np.concatenate((qctx[i],hn.reshape(-1),mask.astype(np.float32))).astype(np.float32)
             with torch.no_grad():qe=torch.nn.functional.normalize(rnet.query(torch.as_tensor(qr[None])),dim=-1).numpy()[0]
-            sc=kemb@qe;sc[np.asarray(pool['global_episode'])==int(qheld['global_episode'][rowids[i]])]=-np.inf
+            sc=kemb@qe*kscale;sc[np.asarray(pool['global_episode'])==int(qheld['global_episode'][rowids[i]])]=-np.inf
             o=np.argsort(-sc,kind='stable')[:50];sco=sc[o]
             cfs,ss,acs=_candidate_batch(qctx[i],o,sco,pool,meta,mag,np.broadcast_to(grip_h[i],(len(o),5)),actions5,stats)
             u=int(o[0])
             if k is not None:
-                ck=ranker_ck[k];cf=cfs[:k];qn=(qhold[i]-ck['qmean'])/ck['qstd'];cn=(cf-ck['cmean'])/ck['cstd'];model=ActionReranker(qhold.shape[-1],cf.shape[-1]);model.load_state_dict(ck['state']);model.eval()
+                ck=ranker_ck[k];cf=cfs[:k];qn=(qr-ck['qmean'])/ck['qstd'];cn=(cf-ck['cmean'])/ck['cstd'];model=ActionReranker(qhold.shape[-1],cf.shape[-1]);model.load_state_dict(ck['state']);model.eval()
                 with torch.no_grad():u=int(o[int(model(torch.as_tensor(qn[None]),torch.as_tensor(cn[None])).argmax(1)[0])])
             ix=int(np.flatnonzero(o==u)[0]);scale=float(ss[ix]);raw=materialize_unit(flat[offs[u]:offs[u+1]].copy(),scale,grip_h[i]);take=min(len(raw),50-cursor)
             outa[cursor:cursor+take]=raw[:take];used.append(u);cursor+=take

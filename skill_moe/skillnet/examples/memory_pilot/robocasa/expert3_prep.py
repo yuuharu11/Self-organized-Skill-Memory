@@ -39,14 +39,14 @@ def _install_history_free_magnitude_adapter():
     old_loader = prep._load_models
     ckpt = torch.load(MAGNITUDE_V2, map_location='cpu', weights_only=False)
     new_width = int(ckpt['input_dim'])
-    unit_width = 33  # frozen Context key (32) + log position magnitude (1)
+    unit_width = 20  # pool['key'] (19-dim shape key) + 1 log stored magnitude
     context_width = new_width - unit_width
     legacy_history_width = 130  # 10 x 12 action channels + 10 validity bits
     legacy_width = new_width + legacy_history_width
     source_mean = np.asarray(ckpt['feature_mean'], np.float32)
     source_std = np.asarray(ckpt['feature_std'], np.float32)
-    if source_mean.shape != (new_width,) or context_width != 2051:
-        raise AssertionError(f'unexpected MAG-v2 feature layout: {new_width=}, {context_width=}')
+    if source_mean.shape != (new_width,) or source_std.shape != (new_width,):
+        raise AssertionError(f'unexpected MAG-v2 feature layout: {new_width=}')
 
     class HistoryFreeAdapter(torch.nn.Module):
         def __init__(self, inner):
@@ -56,20 +56,26 @@ def _install_history_free_magnitude_adapter():
         def forward(self, x):
             if x.shape[-1] != legacy_width:
                 raise AssertionError(f'legacy magnitude input width {x.shape[-1]} != {legacy_width}')
-            compact = torch.cat((x[..., :context_width], x[..., -unit_width:]), dim=-1)
+            # Legacy layout is [context | history | unit metadata]; drop only
+            # the middle history block so the compact vector is exactly the
+            # MAG-v2 training layout [context | unit metadata].
+            compact = torch.cat((x[..., :context_width],
+                x[..., context_width+legacy_history_width:]), dim=-1)
             return self.inner(compact)
 
     def load_models(device='cpu'):
         rk, z, pool, feat, rank_ck, rank_net, mag_ck, mag_net = old_loader(device)
         if not mag_ck.get('history_free', False):
             raise AssertionError('expected history-free magnitude_v2 checkpoint')
+        if np.asarray(pool['key']).shape[1] + 1 != unit_width:
+            raise AssertionError('unit metadata width changed; re-derive the adapter split')
         # Insert normalized-zero history dimensions in the position expected
         # by the old retrieval helper, preserving exact MAG-v2 normalization.
         mag_ck = dict(mag_ck)
         mag_ck['feature_mean'] = np.concatenate((source_mean[:context_width],
-            np.zeros(legacy_history_width, np.float32), source_mean[-unit_width:]))
+            np.zeros(legacy_history_width, np.float32), source_mean[context_width:]))
         mag_ck['feature_std'] = np.concatenate((source_std[:context_width],
-            np.ones(legacy_history_width, np.float32), source_std[-unit_width:]))
+            np.ones(legacy_history_width, np.float32), source_std[context_width:]))
         return (rk, z, pool, feat, rank_ck, rank_net,
                 mag_ck, HistoryFreeAdapter(mag_net).to(device).eval())
 

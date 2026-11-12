@@ -10,7 +10,7 @@ import experiment as ex, expert, gripper
 import expert4_oof as oof
 progress=oof.progress
 
-ROOT=Path('/work/.skillnet-state/outputs/robocasa-memory')
+ROOT=Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))/'outputs/robocasa-memory'
 SOURCE=ROOT/'memory-01/policy-order-v2'; CTX=ROOT/'ctx-01'; GAP=ROOT/'expert-02/gap'
 OUT=ROOT/'expert-04/prep'; EXP3=ROOT/'expert-03/train/expert/expert_003000.msgpack'
 
@@ -49,6 +49,27 @@ def _switch_summary(pred,target,initial):
     return {'rows_with_true_switch':sum(x['switch_count_true']>0 for x in rows),'true_switches':true,
             'detected':true-missed,'missed':missed,'false':false,
             'mean_abs_timing_error_steps':float(np.mean(times)) if times else None}
+
+
+def _heldout_query_table(z, qctx_ids, cids):
+    """Query table for held-out windows under the names _generate() requires.
+
+    subset_z() only slices memory_*/candidate_* arrays, so held-out row
+    indices would select unrelated memory-side rows. Rebuild the query side
+    from the corresponding heldout_* arrays instead; candidate arrays and the
+    same-episode exclusion keep working because heldout_episode is global
+    (task*1000+episode), like memory_episode and pool global episodes.
+    """
+    qctx_ids = np.asarray(qctx_ids, np.int64)
+    zheld = oof.subset_z(z, qctx_ids, cids)
+    for src, dst in (('heldout_task', 'memory_task'),
+                     ('heldout_frame', 'memory_frame'),
+                     ('heldout_episode', 'memory_episode'),
+                     ('heldout_hist', 'memory_hist'),
+                     ('heldout_context', 'memory_context'),
+                     ('heldout_state', 'memory_state')):
+        zheld[dst] = np.asarray(z[src])[qctx_ids]
+    return zheld
 
 
 def _generate(rows, pool, feat, qctx, cctx, ginput, rank_ck, rank_net, mag_ck, mag_net, grip_net,
@@ -114,7 +135,6 @@ def bridge_eval(draft_np, target, row_ids, infos, query, stats):
     from openpi.shared.nnx_utils import module_jit
     if torch.cuda.is_available(): torch.cuda.set_per_process_memory_fraction(.20)
     model,_=expert._load_expert_model()
-    fn=module_jit(model.sample_bridge,static_argnames=('num_steps',))
     # Cache each observation once; heldout truth remains scoring-only.
     items=[]
     for i in row_ids:
@@ -124,6 +144,10 @@ def bridge_eval(draft_np, target, row_ids, infos, query, stats):
     results={}
     for label in ('pretrained','expert03'):
         if label=='expert03': expert._overlay_expert(model,EXP3)
+        # Compile after the overlay: module_jit snapshots the module state at
+        # creation, so a wrapper built before the overlay would rerun the
+        # pretrained weights for the expert03 condition.
+        fn=module_jit(model.sample_bridge,static_argnames=('num_steps',))
         pcur=[];pfollow=[]
         for st in range(0,len(row_ids),8):
             ids=np.arange(st,min(st+8,len(row_ids)))
@@ -149,7 +173,7 @@ def run(*, drafts_only=False):
     qlookup={(int(t),int(e),int(f)):i for i,(t,e,f) in enumerate(zip(z['heldout_task'],z['heldout_local_episode'],z['heldout_frame'],strict=True))}
     qctx_ids=np.asarray([qlookup[(int(qsrc['task'][i]),int(qsrc['episode'][i]),int(qsrc['frame'][i]))] for i in row_ids],np.int64)
     cids=np.arange(len(pool['task']),dtype=np.int64)
-    zheld=oof.subset_z(z,qctx_ids,cids)
+    zheld=_heldout_query_table(z,qctx_ids,cids)
     rank_ck=torch.load(ROOT/'key-lite-01/context_history.pt',map_location='cpu',weights_only=False)
     rank_net=rk.RankNet(rank_ck['q_dim'],rank_ck['k_dim']);rank_net.load_state_dict(rank_ck['state']);rank_net.eval()
     qctx,cctx=rk.assemble_context(zheld,feat,rank_ck['norm'],'memory')

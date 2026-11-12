@@ -106,6 +106,26 @@ def resample_rows(x, n=WINDOW):
     return x[lo] * (1 - frac) + x[hi] * frac
 
 
+def first_rows(x, n=5):
+    """First ``n`` executed commands of a unit, edge-padded when shorter.
+
+    Unlike :func:`resample_rows` (which interpolates across the whole unit),
+    this matches what the closed loop actually executes first: the unit's
+    own prefix. Short units hold their last command, mirroring a zero-order
+    hold rather than inventing motion.
+    """
+    x = np.asarray(x, np.float32)
+    if x.ndim != 2:
+        raise ValueError("first_rows expects a [T,D] array")
+    n = int(n)
+    if len(x) >= n:
+        return x[:n].copy()
+    if len(x) == 0:
+        raise ValueError("first_rows expects a non-empty [T,D] array")
+    pad = np.repeat(x[-1:], n - len(x), axis=0)
+    return np.concatenate([x, pad], axis=0)
+
+
 def encode_shape(action):
     """Scale-only DCT-3 type from RoboCasa EEF position+rotation commands."""
     from scipy.fft import dct, idct

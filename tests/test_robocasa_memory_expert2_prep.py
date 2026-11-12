@@ -1,13 +1,45 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
+
+MP = str(Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/robocasa')
+if MP not in sys.path:
+    sys.path.insert(0, MP)
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/robocasa/expert2_prep.py'
 SPEC = importlib.util.spec_from_file_location('expert2_prep_test', SCRIPT)
 mod = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(mod)
+
+
+def _load_module(name, filename):
+    path = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/robocasa' / filename
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules[name]
+        raise
+    return module
+
+
+def test_load_ranker_prefers_checked_in_script_over_artifact_copy(tmp_path, monkeypatch):
+    prep = _load_module('expert2_prep_fallback_test', 'expert2_prep.py')
+    monkeypatch.setattr(prep, 'KEYLITE', tmp_path)
+    rk = prep._load_ranker()
+    assert hasattr(rk, 'assemble_context')
+
+
+def test_magnitude_keylite_loader_prefers_checked_in_script(tmp_path, monkeypatch):
+    mh = _load_module('magnitude_head_fallback_test', 'magnitude_head.py')
+    monkeypatch.setattr(mh, 'KEYLITE', tmp_path)
+    rk = mh._load_keylite()
+    assert hasattr(rk, 'assemble_context')
 
 
 def test_initial_history_mask_and_phase_contract():

@@ -44,7 +44,13 @@ def _write_json(path, value):
 
 
 def _load_ranker():
-    script = KEYLITE / 'run_key_lite.py'
+    # Prefer the checked-in implementation; the artifact-side copy exists
+    # only in checkouts where a previous run left it behind.
+    script = HERE.parents[1] / 'robocasa' / 'scripts' / 'run_key_lite.py'
+    if not script.is_file():
+        script = KEYLITE / 'run_key_lite.py'
+    if not script.is_file():
+        raise FileNotFoundError(f'run_key_lite.py not found under {HERE.parents[1] / "robocasa" / "scripts"} or {KEYLITE}')
     spec = importlib.util.spec_from_file_location('rm_exp2_keylite', script)
     rk = importlib.util.module_from_spec(spec); spec.loader.exec_module(rk)
     rk.DEVICE = 'cpu'

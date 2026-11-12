@@ -7,5 +7,8 @@ skillrun "$SKILL_ROOT/examples/memory_pilot/robocasa/gripper.py" select --out "$
 skillrun "$SKILL_ROOT/examples/memory_pilot/robocasa/gripper.py" normal --out "$OUT"
 skillrun "$SKILL_ROOT/examples/memory_pilot/robocasa/gripper.py" evaluate --out "$OUT"
 skillrun "$SKILL_ROOT/examples/memory_pilot/robocasa/gripper.py" report --out "$OUT"
-skillrun "$SKILL_ROOT/examples/robocasa/train_memonly_magnitude_nohist.py" --output "$R/key-lite-01/magnitude" --max-epochs 150
+# Legacy history-aware head first: it owns key-lite-01/magnitude and refuses
+# unknown files, so the history-free ablation trains in its own directory.
+skillrun "$SKILL_ROOT/examples/memory_pilot/robocasa/magnitude_head.py"
+skillrun "$SKILL_ROOT/examples/robocasa/train_memonly_magnitude_nohist.py" --output "$R/key-lite-01/magnitude_nohist" --max-epochs 150
 skillrun "$SKILL_ROOT/examples/robocasa/train_memonly_magnitude_norm.py" --output "$R/key-lite-01/magnitude_v2" --max-epochs 150

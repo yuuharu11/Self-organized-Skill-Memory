@@ -13,7 +13,7 @@
 | 2 | 区間単位・P5 メモリ | `scripts/build-memory.sh` | `memory-01/policy-order-v2` | [実験2](experiments.md#2-単位メモリと-p5-キー) |
 | 3 | P5 baseline、Context 特徴・キー | `scripts/context-and-p5.sh` | `ctx-01/p5_baselines`, `ctx-01/cache`, `ctx-01` | [実験2・4](experiments.md#2-単位メモリと-p5-キー), [文脈キー](experiments.md#4-文脈キー) |
 | 4 | Context+history / direction rerank | `scripts/key-lite.sh` | `key-lite-01` | [実験7](experiments.md#7-キー下書き大きさの軽い比較) |
-| 5 | グリッパー・大きさ head（旧・v2） | `scripts/gripper-and-magnitude.sh` | `gripper-01`, `key-lite-01/magnitude{,_v2}` | [実験5・7・9](experiments.md#5-グリッパーの決め方) |
+| 5 | グリッパー・大きさ head（旧・履歴なし・v2） | `scripts/gripper-and-magnitude.sh` | `gripper-01`, `key-lite-01/magnitude{,_nohist,_v2}` | [実験5・7・9](experiments.md#5-グリッパーの決め方) |
 | 6 | メモリだけの閉ループ | `scripts/memonly-closed-loop.sh` | `closed-01/memonly-01` | [実験8](experiments.md#8-メモリだけの閉ループ) |
 | 7 | Expert-02 下書き準備・学習・検証 | `scripts/expert02.sh` | `expert-02/prep`, `expert-02/train` | [実験10](experiments.md#10-expert-の作り直し) |
 | 8 | Expert-03 下書き・学習・t0 検証 | `scripts/expert03.sh` | `expert-03/prep`, `expert-03/train` | [実験10・11](experiments.md#10-expert-の作り直し) |

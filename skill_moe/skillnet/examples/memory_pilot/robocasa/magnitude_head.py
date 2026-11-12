@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -16,7 +17,8 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
 import experiment as ex
 
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory')
+CHECKED_IN_KEYLITE = HERE.parents[1] / 'robocasa' / 'scripts' / 'run_key_lite.py'
+ROOT = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state')) / 'outputs/robocasa-memory'
 CTX = ROOT / 'ctx-01'
 KEYLITE = ROOT / 'key-lite-01'
 SOURCE = ROOT / 'memory-01/policy-order-v2'
@@ -31,7 +33,14 @@ def _write_json(path, value):
 
 
 def _load_keylite():
-    script = KEYLITE / 'run_key_lite.py'
+    # Prefer the checked-in implementation so fresh checkouts do not depend
+    # on a script copy inside the artifact directory; fall back to the
+    # historical artifact-side copy when present.
+    for script in (CHECKED_IN_KEYLITE, KEYLITE / 'run_key_lite.py'):
+        if script.is_file():
+            break
+    else:
+        raise FileNotFoundError(f'run_key_lite.py not found under {CHECKED_IN_KEYLITE.parent} or {KEYLITE}')
     spec = importlib.util.spec_from_file_location('rm_key_lite_for_magnitude', script)
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     mod.DEVICE = 'cpu'
