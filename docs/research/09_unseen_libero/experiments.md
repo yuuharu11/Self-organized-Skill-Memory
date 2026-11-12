@@ -225,6 +225,43 @@ R-so3（回転も消す型）を P5 で選ぶと .199 / .317。U でも順位は
 
 出力：`cluster-pools-01/`、`closed-loop-memory-01/`。LIBERO-10 の成功数は `report` では 0/0 と表示されるので、各試行の `result.json` を数える（[再現手順](reproduce.md)）。
 
+## 7. 場面をまたぐ運動型クエリ
+
+### 問いと事前条件
+
+場面の見た目への依存が、未学習場面での運動型検索を弱めているかを調べる。W の 1,595 候補（S-shared 型、LIBERO-40 の指定 holdout tasks 由来候補を除外）を全条件で共有する。入力条件は P5（履歴＋状態）、A（履歴＋状態から手首画像 token を読む）、B（履歴＋状態を条件にした学習可能な潜在 query token が全VLM tokenを読む）。目的関数は L0（既存の listwise soft teacher）と L1（L0＋場面不変の重み付き InfoNCE）。比較は P5-L0、A-L0、B-L0、A-L1、B-L1 の5条件、seed 4101–4103。
+
+入力画像は `unseen-rows-02` と `run-01` の向き修正済み token cache を読む。最終層の token は 712 個、group id は base / wrist / instruction / padding。中間層16・17は既存の prefix V cache（画像を2×2平均プールし、有効な言語 token を保持）を使う。追加のVLM抽出は行わない。中間層の全解像度 token cache はない。
+
+Step1 ではユーザーの切替指示に従い、63本の広い設定探索を中止した。5条件すべて `k=1`、最終層、教師 `τ=.01`、seed `4101`、8 epoch に固定した。設定の根拠は既存の保留タスク score5 で、追加探索はしていない。場面は `libero_goal`、`libero_object`、`libero_spatial`、LIBERO-10 の9 scene をまとめた `libero10_all` の4群。各 fold では held group の query 行と candidate key、teacher/allowed 列を学習 cache から外し、学習未使用の LIBERO-40 holdout-task 行を残り群の比較に使った。L1 の fold threshold はその fold の訓練行のみから算出した。
+
+### 損失文献の確認と変更点
+
+- [CLASS, §§4.1–4.2, Appendix B–C](https://arxiv.org/html/2508.01600v1)：DTW 行動距離の経験CDFに対する近傍閾値で正例を定め、距離CDFから正例重みを付けた soft InfoNCE。本文・付録は温度 `.05`、DTW horizon 16を報告する。論文に明示された公開実装リンクは確認できなかったので、ソースコード固有の挙動は確認済みとしない。本実験では、未来行動のDTWを使わず、既存の S-shared 型誤差を弱い教師に置き換える。別 scene・別 task の正例を取り、同 scene・異型をハード負例にする。L0 listwise は残し、L1 は補助損失として加える。
+- [Robust Scene Transfer, §III-A](https://arxiv.org/html/2309.09865v3)：同一 scene 内の進行位置と scene 間文脈を使う正負例設計を参照する。本実験は進行位置を教師にせず、型誤差から cross-scene positive を作る。
+- [ICI-VLA, §3.3](https://arxiv.org/html/2609.07581v1)：意味検索の候補集合から DTW で正例を掘り、検索・DTW選別を交互に行う。報告された contrastive temperature は `.07`。本実験は検索・DTWの反復をせず、固定 W 候補と holdout 由来の型誤差で学習する。
+- [Hands](https://arxiv.org/abs/2203.12677) は手首視点が手の操作状態に有用な一方、手や対象が見えない場面では限界があるという、A/B 比較の動機に限って参照する。
+
+### 潜在トークンの将来案（未実装）
+
+[CAC-VLA](https://arxiv.org/html/2607.04816v2) 型にするなら、PaliGemma の prefix の末尾、suffix action expert に渡す直前に K 個の学習可能な query token を追加し、その出力から将来の低次元運動潜在を予測する。最小案では query token・潜在予測 head・action expert adapter だけ学習し、PaliGemma 本体は凍結する。既存の prefix token cache には追加 token を通した hidden state がないため、推論・学習とも pi0.5 の prefix 順伝播が必要になる。追加負荷は query token と prefix の attention（系列長に対して二次）だけではなく、凍結モデルでも prefix forward 全体が毎問い合わせで要るため、現在のキャッシュ再利用方式より大きい。今回の小規模な検索評価には含めない。
+
+### 結果
+
+場面抜きの平均（4 fold）と最終 Eval は次のとおり。Spearman は `corr(score,-type_error)` に符号をそろえ、正が良い。
+
+| 条件 | held top1 / 回収 / Spearman | seen holdout top1 / 回収 / Spearman | Eval top1型誤差 / 回収 / Spearman | Eval MSE6 all / hard | MSE差 vs 同じ行の hold-last all / hard (95% CI) |
+|---|---|---|---|---|---|
+| P5-L0 | .03166 / .540 / .436 | .03071 / .598 / .440 | .01456 / .503 / .259 | .17326 / .35112 | +.04027 [.02701,.05552] / +.11665 [.06560,.16726] |
+| A-L0 | .02126 / .709 / .468 | .02393 / .708 / .456 | .01483 / .478 / .138 | .15635 / .33119 | +.02336 [.00970,.03875] / +.09671 [.04595,.14863] |
+| A-L1 | .01870 / .720 / .455 | .02104 / .727 / .446 | .01485 / .474 / .078 | .16135 / .33484 | +.02835 [.01330,.04457] / +.10036 [.04984,.15384] |
+| B-L0 | .02144 / .695 / .468 | .02297 / .712 / .457 | .01489 / .477 / .133 | .15591 / .32881 | +.02291 [.00845,.03917] / +.09434 [.04540,.14389] |
+| B-L1 | .01859 / .730 / .462 | .02153 / .735 / .452 | .01465 / .476 / .185 | .16823 / .33428 | +.03524 [.02045,.05177] / +.09981 [.04648,.15189] |
+
+場面ごとの top-1・回収率・Spearman mean/median と各候補の score 行列は `.skillnet-state/outputs/memory-pilot/unseen-libero/scene-invariance-01/step1/report.md` にある。今回同じ行で再計算した hold-last は `.13299/.23448` だった。歴史的な参照値 `.114/.201` と異なるため、paired CI は今回再計算した同じ窓の hold-last との差として示した。保存倍率の型復元では全条件が hold-last より悪く、画像読み出しは CV の型検索をいくつかの場面で改善したが、未学習 Eval の回収率は P5 を越えず、最終行動 MSE の改善にはならなかった。L1 の差は A/B と群で一貫せず、単一 seed の記述結果である。初回の root 直下試行は random baseline NaN、`attempt-02` は held scene candidate key の混入が判明して停止した。両者は結果に含めず、修正した `attempt-03` を採用した。
+
+この Step1 では当初計画の3 seed、履歴破損頑健性、正解型のデノイズは実行していない。Eval ラベルは全 CV 完了後の最終採点だけに使った。
+
 ---
 
 出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/unseen_libero/`。
