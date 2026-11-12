@@ -10,10 +10,18 @@ import argparse
 import copy
 import hashlib
 import json
+import sys
 import threading
 from pathlib import Path
 
 import numpy as np
+
+HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+ROBOCASA_EXAMPLES = HERE.parents[1] / "robocasa"
+if str(ROBOCASA_EXAMPLES) not in sys.path:
+    sys.path.insert(0, str(ROBOCASA_EXAMPLES))
 
 import serve_memonly_policy as base
 

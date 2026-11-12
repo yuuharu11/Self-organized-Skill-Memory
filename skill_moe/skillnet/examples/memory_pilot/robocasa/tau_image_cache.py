@@ -229,7 +229,7 @@ def run_frames(cache_root=FRAME_ROOT,workers=4):
     return {"episodes":len(jobs),"created":created,"reused":reused,"cache_root":str(cache_root),"elapsed_sec":time.time()-started}
 
 
-def verify_cache_sample(task="PickPlaceCounterToCabinet",episode=6,root=FRAME_ROOT):
+def verify_cache_sample(task="PickPlaceCounterToCabinet",episode=6,root=FRAME_ROOT,tol=1):
     from openpi.shared import image_tools
     import jax.numpy as jnp
     manifest=json.loads((SOURCE/"manifest.json").read_text());d=next(x for x in manifest["demos"] if x["task"]==task and int(x["episode"])==int(episode))
@@ -243,9 +243,12 @@ def verify_cache_sample(task="PickPlaceCounterToCabinet",episode=6,root=FRAME_RO
             raw=_video_frame(str(video),int(i))
             expected=np.asarray(image_tools.resize_with_pad(jnp.asarray(raw,dtype=jnp.uint8),224,224))
             got=read_frame_cache(task,episode,i,camera,root)
-            equal=bool(np.array_equal(expected,got))
-            checks.append({"camera":camera,"frame":int(i),"equal":equal})
-            if not equal:raise AssertionError(f"cache differs from _video_frame for {camera} frame {i}")
+            # The cache is built by resizing 16 frames at once while this check
+            # resizes one frame, so XLA rounding may differ by one uint8 level.
+            maxdiff=int(np.abs(expected.astype(np.int16)-np.asarray(got,np.int16)).max())
+            equal=maxdiff<=tol
+            checks.append({"camera":camera,"frame":int(i),"equal":equal,"max_abs_diff":maxdiff})
+            if not equal:raise AssertionError(f"cache differs from _video_frame for {camera} frame {i} (max abs diff {maxdiff} > tol {tol})")
     return checks
 
 

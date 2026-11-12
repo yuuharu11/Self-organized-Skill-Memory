@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-SCRIPT = Path('/work/.skillnet-state/worktrees/robocasa-memory/skill_moe/skillnet/examples/memory_pilot/robocasa/expert2_prep.py')
+SCRIPT = Path(__file__).resolve().parents[1] / 'skill_moe/skillnet/examples/memory_pilot/robocasa/expert2_prep.py'
 SPEC = importlib.util.spec_from_file_location('expert2_prep_test', SCRIPT)
 mod = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(mod)

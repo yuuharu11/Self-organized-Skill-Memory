@@ -22,7 +22,7 @@ import experiment as ex
 STATE = Path(os.environ.get("SKILLNET_STATE_DIR", "/work/.skillnet-state"))
 OUT = STATE / "outputs/robocasa-memory/memory-18"
 SOURCE = STATE / "outputs/robocasa-memory/memory-01"
-TASK_SET_FILE = Path("/work/data_process/robocasa/task_sets.json")
+TASK_SET_FILE = Path(os.environ.get("SKILLNET_ROBOCASA_TASK_SETS", str(HERE.parents[4] / "data_process/robocasa/task_sets.json")))
 CHECKPOINT = STATE / "checkpoints/robocasa365/pi05_pretrain_human300/multitask_learning/75000"
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-SCRIPT = Path("/work/.skillnet-state/worktrees/robocasa-memory/skill_moe/skillnet/examples/memory_pilot/robocasa")
+SCRIPT = Path(__file__).resolve().parents[1] / "skill_moe/skillnet/examples/memory_pilot/robocasa"
 if str(SCRIPT) not in sys.path:
     sys.path.insert(0, str(SCRIPT))
 

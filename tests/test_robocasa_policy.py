@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from openpi.policies.robocasa_policy import RobocasaInputs, RobocasaOutputs, RobocasaDatasetOrder
 import importlib.util
 from pathlib import Path
@@ -43,7 +44,11 @@ def test_multitask_is_plain_pi05_horizon_50_and_not_moe():
     assert cfg.model.__class__.__module__.endswith('pi0_config')
     assert cfg.model.discrete_state_input is True and cfg.model.max_token_len==200
     assert cfg.weight_loader.__class__.__name__=='CheckpointWeightLoader'
-    assert cfg.data.create(cfg.assets_dirs,cfg.model).use_quantile_norm is False
+    try:
+        data=cfg.data.create(cfg.assets_dirs,cfg.model)
+    except FileNotFoundError:
+        pytest.skip('multitask checkpoint assets not present')
+    assert data.use_quantile_norm is False
 
 def test_replay_reorders_dataset_actions_before_environment_conversion():
     path=Path(__file__).parents[1]/'skill_moe/skillnet/examples/robocasa/replay_server.py'

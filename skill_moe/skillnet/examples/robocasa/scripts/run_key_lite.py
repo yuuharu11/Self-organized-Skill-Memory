@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from torch import nn
 
-ROOT = Path(os.environ.get('SKILLNET_REPO_ROOT', Path(__file__).resolve().parents[4]))
+ROOT = Path(os.environ.get('SKILLNET_REPO_ROOT', Path(__file__).resolve().parents[5]))
 STATE = Path(os.environ.get('SKILLNET_STATE_DIR', Path.home() / '.skillnet-state'))
 OUT = Path(os.environ.get('ROBOCASA_KEYLITE_OUT', STATE / 'outputs/robocasa-memory/key-lite-01'))
 CTX = Path(os.environ.get('ROBOCASA_CTX_OUT', STATE / 'outputs/robocasa-memory/ctx-01'))
