@@ -33,11 +33,11 @@ CONDITIONS = ("V2-A", "V2-A-L1", "V2-B", "V2-B-L1", "V2-B-pool")
 # _make_model/_train_once path; these entries define the cumulative V2 stages.
 ABLATION_STAGES = {
     "R0": {"implementation": "step1_legacy", "kind": "A", "k": 1, "key_mode": "legacy", "query_pool": False, "l0": "legacy", "l1": False, "lr": 3e-4},
-    "R1": {"implementation": "latent", "kind": "A", "k": 5, "key_mode": "legacy", "query_pool": True, "l0": "legacy", "l1": False, "lr": 3e-4},
-    "R2": {"implementation": "latent", "kind": "A", "k": 5, "key_mode": "split", "query_pool": False, "l0": "legacy", "l1": False, "lr": 3e-4},
-    "R3": {"implementation": "latent", "kind": "A", "k": 5, "key_mode": "split", "query_pool": False, "l0": "dual", "l1": False, "lr": 3e-4},
-    "R4": {"implementation": "latent", "kind": "B", "k": 5, "key_mode": "split", "query_pool": False, "l0": "dual", "l1": False, "lr": 3e-4},
-    "R5": {"implementation": "latent", "kind": "B", "k": 5, "key_mode": "split", "query_pool": False, "l0": "dual", "l1": True, "lr": 3e-4},
+    "R1": {"implementation": "latent", "kind": "A", "k": 1, "key_mode": "legacy", "query_pool": True, "no_history_cross": True, "l0": "legacy", "l1": False, "lr": 3e-4},
+    "R2": {"implementation": "latent", "kind": "B", "k": 1, "key_mode": "legacy", "query_pool": True, "no_history_cross": True, "l0": "legacy", "l1": False, "lr": 3e-4},
+    "R3": {"implementation": "latent", "kind": "B", "k": 1, "key_mode": "legacy", "query_pool": True, "no_history_cross": True, "l0": "legacy", "l1": True, "lr": 3e-4},
+    "R4": {"implementation": "latent", "kind": "B", "k": 5, "key_mode": "split", "query_pool": False, "no_history_cross": True, "l0": "legacy", "l1": True, "lr": 3e-4},
+    "R5": {"implementation": "latent", "kind": "B", "k": 5, "key_mode": "split", "query_pool": False, "no_history_cross": True, "l0": "dual", "l1": True, "lr": 3e-4},
 }
 
 
@@ -155,7 +155,7 @@ def scene_stratified_indices(scene, eligible_ids, batch_size=256, scenes_per_bat
 
 
 def _build_model(kind, *, k=K, token_dim=TOKEN_DIM, d=D, pooled=False,
-                 key_mode="split", query_pool=False):
+                 key_mode="split", query_pool=False, no_history_cross=False):
     import torch
     from torch import nn
     import torch.nn.functional as F
@@ -180,6 +180,7 @@ def _build_model(kind, *, k=K, token_dim=TOKEN_DIM, d=D, pooled=False,
             super().__init__()
             self.kind = kind; self.k = int(k); self.pooled = bool(pooled)
             self.key_mode = key_mode; self.query_pool = bool(query_pool)
+            self.no_history_cross = bool(no_history_cross)
             self.z0 = nn.Parameter(torch.randn(1, k, d) * .02)
             self.vlm_in = nn.Sequential(nn.Linear(token_dim, d), nn.LayerNorm(d))
             self.vlm_cross = CrossLayer()
@@ -223,9 +224,12 @@ def _build_model(kind, *, k=K, token_dim=TOKEN_DIM, d=D, pooled=False,
             q = self.z0.expand(b, -1, -1)
             v = self.vlm_in(tokens.float())
             q, attn_vlm = self.vlm_cross(q, v, pad)
-            hist_tokens = self.history_tokens(history)
-            ctx = torch.cat([hist_tokens, self.state_in(state.float())[:, None]], 1)
-            q, attn_ctx = self.ctx_cross(q, ctx)
+            if self.no_history_cross:
+                attn_ctx = None
+            else:
+                hist_tokens = self.history_tokens(history)
+                ctx = torch.cat([hist_tokens, self.state_in(state.float())[:, None]], 1)
+                q, attn_ctx = self.ctx_cross(q, ctx)
             # Keep the old 78->512->256 global context path. R1 concatenates
             # it with the mean of the K latent reads before producing one key.
             global_ctx = self.legacy_context(torch.cat([history.float().flatten(1), state.float()], -1))
@@ -400,39 +404,31 @@ def load_token_cache(data, *, kind, row_ids=None):
 
 
 def load_training_actions(data, out=OUT):
-    """Return S-shared scale-only keys matching the candidate-pool distribution."""
-    path=Path(out)/"training_actions.npy"
+    """Map each fit row to its closest allowed, exact C_vm_none template.
+
+    Pool shapes are variable-segment M6/DCT reconstructions selected from
+    stitched episodes and then phase-cropped/resampled. They are not a direct
+    per-row action transform, so the reviewed nearest-template fallback is used.
+    """
+    path=Path(out)/"training_pool_template_keys_v2.npy"
     if path.exists():
         actions=np.load(path,mmap_mode="r")
     else:
-        # include_eval_targets=False is a hard boundary: this helper cannot see
-        # unseen LIBERO-90 actions and stores only rows already present in fit_rows.
-        kq, tr, vs, sq = step1._modules()
-        _, rows, unseen, splits = kq._production_data_splits(include_eval_targets=False)
-        row_ids=np.asarray(data["row_id"],np.int64)
-        if not np.array_equal(row_ids,np.asarray(splits["train"][1],np.int64)):
-            raise AssertionError("training action row IDs do not match step1 fit rows")
-        raw=np.asarray(rows["actions"][row_ids,:,:7],np.float32)
-        if raw.shape!=(len(row_ids),10,7):raise ValueError(f"bad training action shape {raw.shape}")
-        # Apply the exact S-shared scale-only transform used by candidate W
-        # shapes. Do not feed physical-scale query trajectories to the same
-        # key encoder as unit-RMS pool shapes.
-        actions=scale_only_key_actions(data["target"],raw[:,:,6],sq.type_of)
+        actions,_=pool_template_key_actions(data["error"],data["allowed"],data["pool_shape"])
         np.save(path,actions,allow_pickle=False)
-    if len(actions)!=len(data["row_id"]):raise AssertionError("training action array length mismatch")
+    if actions.shape!=(len(data["row_id"]),10,7):raise AssertionError("training pool-key shape mismatch")
     return actions
 
 
-def scale_only_key_actions(target_physical, gripper, transform=None):
-    """Convert physical six-axis targets to S-shared types and append gripper."""
-    x=np.asarray(target_physical,np.float32);g=np.asarray(gripper,np.float32)
-    if x.ndim!=3 or x.shape[1:]!=(10,6) or g.shape!=x.shape[:2]:
-        raise ValueError(f"expected target [N,10,6] and gripper [N,10], got {x.shape}/{g.shape}")
-    if transform is None:
-        transform=step1._modules()[3].type_of
-    scaled=np.asarray(transform(x,"S-shared"),np.float32)
-    if scaled.shape!=x.shape:raise AssertionError("scale-only transform changed query shape")
-    return np.concatenate([scaled,g[...,None]],axis=-1)
+def pool_template_key_actions(error, allowed, pool_shape):
+    """Select each row's minimum-type-error allowed pool key, returning IDs."""
+    e=np.asarray(error,np.float32);a=np.asarray(allowed,bool);p=np.asarray(pool_shape,np.float32)
+    if e.ndim!=2 or a.shape!=e.shape or p.shape!=(e.shape[1],10,7):
+        raise ValueError(f"pool mapping shapes mismatch: error={e.shape}, allowed={a.shape}, pool={p.shape}")
+    if np.any(~a.any(1)):raise ValueError("some fit rows have no allowed pool template")
+    ranked=np.where(a,e,np.inf);idx=np.argmin(ranked,axis=1)
+    if np.any(~np.isfinite(ranked[np.arange(len(idx)),idx])):raise AssertionError("selected a forbidden template")
+    return p[idx].copy(),idx.astype(np.int64)
 
 
 def _query_tokens(batch_tokens, kind):
@@ -474,14 +470,15 @@ def _tau_pos_for_key_actions(data, type_actions, row_ids, *, seed=SEED, per_task
 
 def _train_config(data, tokens, groups, key_actions, *, kind, l1, pooled, l0_mode, l1_weight, k=K,
                   epochs=3, device="cuda", batch_size=64, seed=SEED, save_path=None,
-                  key_mode="split", query_pool=False, learning_rate=3e-4):
+                  key_mode="split", query_pool=False, no_history_cross=False, learning_rate=3e-4):
     import torch
     torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
     if str(device).startswith("cuda"):
         torch.cuda.set_per_process_memory_fraction(float(os.environ.get("V2_GPU_FRACTION", ".22")), device=0)
     torch.manual_seed(seed); np.random.seed(seed)
     torch.cuda.manual_seed_all(seed) if torch.cuda.is_available() else None
-    net = _build_model(kind,k=k,pooled=pooled,key_mode=key_mode,query_pool=query_pool).to(device)
+    net = _build_model(kind,k=k,pooled=pooled,key_mode=key_mode,query_pool=query_pool,
+                       no_history_cross=no_history_cross).to(device)
     opt = torch.optim.AdamW(net.parameters(), lr=float(learning_rate), weight_decay=1e-4)
     fit_ids = np.flatnonzero(np.asarray(data["fit"], bool))
     task = np.asarray(data["task"]); scene = np.asarray(data["scene"])
@@ -540,7 +537,7 @@ def _train_config(data, tokens, groups, key_actions, *, kind, l1, pooled, l0_mod
         torch.save({"state_dict":net.cpu().state_dict(),"kind":kind,"pooled":pooled,"l1":l1,
                     "l0_mode":l0_mode,"l1_weight":l1_weight,"seed":seed,"epochs":epochs,"k":k,
                     "key_mode":key_mode,"query_pool":query_pool,"learning_rate":learning_rate,
-                    "tau_pos":tau_pos,"token_dim":TOKEN_DIM},tmp);os.replace(tmp,p)
+                    "no_history_cross":no_history_cross,"tau_pos":tau_pos,"token_dim":TOKEN_DIM},tmp);os.replace(tmp,p)
     return net, logs
 
 
@@ -629,15 +626,71 @@ def ablation_config(stage, *, k=None, l1_weight=None):
     """Return one immutable R0–R5 switch configuration."""
     if stage not in ABLATION_STAGES: raise ValueError(f"unknown ablation stage {stage}")
     cfg=dict(ABLATION_STAGES[stage])
+    if stage in ("R1", "R2", "R3") and k not in (None,1):
+        raise ValueError(f"{stage} uses one query/key token; K search is removed until R4")
+    if stage in ("R4", "R5") and k not in (None,5):
+        raise ValueError(f"{stage} fixes K=5")
     if k is not None: cfg["k"]=int(k)
-    if cfg["implementation"]!="step1_legacy" and cfg["k"] not in (4,5):
-        raise ValueError("latent stages require K in {4,5}")
     if stage=="R5" and l1_weight is not None:
         if float(l1_weight) not in (.1,.3): raise ValueError("R5 weight must be .1 or .3")
         cfg["l1_weight"]=float(l1_weight)
     else: cfg["l1_weight"]=float(l1_weight or .1)
     cfg["stage"]=stage
     return cfg
+
+
+def stage_candidate_configs(retained, stage):
+    """Apply only this stage's patch to the currently retained configuration."""
+    if stage not in ("R1","R2","R3","R4","R5"):
+        raise ValueError(f"not an incremental stage: {stage}")
+    retained=dict(retained)
+    scaffold=False
+    if retained.get("implementation")=="step1_legacy":
+        # Later stages require the one-slot latent encoder introduced in R1.
+        # If R1 was rejected, use only that structural prerequisite and record it;
+        # the stage under test remains the sole additional change.
+        retained=ablation_config("R1")
+        scaffold=True
+    cfg=retained.copy()
+    if stage=="R1":
+        cfg=ablation_config("R1")
+    elif stage=="R2":
+        cfg["kind"]="B"  # full token groups + train-only third-person mask
+    elif stage=="R3":
+        cfg["l1"]=True
+    elif stage=="R4":
+        cfg.update(k=5,key_mode="split",query_pool=False)
+    elif stage=="R5":
+        cfg["l0"]="dual"
+    cfg["stage"]=stage
+    cfg["scaffold_from_R1"]=scaffold
+    return cfg
+
+
+def stage_acceptance(candidate, incumbent):
+    """Mechanical preregistered rule: <=2% error and strictly higher rho."""
+    ce=float(candidate["top1_type_error"]);ie=float(incumbent["top1_type_error"])
+    cr=float(candidate["spearman_positive"]);ir=float(incumbent["spearman_positive"])
+    err_ok=ce<=ie*1.02
+    rho_ok=cr>ir
+    return {"accepted":bool(err_ok and rho_ok),"error_ok":bool(err_ok),"spearman_ok":bool(rho_ok),
+            "candidate_error":ce,"incumbent_error":ie,"error_limit":ie*1.02,
+            "candidate_spearman":cr,"incumbent_spearman":ir}
+
+
+def choose_stage_candidate(candidates, incumbent, stage):
+    """Annotate candidates with gates and choose only from passing candidates."""
+    checked=[]
+    for candidate in candidates:
+        item=dict(candidate);item["rule"]=stage_acceptance(item,incumbent)
+        item["accepted"]=item["rule"]["accepted"];checked.append(item)
+    eligible=[x for x in checked if x["accepted"]]
+    if not eligible:return None,checked
+    if stage=="R3":
+        chosen=max(eligible,key=lambda x:(x["spearman_positive"],-x["top1_type_error"]))
+    else:
+        chosen=eligible[0]
+    return chosen,checked
 
 
 def _load_ablation_checkpoint(path, cfg, device):
@@ -647,7 +700,8 @@ def _load_ablation_checkpoint(path, cfg, device):
         model=step1._make_model("A",1,TOKEN_DIM)
     else:
         model=_build_model(cfg["kind"],k=cfg["k"],key_mode=cfg["key_mode"],
-                           query_pool=cfg["query_pool"],pooled=False)
+                           query_pool=cfg["query_pool"],pooled=False,
+                           no_history_cross=cfg.get("no_history_cross",False))
     model.load_state_dict(ck["state_dict"])
     return model.to(device)
 
@@ -664,7 +718,8 @@ def _fit_ablation_candidate(out, data, tokens, groups, key_actions, cfg, *, devi
         return model,logs
     return _train_config(data,tokens,groups,key_actions,kind=cfg["kind"],l1=cfg["l1"],pooled=False,
         l0_mode=cfg["l0"],l1_weight=cfg["l1_weight"],k=cfg["k"],key_mode=cfg["key_mode"],
-        query_pool=cfg["query_pool"],learning_rate=cfg["lr"],epochs=3,device=device,
+        query_pool=cfg["query_pool"],no_history_cross=cfg.get("no_history_cross",False),
+        learning_rate=cfg["lr"],epochs=3,device=device,
         batch_size=256 if cfg["l1"] else 64,seed=SEED,save_path=p)
 
 
@@ -682,7 +737,7 @@ def _score_ablation_candidate(model, cfg, data, tokens, groups, ids, *, device):
 
 
 def tune_stages(out=OUT, *, source_out=step1.OUT, device="cuda"):
-    """Holdout-only, one-stage-at-a-time R0–R5 ablation; three epochs per fit."""
+    """Holdout-only R0–R5 ablation with mechanical accept/reject patches."""
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     dest=out/"ablation_selection.json"
     if dest.exists(): return json.loads(dest.read_text())
@@ -693,43 +748,53 @@ def tune_stages(out=OUT, *, source_out=step1.OUT, device="cuda"):
     key_actions=load_training_actions(data,out)
     selected=np.flatnonzero(np.asarray(data["select"],bool))
     if not len(selected): raise AssertionError("empty heldout-task selection set")
-    records=[];best_cfg=None;best_error=float("inf");selected_k=5
-    # R0 anchor, then R1 K comparison, R2 tokenwise scoring, R3 loss fix,
-    # R4 full-token input, R5 relational loss with the two requested weights.
-    candidates=[("R0",[ablation_config("R0")])]
-    candidates.append(("R1",[ablation_config("R1",k=x) for x in (4,5)]))
-    candidates += [(st,[ablation_config(st,k=selected_k)]) for st in ("R2","R3","R4")]
-    candidates.append(("R5",[ablation_config("R5",k=selected_k,l1_weight=w) for w in (.1,.3)]))
-    for stage,stage_cfgs in candidates:
+    records=[]
+    # R0 is the untouched reference implementation.
+    cfg0=ablation_config("R0");cp=out/"ablation_tuning/R0.pt"
+    model,logs=_fit_ablation_candidate(out,data,tokens,groups,key_actions,cfg0,device=device,save_path=cp)
+    val=_score_ablation_candidate(model,cfg0,data,tokens,groups,selected,device=device)
+    incumbent={"config":cfg0,"top1_type_error":val["top1_type_error"],
+        "recovery":val["metrics"]["recovery"],"spearman_positive":val["metrics"]["spearman_mean"],
+        "mean_query_token_cosine":val["mean_query_token_cosine"],"checkpoint":str(cp)}
+    records.append({"stage":"R0","candidates":[{**incumbent,"accepted":True,"train_log":logs}],
+        "accepted":True,"retained_stage_after":"R0","retained_metrics_after":incumbent})
+    if hasattr(model,"cpu"):model.cpu()
+    del model
+    retained=cfg0
+    for stage in ("R1","R2","R3","R4","R5"):
+        weights=(.1,.3) if stage=="R3" else (None,)
         stage_results=[]
-        for cfg in stage_cfgs:
-            # R2+ inherit the K chosen by the R1 heldout comparison.
-            if stage in ("R2","R3","R4","R5"):
-                cfg=ablation_config(stage,k=selected_k,l1_weight=cfg["l1_weight"])
-            tag=f"{stage}_k{cfg['k']}_l1w{cfg['l1_weight']:g}"
+        for weight in weights:
+            cfg=stage_candidate_configs(retained,stage)
+            if weight is not None:
+                cfg["l1_weight"]=weight
+            tag=f"{stage}_from_{retained.get('stage','R0')}_k{cfg['k']}_w{cfg['l1_weight']:g}"
             cp=out/"ablation_tuning"/(tag+".pt")
             model,logs=_fit_ablation_candidate(out,data,tokens,groups,key_actions,cfg,device=device,save_path=cp)
             val=_score_ablation_candidate(model,cfg,data,tokens,groups,selected,device=device)
-            rec={"stage":stage,"config":cfg,"checkpoint":str(cp),"seed":SEED,"epochs":3,
-                 "selection_rows":int(len(selected)),"selection_top1_type_error":val["top1_type_error"],
-                 "recovery":val["metrics"]["recovery"],"spearman_positive":val["metrics"]["spearman_mean"],
-                 "mean_query_token_cosine":val["mean_query_token_cosine"],"train_log":logs}
-            stage_results.append(rec);_log(out,stage="ablation_select",**rec)
+            metrics={"config":cfg,"top1_type_error":val["top1_type_error"],
+                "recovery":val["metrics"]["recovery"],"spearman_positive":val["metrics"]["spearman_mean"],
+                "mean_query_token_cosine":val["mean_query_token_cosine"],"checkpoint":str(cp),
+                "train_log":logs}
+            stage_results.append(metrics);_log(out,stage="ablation_select",stage_name=stage,**metrics)
             if hasattr(model,"cpu"):model.cpu()
             del model
-        stage_best=min(stage_results,key=lambda r:r["selection_top1_type_error"])
-        if stage=="R1": selected_k=int(stage_best["config"]["k"])
-        improved=stage_best["selection_top1_type_error"] < best_error
-        # R0 is always the initial selected reference. Later stages are retained
-        # only when they improve heldout top-1 type error.
-        if best_cfg is None or improved:
-            best_cfg=stage_best["config"];best_error=stage_best["selection_top1_type_error"]
-        records.append({"stage":stage,"candidates":stage_results,"best":stage_best,"improved_over_retained":bool(improved),
-                        "retained_stage_after":best_cfg["stage"],"retained_error_after":best_error})
+        # R3 explicitly chooses the highest Spearman among candidates that pass
+        # both preregistered gates; other stages have one candidate.
+        chosen,stage_results=choose_stage_candidate(stage_results,incumbent,stage)
+        if chosen is not None:
+            retained=dict(chosen["config"])
+            incumbent={k:chosen[k] for k in ("config","top1_type_error","recovery","spearman_positive",
+                "mean_query_token_cosine","checkpoint")}
+        records.append({"stage":stage,"candidates":stage_results,"accepted":chosen is not None,
+            "chosen_config":None if chosen is None else chosen["config"],
+            "retained_stage_after":incumbent["config"].get("stage","R0"),
+            "retained_metrics_after":incumbent})
     result={"status":"selection_frozen","seed":SEED,"epochs_per_candidate":3,
         "selection_source":"LIBERO-40 heldout tasks only","eval_targets_read":False,
-        "candidate_fit_count":sum(len(x[1]) for x in candidates),"candidate_cap":10,
-        "selected_k":selected_k,"stages":records,"retained_config":best_cfg,
+        "acceptance_rule":"top1 type error <= retained * 1.02 AND Spearman strictly higher",
+        "candidate_fit_count":sum(len(x["candidates"]) for x in records),"candidate_cap":10,
+        "stages":records,"retained_config":incumbent["config"],
         "stage_switch":ABLATION_STAGES}
     _atomic_json(dest,result);return result
 
@@ -1014,7 +1079,8 @@ def evaluate_ablation(out=OUT, *, source_out=step1.OUT, device="cuda", batch=16)
         ai=loc
         model,logs=_train_config(local,tokens[loc],groups,key_actions[ai],kind=cfg["kind"],
             l1=cfg["l1"],pooled=False,l0_mode=cfg["l0"],l1_weight=cfg["l1_weight"],k=cfg["k"],
-            key_mode=cfg["key_mode"],query_pool=cfg["query_pool"],learning_rate=cfg["lr"],
+            key_mode=cfg["key_mode"],query_pool=cfg["query_pool"],
+            no_history_cross=cfg.get("no_history_cross",False),learning_rate=cfg["lr"],
             epochs=3,device=device,batch_size=256 if cfg["l1"] else 64,seed=SEED,save_path=path)
         _log(out,stage="api_train",condition=condition,fold=fold,logs=logs)
         return model
@@ -1083,14 +1149,20 @@ def report(out=OUT):
     if not p.exists():raise FileNotFoundError("run evaluate after tune; ablation_evaluation.json missing")
     d=json.loads(p.read_text());res=d["result"];sel=d["selection"]
     lines=["# INV2 step 2: 修正後 R0–R5", "",
-        "LIBERO-40 保留タスクのみで段階別の設定を選択し、Evalは選択後に一度だけ採点した。seed=4101、各fit 3 epoch。", 
-        "R0はINV1 A-L0の旧 _make_model・旧L0・旧学習率3e-4。R1–R5は表の変更を順に足した候補で、保留のTop-1型誤差が前段の保持値を下回った変更だけを最終設定に残す。", "",
+        "LIBERO-40 保留タスクのみで設定を選択し、Evalは選択後に一度だけ採点する。seed=4101、各fit 3 epoch。",
+        "採否は top-1 型誤差 ≤ 現構成×1.02 かつ Spearman の厳密な上昇。R3は両条件を満たす重み候補から Spearman 最大を採る。R1が不採用の状態で後段を試す場合、後段に必要な1スロット潜在骨格だけを足し、その事実を記録する。", "",
         "## 保留タスクの段階別切り分け", "",
-        "| 段/候補 | K | L0 | L1重み | top-1型誤差 | 回収率 | Spearman | K内平均cos | 前段より改善 |", "|---|---:|---|---:|---:|---:|---:|---:|---|"]
+        "| 段/候補 | K | L0 | L1重み | top-1型誤差 | 回収率 | Spearman | K内平均cos | 判定 |", "|---|---:|---|---:|---:|---:|---:|---:|---|"]
     for st in sel["stages"]:
         for r in st["candidates"]:
             c=r["config"];cos=r["mean_query_token_cosine"]
-            lines.append(f"| {st['stage']} | {c['k']} | {c['l0']} | {c['l1_weight']:.1f} | {r['selection_top1_type_error']:.6f} | {r['recovery']:.4f} | {r['spearman_positive']:.4f} | {'—' if cos is None else f'{cos:.4f}'} | {'はい' if st['improved_over_retained'] and r is st['best'] else 'いいえ'} |")
+            accepted=r.get("accepted",st.get("accepted",False))
+            limit=r.get("rule",{}).get("error_limit")
+            detail="採用" if accepted else "除外"
+            if limit is not None:detail+=f" (誤差上限 {limit:.6f})"
+            if c.get("scaffold_from_R1"):detail+="; R1骨格を前提追加"
+            value=r.get("top1_type_error",r.get("selection_top1_type_error"))
+            lines.append(f"| {st['stage']} | {c['k']} | {c['l0']} | {c['l1_weight']:.1f} | {value:.6f} | {r['recovery']:.4f} | {r['spearman_positive']:.4f} | {'—' if cos is None else f'{cos:.4f}'} | {detail} |")
     lines += ["", f"保持された最終設定: `{sel['retained_config']}`", "", "## 4群抜きCV・Eval", "",
         "| 条件 | 外した群 | held型誤差 | 学習側型誤差 | held回収率 | 学習側回収率 | heldρ | 学習側ρ | 差(回収率) | Eval MSE6 all [95% CI] | hard [95% CI] |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
@@ -1114,9 +1186,9 @@ def report(out=OUT):
         m=r["extras"]["action_mse"]
         lines.append(f"| INV2 {c} | {r['metrics']['top1_type_error']:.6f} | {r['metrics']['recovery']:.4f} | {r['metrics']['spearman_mean']:.4f} | {m['all_mean']:.6f} | {m['hard_mean']:.6f} |")
     lines += ["", "## 修正・実装判断", "",
-        "L0′の .01/.05/.03 は教師分布だけに適用し、logits は学習scale込みの値のまま同じ log_softmax に入力する。L1′キーは `scale_only_query.type_of(..., 'S-shared')` を通した6軸とgripperで、pool_shapeと同じ型スケールに合わせた。",
-        "履歴トークンには学習可能な10位置埋め込みを追加。78次元の履歴＋状態は旧512中間MLPを通し、R1ではVLM潜在Kの平均と連結して1ベクトルへ、R2以降は各潜在へ射影加算する。連結はR1の旧版互換な指定を守るため選択。",
-        "L1′の正例閾値は各fit foldのscale-onlyキー型からq25を再較正。Bの三人称群は学習時のみサンプル単位30%でkey-padding maskし、evalはmaskなし。", "",
+        "L0′の .01/.05/.03 は教師分布だけに適用し、logits は学習scale込みの値のまま同じ log_softmax に入力する。L1′キーはC_vm_none候補shapeの生成を元行だけから再現できないため、各行で最小型誤差となる許可済みpool template自体を使う。",
+        "R1はZ0を1個だけ使い、手首トークンへのcross-attention後に旧78→512→256履歴・状態ベクトルと結合する。履歴列を読むcross-attentionは使わない。R4以降でK=5分割キー・対応トークン内積に切り替える。",
+        "Bの三人称群は学習時のみサンプル単位30%でkey-padding maskし、evalはmaskなし。", "",
         "R0–R5の候補設定は `ablation_selection.json`、API結果は `ablation_evaluation.json` に保存。Evalの正解は選択後の採点だけに使用。"]
     (out/"report.md").write_text("\n".join(lines)+"\n")
     return d
