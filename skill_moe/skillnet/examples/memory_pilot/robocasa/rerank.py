@@ -12,8 +12,13 @@ import numpy as np
 import torch
 from torch import nn
 
-STATE=Path('/work/.skillnet-state');ROOT=STATE/'outputs/robocasa-memory';WT=STATE/'worktrees/robocasa-memory'
-SRC=ROOT/'memory-01/policy-order-v2';CTX=ROOT/'ctx-01';KEY=ROOT/'key-lite-01';OUT=ROOT/'rerank-01'
+STATE=Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT=Path(os.environ.get('ROBOCASA_OUTPUT_ROOT',str(STATE/'outputs/robocasa-memory')))
+WT=Path(os.environ.get('SKILLNET_REPO_ROOT',str(STATE / 'worktrees/robocasa-memory')))
+SRC=Path(os.environ.get('ROBOCASA_MEMORY_SOURCE',str(ROOT/'memory-01/policy-order-v2')))
+CTX=Path(os.environ.get('ROBOCASA_CONTEXT_ROOT',str(ROOT/'ctx-01')))
+KEY=Path(os.environ.get('ROBOCASA_KEYLITE_ROOT',str(ROOT/'key-lite-01')))
+OUT=Path(os.environ.get('ROBOCASA_RERANK_OUT',str(ROOT/'rerank-01')))
 EXDIR=WT/'skill_moe/skillnet/examples/memory_pilot/robocasa';SERV=WT/'skill_moe/skillnet/examples/robocasa'
 sys.path[:0]=[str(EXDIR),str(SERV),str(KEY)]
 import experiment as ex, expert

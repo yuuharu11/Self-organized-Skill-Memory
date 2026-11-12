@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory/expert-03')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+OUTPUT_ROOT = Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE / 'outputs/robocasa-memory')))
+ROOT = Path(os.environ.get('ROBOCASA_EXPERT3_ROOT', str(OUTPUT_ROOT / 'expert-03')))
 
 
 def main():

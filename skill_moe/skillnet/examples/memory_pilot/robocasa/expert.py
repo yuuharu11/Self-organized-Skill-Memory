@@ -26,7 +26,7 @@ import experiment as ex
 STATE = Path(os.environ.get("SKILLNET_STATE_DIR", "/work/.skillnet-state"))
 SOURCE = STATE / "outputs/robocasa-memory/memory-01/policy-order-v2"
 CHECKPOINT = Path(os.environ.get("SKILLNET_ROBOCASA_CHECKPOINT", STATE / "checkpoints/robocasa365/pi05_pretrain_human300/multitask_learning/75000"))
-OUT = Path(os.environ.get("ROBOCASA_EXPERT_OUT", "/work/.skillnet-state/outputs/robocasa-memory/expert-01"))
+OUT = Path(os.environ.get("ROBOCASA_EXPERT_OUT", STATE / "outputs/robocasa-memory/expert-01"))
 SEED = 20261110
 T0S = (.2, .4, .6)
 HORIZON = 50

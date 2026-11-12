@@ -17,9 +17,11 @@ if str(HERE) not in sys.path:
 import expert
 import expert2_train as base
 
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory/expert-03')
-PREP = ROOT / 'prep'
-OUT = ROOT / 'train'
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+OUTPUT_ROOT = Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE / 'outputs/robocasa-memory')))
+ROOT = Path(os.environ.get('ROBOCASA_EXPERT3_ROOT', str(OUTPUT_ROOT / 'expert-03')))
+PREP = Path(os.environ.get('ROBOCASA_EXPERT3_PREP', str(ROOT / 'prep')))
+OUT = Path(os.environ.get('ROBOCASA_EXPERT3_TRAIN', str(ROOT / 'train')))
 SEED = 20261111
 T0_LOW, T0_HIGH = 0.2, 0.5
 

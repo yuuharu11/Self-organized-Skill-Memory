@@ -12,11 +12,12 @@ if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
 import expert
 import expert2_prep as prep
 
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT = Path(os.environ.get('ROBOCASA_EXPERT2_ROOT', str(STATE / 'outputs/robocasa-memory/expert-02')))
 SOURCE = expert.SOURCE
 CHECKPOINT = expert.CHECKPOINT
-PREP = ROOT / 'prep/attempt-10'
-OUT = ROOT / 'train/attempt-01'
+PREP = Path(os.environ.get('ROBOCASA_EXPERT2_PREP', str(ROOT / 'prep/attempt-10')))
+OUT = Path(os.environ.get('ROBOCASA_EXPERT2_OUT', str(ROOT / 'train/attempt-01')))
 T0 = 0.2
 SEED = 20261111
 
@@ -58,7 +59,7 @@ def prepare_full_cache(out=OUT, *, threads=8):
     selected=np.unique(np.r_[train_ids,val_ids]); tasks=np.asarray(data['task']); eps=np.asarray(data['episode']); frames=np.asarray(data['frame'])
     manifest=json.loads((SOURCE/'manifest.json').read_text()); info={(int(r['task_id']),int(r['episode'])):r for r in manifest['demos']}
     cache_dir=out/'obs_cache'; cache_dir.mkdir(parents=True,exist_ok=True)
-    reuse_dirs=[Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02/train/attempt-03/obs_cache'),Path('/work/.skillnet-state/outputs/robocasa-memory/expert-02/train/attempt-02/obs_cache'),PREP/'train/obs_cache']
+    reuse_dirs=[ROOT/'train/attempt-03/obs_cache',ROOT/'train/attempt-02/obs_cache',PREP/'train/obs_cache']
     report={'train_rows':len(train_ids),'validation_rows':len(val_ids),'validation_rows_per_task':50,'reused_rows':0,'extracted_rows':0,'tasks':{}}
     for task in sorted(np.unique(tasks[selected]).tolist()):
         ids=selected[tasks[selected]==task]

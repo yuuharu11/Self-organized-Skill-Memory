@@ -1,11 +1,13 @@
-import json, numpy as np
+import json, numpy as np, os
 from pathlib import Path
 from openpi.shared import normalize
-ROOT=Path('/work/.skillnet-state/outputs/robocasa-memory')
-OUT=ROOT/'expert-02/gap'; q=np.load(ROOT/'memory-01/policy-order-v2/queries/U_heldout.npz',allow_pickle=False)
+STATE=Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT=Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE/'outputs/robocasa-memory')))
+OUT=Path(os.environ.get('ROBOCASA_GAP_OUT', str(ROOT/'expert-02/gap'))); q=np.load(ROOT/'memory-01/policy-order-v2/queries/U_heldout.npz',allow_pickle=False)
 d=np.load(OUT/'offline_predictions.npz',allow_pickle=False)
 rows=json.loads((OUT/'offline_comparison.json').read_text())
-stats=normalize.load(Path('/work/.skillnet-state/checkpoints/robocasa365/pi05_pretrain_human300/multitask_learning/75000/assets'))['actions']
+checkpoint=Path(os.environ.get('SKILLNET_ROBOCASA_CHECKPOINT', str(STATE/'checkpoints/robocasa365/pi05_pretrain_human300/multitask_learning/75000')))
+stats=normalize.load(checkpoint/'assets')['actions']
 mean=np.asarray(stats.mean,np.float32);std=np.asarray(stats.std,np.float32)
 idx=np.asarray(d['row_ids'],np.int64); tasks=np.asarray(q['task'])[idx]
 length=np.asarray(d['length'],np.int32)

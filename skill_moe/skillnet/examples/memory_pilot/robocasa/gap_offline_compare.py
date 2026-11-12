@@ -3,12 +3,12 @@ import json, os, pickle, sys, time
 from pathlib import Path
 import numpy as np
 
-STATE=Path('/work/.skillnet-state')
+STATE=Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
 ROOT=STATE/'outputs/robocasa-memory'
-WT=STATE/'worktrees/robocasa-memory'
+WT=Path(os.environ.get('SKILLNET_REPO_ROOT', str(STATE / 'worktrees/robocasa-memory')))
 SRC=ROOT/'memory-01/policy-order-v2'
 CTX=ROOT/'ctx-01'
-OUT=ROOT/'expert-02/gap'
+OUT=Path(os.environ.get('ROBOCASA_GAP_OUT', str(ROOT/'expert-02/gap')))
 EXDIR=WT/'skill_moe/skillnet/examples/memory_pilot/robocasa'
 SERV=WT/'skill_moe/skillnet/examples/robocasa'
 sys.path.insert(0,str(EXDIR));sys.path.insert(0,str(SERV))

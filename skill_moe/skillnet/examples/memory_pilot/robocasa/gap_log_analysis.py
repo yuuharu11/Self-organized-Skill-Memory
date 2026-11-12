@@ -1,5 +1,6 @@
-import json, collections, pathlib, statistics
-ROOT=pathlib.Path('/work/.skillnet-state/outputs/robocasa-memory')
+import json, collections, pathlib, statistics, os
+STATE=pathlib.Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT=pathlib.Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE/'outputs/robocasa-memory')))
 EXP=ROOT/'expert-02/eval300'
 BASE=ROOT/'baseline-01/v6-nosubtask/eval/results.json'
 EVAL=EXP/'eval/results.json'; OLD=ROOT/'expert-02/closedloop-v2/run-01/eval/results.json'

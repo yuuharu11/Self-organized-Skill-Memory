@@ -18,14 +18,15 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory')
-WORKTREE = Path('/work/.skillnet-state/worktrees/robocasa-memory')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT = Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE / 'outputs/robocasa-memory')))
+WORKTREE = Path(os.environ.get('SKILLNET_REPO_ROOT', str(STATE / 'worktrees/robocasa-memory')))
 CTX = ROOT / 'ctx-01'
 KEYLITE = ROOT / 'key-lite-01'
 SOURCE = ROOT / 'memory-01/policy-order-v2'
 EXPERT1 = ROOT / 'expert-01'
 MAG = KEYLITE / 'magnitude/magnitude_head.pt'
-OUT = ROOT / 'expert-02/prep'
+OUT = Path(os.environ.get('ROBOCASA_EXPERT2_PREP', str(ROOT / 'expert-02/prep')))
 T0S = (0.1, 0.2, 0.3)
 SEED = 20261111
 

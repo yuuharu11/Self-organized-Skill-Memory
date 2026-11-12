@@ -6,6 +6,7 @@ expert2_prep; only the magnitude checkpoint and output root change.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -15,9 +16,11 @@ if str(HERE) not in sys.path:
 
 import expert2_prep as prep
 
-ROOT = Path('/work/.skillnet-state/outputs/robocasa-memory/expert-03')
-OUT = ROOT / 'prep'
-MAGNITUDE_V2 = Path('/work/.skillnet-state/outputs/robocasa-memory/key-lite-01/magnitude_v2/magnitude_head.pt')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+OUTPUT_ROOT = Path(os.environ.get('ROBOCASA_OUTPUT_ROOT', str(STATE / 'outputs/robocasa-memory')))
+ROOT = Path(os.environ.get('ROBOCASA_EXPERT3_ROOT', str(OUTPUT_ROOT / 'expert-03')))
+OUT = Path(os.environ.get('ROBOCASA_EXPERT3_PREP', str(ROOT / 'prep')))
+MAGNITUDE_V2 = Path(os.environ.get('ROBOCASA_EXPERT3_MAGNITUDE', str(OUTPUT_ROOT / 'key-lite-01/magnitude_v2/magnitude_head.pt')))
 
 
 def _install_history_free_magnitude_adapter():
