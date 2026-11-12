@@ -109,15 +109,23 @@ def unit_metadata(pool):
     return key.astype(np.float32), magnitude
 
 
-def materialize_unit(policy_actions, scale, grip_signs):
-    """Scale stored EEF motion and use the Context head for initial grip steps."""
+def materialize_unit(policy_actions, scale, grip_signs, *, use_context_gripper=True,
+                     scale_position_only=False):
+    """Scale stored EEF motion and optionally replace its initial grip steps.
+
+    The two switches are ablations; both default to the historical behavior.
+    """
     out = np.asarray(policy_actions, np.float32).copy()
     grip = np.asarray(grip_signs, np.float32).reshape(-1)
     if out.ndim != 2 or out.shape[1] != 12 or len(out) == 0 or len(grip) < min(5, len(out)):
         raise ValueError("expected nonempty [T,12] policy actions and at least five grip predictions")
-    out[:, :6] *= float(scale)
-    n = min(5, len(out))
-    out[:n, 6] = grip[:n]
+    if scale_position_only:
+        out[:, :3] *= float(scale)
+    else:
+        out[:, :6] *= float(scale)
+    if use_context_gripper:
+        n = min(5, len(out))
+        out[:n, 6] = grip[:n]
     return out
 
 
@@ -145,6 +153,9 @@ class MemoryOnlyPolicy:
         self.histories = {}
         self.log_lock = threading.Lock()
         self.log_path = Path(args.query_log) if args.query_log else None
+        self.diagnostic_log_path = Path(args.diagnostic_log) if getattr(args, "diagnostic_log", None) else None
+        self.diagnostic_reference_count = int(getattr(args, "diagnostic_reference_count", 0))
+        self.diagnostic_count = 0
         self.action_expert_calls = 0
 
         checkpoint = Path(args.checkpoint)
@@ -155,10 +166,29 @@ class MemoryOnlyPolicy:
         self.bridge_steps = int(getattr(args, "bridge_steps", 10))
         self.bridge_noise_seed = int(getattr(args, "bridge_noise_seed", 4101))
         self.bridge_fn = None
-        if self.bridge_checkpoint is not None:
-            expert_api._overlay_expert(self.model, self.bridge_checkpoint)
+        self.pretrained_normal_fn = None
+        use_base_bridge = bool(getattr(args, "bridge_use_base_expert", False))
+        if self.bridge_checkpoint is not None and use_base_bridge:
+            raise ValueError("choose either --bridge-checkpoint or --bridge-use-base-expert")
+        if self.bridge_checkpoint is not None or use_base_bridge:
+            if self.diagnostic_reference_count > 0:
+                # Preserve a base-checkpoint policy for a bounded diagnostic.
+                # Its normal sample shares the exact observation and noise
+                # with the Expert bridge output.
+                if self.bridge_checkpoint is None:
+                    self.pretrained_model = self.model
+                else:
+                    self.pretrained_model, _ = expert_api._load_expert_model(checkpoint)
+                from openpi.shared.nnx_utils import module_jit
+                self.pretrained_normal_fn = module_jit(
+                    self.pretrained_model.sample_actions, static_argnames=("num_steps",)
+                )
+            if self.bridge_checkpoint is not None:
+                expert_api._overlay_expert(self.model, self.bridge_checkpoint)
             from openpi.shared.nnx_utils import module_jit
             self.bridge_fn = module_jit(self.model.sample_bridge, static_argnames=("num_steps",))
+        elif self.diagnostic_reference_count > 0:
+            raise ValueError("--diagnostic-reference-count requires a bridge mode")
         self.prefix_fn = _prefix_feature_fn(self.model)
         cfg = train_config.get_config("pi05_robocasa_multitask")
         dc = cfg.data.create(cfg.assets_dirs, cfg.model)
@@ -245,6 +275,13 @@ class MemoryOnlyPolicy:
         with self.log_lock, self.log_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
+    def _log_diagnostic(self, record):
+        if self.diagnostic_log_path is None:
+            return
+        self.diagnostic_log_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.log_lock, self.diagnostic_log_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
     def _context_query(self, prefix, state):
         torch, *_ = self._extra
         fm, fs, sm, ss = self.key_norm
@@ -297,6 +334,11 @@ class MemoryOnlyPolicy:
         if state.shape != (16,):
             raise ValueError(f"expected fork-order state[16], got {state.shape}")
         with self.lock:
+            diagnostic_index = None
+            if (self.pretrained_normal_fn is not None
+                    and self.diagnostic_count < self.diagnostic_reference_count):
+                diagnostic_index = self.diagnostic_count
+                self.diagnostic_count += 1
             history_obj = self.histories.setdefault(client_id, ClientHistory(10))
             history, mask, request_index = history_obj.begin_request(episode_id, episode_start)
             start = time.perf_counter()
@@ -325,7 +367,12 @@ class MemoryOnlyPolicy:
                 # The learned Context grip head predicts the next five commands;
                 # later values in this returned horizon are memory values and are
                 # normally discarded by the five-step replanning client.
-                unit = materialize_unit(unit, scale, grip)
+                use_context_gripper = not self.args.draft_unit_gripper or filled == 0
+                unit = materialize_unit(
+                    unit, scale, grip,
+                    use_context_gripper=use_context_gripper,
+                    scale_position_only=self.args.scale_position_only,
+                )
                 take = min(len(unit), 50 - filled)
                 segment = unit[:take].copy()
                 planned[filled:filled + take] = segment
@@ -341,7 +388,7 @@ class MemoryOnlyPolicy:
             bridge_seconds = 0.0
             if self.bridge_fn is not None:
                 # The retrieval-only proposal is converted to the policy's
-                # normalized 32-D action space and refined from fixed t0=.2.
+                # normalized 32-D action space and refined from bridge_t0.
                 # No noise-to-action (ordinary π0.5) sampling is invoked.
                 from openpi.shared import normalize
                 bridge_start = time.perf_counter()
@@ -358,6 +405,11 @@ class MemoryOnlyPolicy:
                     num_steps=self.bridge_steps, noise=noise)
                 refined = np.asarray(refined, np.float32)[0] * (std[None, :] + 1e-6) + mean[None, :]
                 returned = refined[:, :12].astype(np.float32)
+                if self.args.grip_after_bridge:
+                    if not selected_records:
+                        raise AssertionError("bridge grip override requires the first unit's Context prediction")
+                    grip_override = np.asarray(selected_records[0]["gripper_first5"], np.float32)
+                    returned[:min(5, len(returned)), 6] = grip_override[:min(5, len(returned))]
                 self.action_expert_calls += 1
                 bridge_seconds = time.perf_counter() - bridge_start
             history_obj.set_pending(returned[:int(self.args.replan_steps)])
@@ -371,9 +423,47 @@ class MemoryOnlyPolicy:
                 "bridge_t0": self.bridge_t0 if self.bridge_fn is not None else None,
                 "inference_seconds": elapsed,
                 "magnitude_multiplier": float(self.args.magnitude_multiplier),
+                "draft_unit_gripper": bool(self.args.draft_unit_gripper),
+                "grip_after_bridge": bool(self.args.grip_after_bridge),
+                "scale_position_only": bool(self.args.scale_position_only),
                 "position_step_norm_median": float(np.median(np.linalg.norm(
                     planned[:int(self.args.replan_steps), :3].astype(np.float64), axis=1))),
                 "shape": list(planned.shape), "finite": True})
+            if diagnostic_index is not None:
+                # This is a like-for-like reference: same observation,
+                # normalized-action statistics and Gaussian noise tensor.
+                normal_norm = self.pretrained_normal_fn(
+                    jax.random.fold_in(key, 3), observation,
+                    num_steps=self.bridge_steps, noise=noise,
+                )
+                normal_physical = (
+                    np.asarray(normal_norm, np.float32)[0] * (std[None, :] + 1e-6)
+                    + mean[None, :]
+                )
+                draft5 = planned[:5].astype(np.float32)
+                expert5 = returned[:5].astype(np.float32)
+                normal5 = normal_physical[:5, :12].astype(np.float32)
+
+                def _rms(lhs, rhs, dims):
+                    return float(np.sqrt(np.mean((lhs[:, :dims] - rhs[:, :dims]) ** 2)))
+
+                self._log_diagnostic({
+                    "diagnostic_index": diagnostic_index,
+                    "episode_id": episode_id,
+                    "query_index": request_index,
+                    "bridge_t0": self.bridge_t0,
+                    "bridge_steps": self.bridge_steps,
+                    "noise_shared": True,
+                    "draft_first5_physical_fork_order": draft5.tolist(),
+                    "expert_first5_physical_fork_order": expert5.tolist(),
+                    "pretrained_pi05_first5_physical_fork_order": normal5.tolist(),
+                    "expert_vs_draft_rms12": _rms(expert5, draft5, 12),
+                    "expert_vs_draft_position_rms3": _rms(expert5, draft5, 3),
+                    "expert_vs_pi05_rms12": _rms(expert5, normal5, 12),
+                    "expert_vs_pi05_position_rms3": _rms(expert5, normal5, 3),
+                    "draft_vs_pi05_rms12": _rms(draft5, normal5, 12),
+                    "draft_vs_pi05_position_rms3": _rms(draft5, normal5, 3),
+                })
             return {"actions": returned}
 
 
@@ -390,8 +480,16 @@ def main():
     p.add_argument("--key-checkpoint", type=Path, default=root / "key-lite-01/context_history.pt")
     p.add_argument("--magnitude-checkpoint", type=Path, default=root / "key-lite-01/magnitude/magnitude_head.pt")
     p.add_argument("--magnitude-multiplier", type=float, default=1.0)
+    p.add_argument("--draft-unit-gripper", action="store_true",
+                   help="use Context grip only for the first unit; later units keep stored grip values")
+    p.add_argument("--grip-after-bridge", action="store_true",
+                   help="replace the returned chunk's first five grip commands with Context predictions")
+    p.add_argument("--scale-position-only", action="store_true",
+                   help="apply the learned magnitude multiplier only to EEF translation, not rotation")
     p.add_argument("--bridge-checkpoint", type=Path, default=None,
                    help="overlay an action-expert bridge checkpoint on the pretrained model")
+    p.add_argument("--bridge-use-base-expert", action="store_true",
+                   help="run the bridge directly with the released 75k action expert")
     p.add_argument("--bridge-t0", type=float, default=0.2)
     p.add_argument("--bridge-steps", type=int, default=10)
     p.add_argument("--bridge-noise-seed", type=int, default=4101)
@@ -399,13 +497,18 @@ def main():
     p.add_argument("--host", default="127.0.0.1"); p.add_argument("--port", type=int, default=8000)
     p.add_argument("--replan-steps", type=int, default=5)
     p.add_argument("--query-log", type=Path)
+    p.add_argument("--diagnostic-log", type=Path)
+    p.add_argument("--diagnostic-reference-count", type=int, default=0)
     a = p.parse_args()
     if a.magnitude_multiplier <= 0:
         p.error("--magnitude-multiplier must be positive")
+    if a.diagnostic_reference_count < 0:
+        p.error("--diagnostic-reference-count must be nonnegative")
     os.environ["SKILLNET_SUBTASK_GENERATE"] = "0"
     policy = MemoryOnlyPolicy(a)
-    print(f"serving rm-memory-only on {a.host}:{a.port}; action_expert_calls={policy.action_expert_calls}", flush=True)
-    WebsocketPolicyServer(policy, host=a.host, port=a.port, metadata={"policy": "memory-only", "action_horizon": 50},
+    policy_name = "memory-bridge" if policy.bridge_fn is not None else "memory-only"
+    print(f"serving rm-{policy_name} on {a.host}:{a.port}; action_expert_calls={policy.action_expert_calls}", flush=True)
+    WebsocketPolicyServer(policy, host=a.host, port=a.port, metadata={"policy": policy_name, "action_horizon": 50},
                           ping_interval=None, ping_timeout=None, infer_in_thread=True).serve_forever()
 
 
