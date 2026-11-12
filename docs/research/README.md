@@ -29,7 +29,7 @@
 | 07 | [π0.5 LIBERO-40](07_pi05_memory40/README.md) | 修正 Expert で通常生成を上回るか | 進行中 |
 | 08 | [保留タスクへのメモリ追加](08_heldout_memory_addition/README.md) | 重みを固定した実演追加がLong評価を変えるか | 準備のみ。互換性・split・資源見積もりを整理 |
 | 09 | [未学習LIBEROタスクへの転移](09_unseen_libero/README.md) | LIBERO-40で作った運動を未学習タスクへ持ち込む余地があるか | 単位メモリで未学習 LIBERO-90 が 43/100（π0.5 32/100）。学習済みの LIBERO-10 では落ちる。律速は型の選び方と向き・大きさ |
-| 10 | [RoboCasa365](10_robocasa365/README.md) | atomic のデモから作ったスキルメモリが Composite-Unseen の汎化を上げるか | 環境・データ・評価配線の準備。学習・本評価は未実施 |
+| 10 | [RoboCasa365](10_robocasa365/README.md) | atomic のデモから作ったスキルメモリで、RoboCasa で微調整した π0.5 を atomic タスクで上回れるか | 6タスク×50試行で、メモリ＋学習 Expert 118/300、π0.5 173/300。先頭5ステップの誤差では方策の良し悪しを順位づけできないと判明。いったん保留し、LIBERO で単位の進み具合の管理とクエリの場面不変性を検証する |
 
 横断の文献調査は [surveys/](surveys/README.md)。
 
