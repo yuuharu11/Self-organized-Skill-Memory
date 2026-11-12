@@ -470,15 +470,21 @@ def _tau_pos_for_key_actions(data, type_actions, row_ids, *, seed=SEED, per_task
 
 def _train_config(data, tokens, groups, key_actions, *, kind, l1, pooled, l0_mode, l1_weight, k=K,
                   epochs=3, device="cuda", batch_size=64, seed=SEED, save_path=None,
-                  key_mode="split", query_pool=False, no_history_cross=False, learning_rate=3e-4):
+                  key_mode="split", query_pool=False, no_history_cross=False, learning_rate=3e-4,
+                  legacy_r0=False):
     import torch
     torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
     if str(device).startswith("cuda"):
         torch.cuda.set_per_process_memory_fraction(float(os.environ.get("V2_GPU_FRACTION", ".22")), device=0)
     torch.manual_seed(seed); np.random.seed(seed)
     torch.cuda.manual_seed_all(seed) if torch.cuda.is_available() else None
-    net = _build_model(kind,k=k,pooled=pooled,key_mode=key_mode,query_pool=query_pool,
-                       no_history_cross=no_history_cross).to(device)
+    if legacy_r0:
+        if kind!="A" or int(k)!=1 or l1 or key_mode!="legacy" or l0_mode!="legacy":
+            raise ValueError("legacy_r0 requires the exact R0 architecture/key/loss")
+        net=step1._make_model("A",1,TOKEN_DIM).to(device)
+    else:
+        net = _build_model(kind,k=k,pooled=pooled,key_mode=key_mode,query_pool=query_pool,
+                           no_history_cross=no_history_cross).to(device)
     opt = torch.optim.AdamW(net.parameters(), lr=float(learning_rate), weight_decay=1e-4)
     fit_ids = np.flatnonzero(np.asarray(data["fit"], bool))
     task = np.asarray(data["task"]); scene = np.asarray(data["scene"])
@@ -512,11 +518,14 @@ def _train_config(data, tokens, groups, key_actions, *, kind, l1, pooled, l0_mod
             if len(ids)<2: continue
             bi = torch.as_tensor(ids, dtype=torch.long, device=device)
             tok = torch.as_tensor(tokens[ids], device=device)
-            q, _ = net.encode_query(tok, history[bi], state[bi], token_groups=torch.as_tensor(groups, device=device), train_mask=(kind=="B"))
-            if net.pooled: q_pool = torch.nn.functional.normalize(q.mean(1), dim=-1)
-            pool_keys = net.encode_keys(pool_action)
-            qscore = net.scores(q, pool_keys)
-            loss = legacy_l0(qscore,err_np[ids],allowed_np[ids]) if l0_mode=="legacy" else l0_prime(qscore, err_np[ids], allowed_np[ids], mode=l0_mode)
+            if legacy_r0:
+                qscore=legacy_r0_logits(net,history[bi],state[bi],tok,pool_action)
+                loss=legacy_l0(qscore,err_np[ids],allowed_np[ids])
+            else:
+                q, _ = net.encode_query(tok, history[bi], state[bi], token_groups=torch.as_tensor(groups, device=device), train_mask=(kind=="B"))
+                pool_keys = net.encode_keys(pool_action)
+                qscore = net.scores(q, pool_keys)
+                loss = legacy_l0(qscore,err_np[ids],allowed_np[ids]) if l0_mode=="legacy" else l0_prime(qscore, err_np[ids], allowed_np[ids], mode=l0_mode)
             npos=0
             if l1:
                 # Same batch's observed action keys, with the same two-frame partition.
@@ -537,7 +546,8 @@ def _train_config(data, tokens, groups, key_actions, *, kind, l1, pooled, l0_mod
         torch.save({"state_dict":net.cpu().state_dict(),"kind":kind,"pooled":pooled,"l1":l1,
                     "l0_mode":l0_mode,"l1_weight":l1_weight,"seed":seed,"epochs":epochs,"k":k,
                     "key_mode":key_mode,"query_pool":query_pool,"learning_rate":learning_rate,
-                    "no_history_cross":no_history_cross,"tau_pos":tau_pos,"token_dim":TOKEN_DIM},tmp);os.replace(tmp,p)
+                    "no_history_cross":no_history_cross,"legacy_r0":legacy_r0,
+                    "tau_pos":tau_pos,"token_dim":TOKEN_DIM},tmp);os.replace(tmp,p)
     return net, logs
 
 
@@ -678,6 +688,39 @@ def stage_acceptance(candidate, incumbent):
             "candidate_spearman":cr,"incumbent_spearman":ir}
 
 
+def multiseed_acceptance(candidate, baseline):
+    """Noise-aware gate: error <= 1.02x R0 and rho gain > 2x R0 sample SD."""
+    err=float(candidate["top1_type_error_mean"]);base=float(baseline["top1_type_error_mean"])
+    rho=float(candidate["spearman_positive_mean"]);base_rho=float(baseline["spearman_positive_mean"])
+    rho_sd=float(baseline["spearman_positive_sd"])
+    err_ok=err<=base*1.02
+    rho_gain=rho-base_rho;rho_limit=2.*rho_sd
+    return {"accepted":bool(err_ok and rho_gain>rho_limit),"error_ok":bool(err_ok),
+        "spearman_ok":bool(rho_gain>rho_limit),"error_limit":base*1.02,
+        "spearman_gain":rho_gain,"required_spearman_gain_gt":rho_limit}
+
+
+def aggregate_seed_metrics(rows):
+    """Mean and sample SD for per-seed heldout metrics."""
+    if len(rows)<2:raise ValueError("need at least two seeds for noise estimate")
+    out={"seeds":[int(r["seed"]) for r in rows],"n_seeds":len(rows)}
+    for key in ("top1_type_error","recovery","spearman_positive","mean_query_token_cosine"):
+        vals=np.asarray([r[key] for r in rows if r.get(key) is not None],np.float64)
+        out[f"{key}_mean"]=float(vals.mean()) if len(vals) else None
+        out[f"{key}_sd"]=float(vals.std(ddof=1)) if len(vals)>1 else (0. if len(vals)==1 else None)
+    return out
+
+
+def legacy_r0_logits(model, history, state, tokens, pool_actions):
+    """Old A-L0 forward/key path used by the new optimizer loop control."""
+    import torch
+    import torch.nn.functional as F
+    mask=torch.ones(tokens.shape[:2],device=tokens.device,dtype=torch.bool)
+    q,_=model(history,state,tokens,mask)
+    keys=F.normalize(model.key(pool_actions.flatten(1)),dim=-1)
+    return F.normalize(q,dim=-1)@keys.T*model.log_scale.exp()
+
+
 def choose_stage_candidate(candidates, incumbent, stage):
     """Annotate candidates with gates and choose only from passing candidates."""
     checked=[]
@@ -693,10 +736,257 @@ def choose_stage_candidate(candidates, incumbent, stage):
     return chosen,checked
 
 
+def history_variant(data, ids, variant, *, seed=SEED):
+    """Return a shallow data view with selection histories preserved, zeroed, or cross-episode swapped."""
+    if variant not in ("true", "zero", "other_episode"):
+        raise ValueError(f"unknown history variant: {variant}")
+    out=dict(data)
+    h=np.asarray(data["history"],np.float32).copy()
+    ids=np.asarray(ids,np.int64)
+    if variant=="zero":
+        h[ids]=0
+    elif variant=="other_episode":
+        episodes=np.asarray(data["episode"])
+        candidates=np.arange(len(h),dtype=np.int64)
+        rng=np.random.default_rng(seed)
+        for i in ids:
+            other=candidates[episodes[candidates]!=episodes[i]]
+            if not len(other):raise ValueError("cannot replace history: no other episode")
+            h[i]=data["history"][rng.choice(other)]
+    out["history"]=h
+    return out
+
+
+def _metric_record(value, cfg, data, tokens, groups, ids, *, device):
+    """Small JSON-safe heldout summary for one fitted model."""
+    met=value["metrics"]
+    return {"config":cfg,"top1_type_error":value["top1_type_error"],
+        "recovery":float(met["recovery"]),"spearman_positive":float(met["spearman_mean"]),
+        "mean_query_token_cosine":value.get("mean_query_token_cosine")}
+
+
+def _evaluate_history_variants(model,cfg,data,tokens,groups,ids,*,device,seed):
+    rows={}
+    for offset,name in enumerate(("true","zero","other_episode")):
+        d=history_variant(data,ids,name,seed=seed+offset)
+        v=_score_ablation_candidate(model,cfg,d,tokens,groups,ids,device=device)
+        rows[name]=_metric_record(v,cfg,d,tokens,groups,ids,device=device)
+    return rows
+
+
+def _fit_for_diagnostics(out,data,tokens,groups,key_actions,cfg,*,device,seed,checkpoint):
+    """Use the frozen 4101 selection fit once; fit other seeds under distinct paths."""
+    return _fit_ablation_candidate(out,data,tokens,groups,key_actions,cfg,device=device,
+                                   save_path=checkpoint,seed=seed)
+
+
+def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda"):
+    """Three-seed stage noise/history diagnostics; deliberately does not read Eval or run group-CV."""
+    out=Path(out)
+    selection_path=out/"ablation_selection.json"
+    if not selection_path.exists():raise FileNotFoundError("run tune first; ablation_selection.json missing")
+    selection=json.loads(selection_path.read_text())
+    if selection.get("status")!="selection_frozen":raise ValueError("initial selection is not frozen")
+    dest=out/"ablation_selection_3seed.json"
+    if dest.exists():raise FileExistsError(dest)
+    data=step1._step1_prepare_data(source_out)
+    ids=np.flatnonzero(np.asarray(data["select"],bool));fit_ids=np.flatnonzero(np.asarray(data["fit"],bool))
+    if np.any(np.asarray(data["task"])[ids] == -1):raise AssertionError("invalid selection task ids")
+    tokens,groups=load_token_cache(data,kind="B",row_ids=np.arange(len(data["row_id"])))
+    key_actions=load_training_actions(data,out)
+    seeds=(4101,4102,4103)
+    # Preserve the exact one-seed configs chosen during the original staged run.
+    stage_cfgs={"R0":[selection["stages"][0]["candidates"][0]["config"]]}
+    stage_cps={"R0":[selection["stages"][0]["candidates"][0].get("checkpoint")]}
+    for stage_rec in selection["stages"][1:]:
+        stage_cfgs[stage_rec["stage"]]=[x["config"] for x in stage_rec["candidates"]]
+        stage_cps[stage_rec["stage"]]=[x.get("checkpoint") for x in stage_rec["candidates"]]
+    stage_rows={};history_rows={};seed_models={}
+    for stage in ("R0","R1","R2","R3","R4","R5"):
+        stage_rows[stage]=[]
+        candidate_configs=stage_cfgs[stage]
+        for ci,cfg0 in enumerate(candidate_configs):
+            cfg=dict(cfg0)
+            stage_id=stage+(f"_c{ci}" if len(candidate_configs)>1 else "")
+            stage_rows[stage_id]=[]
+            history_rows[stage_id]={}
+            for seed in seeds:
+                init_cp=stage_cps[stage][ci]
+                original=Path(init_cp) if seed==4101 and init_cp else None
+                cp=original if original and original.exists() else out/"noise_history_models"/f"{stage_id}_seed{seed}.pt"
+                model,logs=_fit_for_diagnostics(out,data,tokens,groups,key_actions,cfg,device=device,
+                                                seed=seed,checkpoint=cp)
+                base=_score_ablation_candidate(model,cfg,data,tokens,groups,ids,device=device)
+                record=_metric_record(base,cfg,data,tokens,groups,ids,device=device)
+                record.update(seed=seed,checkpoint=str(cp),train_log=logs)
+                stage_rows[stage_id].append(record)
+                _log(out,diagnostic="noise_history_fit",stage_name=stage_id,seed=seed,
+                     checkpoint=str(cp),top1_type_error=record["top1_type_error"],
+                     recovery=record["recovery"],spearman_positive=record["spearman_positive"])
+                if stage=="R0" and stage_id=="R0":
+                    # Stage R0 itself is also exposed under the compact key.
+                    pass
+                history_rows[stage_id][str(seed)]=_evaluate_history_variants(
+                    model,cfg,data,tokens,groups,ids,device=device,seed=seed*10)
+                seed_models.setdefault(stage_id,{})[str(seed)]=str(cp)
+                if hasattr(model,"cpu"):model.cpu()
+                del model
+            stage_rows[stage_id+"_aggregate"]=aggregate_seed_metrics(stage_rows[stage_id])
+        if len(candidate_configs)==1:
+            stage_rows[stage]=stage_rows.pop(stage)
+            stage_rows[stage+"_aggregate"]=aggregate_seed_metrics(stage_rows[stage])
+            history_rows[stage]=history_rows.pop(stage)
+
+    r0=stage_rows["R0_aggregate"]
+    gates={};retained=selection["stages"][0]["candidates"][0]["config"]
+    retained_name="R0"
+    for stage in ("R1","R2","R3","R4","R5"):
+        keys=[stage+(f"_c{i}" if len(stage_cfgs[stage])>1 else "") for i in range(len(stage_cfgs[stage]))]
+        checked=[]
+        for name in keys:
+            agg=stage_rows[name+"_aggregate"]
+            gate=multiseed_acceptance(agg,r0)
+            item={"candidate":name,"config":stage_rows[name][0]["config"],"aggregate":agg,"rule":gate}
+            checked.append(item)
+        eligible=[x for x in checked if x["rule"]["accepted"]]
+        chosen=max(eligible,key=lambda x:(x["aggregate"]["spearman_positive_mean"],-x["aggregate"]["top1_type_error_mean"])) if eligible else None
+        gates[stage]={"candidates":checked,"accepted":chosen is not None,
+                      "chosen":None if chosen is None else chosen["candidate"]}
+        if chosen:
+            retained=dict(chosen["config"]);retained_name=chosen["candidate"]
+
+    # State-only arm: the selected architecture is trained with all history
+    # inputs clamped to zero, making H/history constant and therefore uninformative.
+    nohist_cfg=dict(retained)
+    nohist_rows=[];nohist_history={}
+    zero_data=dict(data);zero_data["history"]=np.zeros_like(data["history"],dtype=np.float32)
+    for seed in seeds:
+        cp=out/"noise_history_models"/f"state_only_seed{seed}.pt"
+        model,logs=_fit_for_diagnostics(out,zero_data,tokens,groups,key_actions,nohist_cfg,
+            device=device,seed=seed,checkpoint=cp)
+        vals=_score_ablation_candidate(model,nohist_cfg,zero_data,tokens,groups,ids,device=device)
+        row=_metric_record(vals,nohist_cfg,zero_data,tokens,groups,ids,device=device)
+        row.update(seed=seed,checkpoint=str(cp),train_log=logs,history_input="zero for fit and evaluation")
+        nohist_rows.append(row)
+        nohist_history[str(seed)]={v:_metric_record(_score_ablation_candidate(model,nohist_cfg,
+            history_variant(zero_data,ids,"zero" if v!="true" else "true",seed=seed),tokens,groups,ids,device=device),
+            nohist_cfg,zero_data,tokens,groups,ids,device=device) for v in ("true","zero","other_episode")}
+        if hasattr(model,"cpu"):model.cpu()
+        del model
+
+    # Control for the optimizer/minibatch loop: old A-L0 model and objective,
+    # but fitted through this module's new loop, for the same three seeds.
+    r0new_cfg=dict(ablation_config("R0"),implementation="step1_legacy_new_loop",stage="R0-new")
+    tokens_a,groups_a=load_token_cache(data,kind="A",row_ids=np.arange(len(data["row_id"])))
+    r0new_rows=[];r0new_history={}
+    for seed in seeds:
+        cp=out/"noise_history_models"/f"R0_new_seed{seed}.pt"
+        model,logs=_fit_for_diagnostics(out,data,tokens_a,groups_a,key_actions,r0new_cfg,
+            device=device,seed=seed,checkpoint=cp)
+        val=_score_ablation_candidate(model,r0new_cfg,data,tokens_a,groups_a,ids,device=device)
+        row=_metric_record(val,r0new_cfg,data,tokens_a,groups_a,ids,device=device)
+        row.update(seed=seed,checkpoint=str(cp),train_log=logs)
+        r0new_rows.append(row)
+        r0new_history[str(seed)]=_evaluate_history_variants(model,r0new_cfg,data,tokens_a,groups_a,ids,
+            device=device,seed=seed*10)
+        if hasattr(model,"cpu"):model.cpu()
+        del model
+
+    # Historical P5 baseline, trained on the same fit tasks, measured under all history variants.
+    p5_rows=[];p5_history={}
+    for seed in seeds:
+        cp=out/"noise_history_models"/f"P5_seed{seed}.pt"
+        if cp.exists():
+            model,_=step1._torch_load(cp,device)
+            logs=[]
+        else:
+            model,logs=step1._train_once(out,"P5",seed=seed,tau=.01,k=1,layer="final",epochs=3,
+                save_path=cp,device=device,batch_size=64,report_each=False,data_override=data)
+        p5_history[str(seed)]={}
+        for offset,name in enumerate(("true","zero","other_episode")):
+            d=history_variant(data,ids,name,seed=seed*10+offset)
+            scores,rank,_=step1._score_model(model,"P5",d,ids,layer="final",device=device,batch=32)
+            met=step1._step1_metrics(scores,d,ids);err=np.asarray(d["error"])[ids];ix=rank[:,0]
+            row={"top1_type_error":float(err[np.arange(len(ix)),ix].mean()),
+                "recovery":float(met["recovery"]),"spearman_positive":float(met["spearman_mean"])}
+            p5_history[str(seed)][name]=row
+        p5_rows.append({"seed":seed,"checkpoint":str(cp),"train_log":logs})
+        _log(out,diagnostic="noise_history_P5",seed=seed,checkpoint=str(cp))
+        if hasattr(model,"cpu"):model.cpu()
+        del model
+
+    p5_agg={}
+    for variant in ("true","zero","other_episode"):
+        p5_agg[variant]={}
+        for metric in ("top1_type_error","recovery","spearman_positive"):
+            v=[p5_history[str(s)][variant][metric] for s in seeds]
+            p5_agg[variant][metric+"_mean"]=float(np.mean(v))
+            p5_agg[variant][metric+"_sd"]=float(np.std(v,ddof=1))
+
+    result={"status":"complete","source_selection":str(selection_path),"source_selection_seed":4101,
+        "seeds":list(seeds),"epochs":3,"selection_rows":int(len(ids)),"fit_rows":int(len(fit_ids)),
+        "eval_rows_read":False,"group_cv_run":False,"retained_config":retained,
+        "retained_candidate":retained_name,"acceptance_vs_R0":gates,"stages":stage_rows,
+        "history_variants":history_rows,"state_only_arm":{"aggregate":aggregate_seed_metrics(nohist_rows),
+            "per_seed":nohist_rows,"history_variants":nohist_history},
+        "R0_new_loop":{"aggregate":aggregate_seed_metrics(r0new_rows),"per_seed":r0new_rows,
+            "history_variants":r0new_history},
+        "P5":{"per_seed":p5_rows,"history_variants":p5_history,"aggregate":p5_agg},
+        "model_paths":seed_models}
+    _atomic_json(dest,result)
+    _atomic_json(out/"history_dependence.json",{"status":"complete","variants":["true","zero","other_episode"],
+        "stages":history_rows,"state_only":result["state_only_arm"],"R0_new_loop":r0new_history,"P5":p5_agg})
+    write_noise_history_report(out,result)
+    return result
+
+
+def write_noise_history_report(out,result):
+    """Write concise tables from the frozen multi-seed diagnostics."""
+    out=Path(out);s=result["stages"]
+    lines=["# INV2 noise and history diagnostics","",
+        "Evaluation uses only the LIBERO-40 heldout-task selection rows. No LIBERO-90 Eval labels or group-CV were read/run.",
+        "The initial staged configs are frozen from ablation_selection.json. Multi-seed gates compare every candidate with R0: top-1 error mean ≤ 1.02×R0 mean and Spearman gain > 2×R0 sample SD.","",
+        "## Three-seed stage metrics (mean ± sample SD)","",
+        "| stage/candidate | top-1 type error | recovery | Spearman (+ is good) | K-token cosine | gate vs R0 |",
+        "|---|---:|---:|---:|---:|---|"]
+    names=["R0","R1","R2","R3_c0","R3_c1","R4","R5"]
+    for name in names:
+        if name not in s:continue
+        a=s[name+"_aggregate"]
+        stage=name.split("_")[0]
+        gate=("baseline" if name=="R0" else "pass" if result["acceptance_vs_R0"].get(stage,{}).get("accepted") else "reject")
+        def fmt(metric):
+            m=a.get(metric+"_mean");sd=a.get(metric+"_sd")
+            return "—" if m is None else f"{m:.4f} ± {sd:.4f}"
+        lines.append(f"| {name} | {fmt('top1_type_error')} | {fmt('recovery')} | {fmt('spearman_positive')} | {fmt('mean_query_token_cosine')} | {gate} |")
+    lines += ["",f"Retained multi-seed configuration: `{result['retained_candidate']}` — `{result['retained_config']}`.",
+        "R3 candidates are both reported; the higher-Spearman passing candidate is preferred.","",
+        "## History dependence (three-seed mean ± sample SD)","",
+        "| stage/candidate | history | recovery | Spearman | top-1 type error |","|---|---|---:|---:|---:|"]
+    for name,seed_map in result["history_variants"].items():
+        variants=[seed_map[str(seed)] for seed in result["seeds"]]
+        for v in ("true","zero","other_episode"):
+            vals=[r[v] for r in variants]
+            fields=[]
+            for metric in ("recovery","spearman_positive","top1_type_error"):
+                x=np.asarray([r[metric] for r in vals],float)
+                fields.append(f"{x.mean():.4f} ± {x.std(ddof=1):.4f}")
+            lines.append(f"| {name} | {v} | {fields[0]} | {fields[1]} | {fields[2]} |")
+    for title,key in (("State-only history-clamped arm","state_only_arm"),("R0-new loop","R0_new_loop")):
+        agg=result[key]["aggregate"]
+        lines += ["",f"## {title}","", "| top-1 type error | recovery | Spearman |","|---:|---:|---:|"]
+        lines.append("| "+" | ".join(f"{agg[k+'_mean']:.4f} ± {agg[k+'_sd']:.4f}" for k in ("top1_type_error","recovery","spearman_positive"))+" |")
+    lines += ["","## P5 baseline under history variants","","| history | top-1 type error | recovery | Spearman |","|---|---:|---:|---:|"]
+    for v,r in result["P5"]["aggregate"].items():
+        lines.append(f"| {v} | {r['top1_type_error_mean']:.4f} ± {r['top1_type_error_sd']:.4f} | {r['recovery_mean']:.4f} ± {r['recovery_sd']:.4f} | {r['spearman_positive_mean']:.4f} ± {r['spearman_positive_sd']:.4f} |")
+    lines += ["","The state-only arm is fitted and evaluated with history clamped to zero; its history variants are not informative and are recorded as such in JSON. All reported comparisons are offline heldout-task retrieval diagnostics, not LIBERO-90 Eval results."]
+    (out/"noise_history_report.md").write_text("\n".join(lines)+"\n")
+
+
 def _load_ablation_checkpoint(path, cfg, device):
     import torch
     ck=torch.load(path,map_location="cpu",weights_only=False)
-    if cfg["implementation"]=="step1_legacy":
+    if cfg["implementation"] in ("step1_legacy","step1_legacy_new_loop"):
         model=step1._make_model("A",1,TOKEN_DIM)
     else:
         model=_build_model(cfg["kind"],k=cfg["k"],key_mode=cfg["key_mode"],
@@ -706,25 +996,30 @@ def _load_ablation_checkpoint(path, cfg, device):
     return model.to(device)
 
 
-def _fit_ablation_candidate(out, data, tokens, groups, key_actions, cfg, *, device, save_path):
+def _fit_ablation_candidate(out, data, tokens, groups, key_actions, cfg, *, device, save_path, seed=SEED):
     """Fit one candidate with the historical optimizer and exact stage flags."""
     import torch
     p=Path(save_path)
     if p.exists(): return _load_ablation_checkpoint(p,cfg,device),[]
     if cfg["implementation"]=="step1_legacy":
         step1._preload_final_tokens(data,"A",device)
-        model,logs=step1._train_once(out,"A-L0",seed=SEED,tau=.01,k=1,layer="final",epochs=3,
+        model,logs=step1._train_once(out,"A-L0",seed=seed,tau=.01,k=1,layer="final",epochs=3,
             save_path=p,device=device,batch_size=64,report_each=False,data_override=data)
         return model,logs
+    if cfg["implementation"]=="step1_legacy_new_loop":
+        return _train_config(data,tokens,groups,key_actions,kind="A",l1=False,pooled=False,
+            l0_mode="legacy",l1_weight=0.,k=1,epochs=3,device=device,batch_size=64,
+            seed=seed,save_path=p,key_mode="legacy",query_pool=False,
+            learning_rate=3e-4,legacy_r0=True)
     return _train_config(data,tokens,groups,key_actions,kind=cfg["kind"],l1=cfg["l1"],pooled=False,
         l0_mode=cfg["l0"],l1_weight=cfg["l1_weight"],k=cfg["k"],key_mode=cfg["key_mode"],
         query_pool=cfg["query_pool"],no_history_cross=cfg.get("no_history_cross",False),
         learning_rate=cfg["lr"],epochs=3,device=device,
-        batch_size=256 if cfg["l1"] else 64,seed=SEED,save_path=p)
+        batch_size=256 if cfg["l1"] else 64,seed=seed,save_path=p)
 
 
 def _score_ablation_candidate(model, cfg, data, tokens, groups, ids, *, device):
-    if cfg["implementation"]=="step1_legacy":
+    if cfg["implementation"] in ("step1_legacy","step1_legacy_new_loop"):
         scores,rank,_=step1._score_model(model,"A-L0",data,ids,layer="final",device=device,batch=32)
         token_cos=None
     else:
@@ -742,7 +1037,9 @@ def tune_stages(out=OUT, *, source_out=step1.OUT, device="cuda"):
     dest=out/"ablation_selection.json"
     if dest.exists(): return json.loads(dest.read_text())
     if not (step1.OUT/"STEP1_API.md").exists(): raise FileNotFoundError(step1.OUT/"STEP1_API.md")
-    data=_load_step1(source_out); fit_sel=np.flatnonzero(np.asarray(data["fit"])|np.asarray(data["select"]))
+    # Use the STEP1 API-prepared mapping, which includes the fixed group labels
+    # needed by the shared retrieval metrics (the raw fit cache omits `group`).
+    data=step1._step1_prepare_data(source_out); fit_sel=np.flatnonzero(np.asarray(data["fit"])|np.asarray(data["select"]))
     if not np.array_equal(fit_sel,np.arange(len(data["row_id"]))): raise AssertionError("fit/selection cache row order mismatch")
     tokens,groups=load_token_cache(data,kind="B",row_ids=fit_sel)
     key_actions=load_training_actions(data,out)
@@ -1194,7 +1491,7 @@ def report(out=OUT):
     return d
 
 def main(argv=None):
-    p=argparse.ArgumentParser();p.add_argument("stage",choices=["prepare","smoke","tune","train","evaluate","report"])
+    p=argparse.ArgumentParser();p.add_argument("stage",choices=["prepare","smoke","tune","diagnostics","train","evaluate","report"])
     p.add_argument("--out",default=str(OUT));p.add_argument("--device",default="cuda")
     p.add_argument("--source-out",default=str(step1.OUT));p.add_argument("--epochs",type=int,default=3)
     p.add_argument("--batch-size",type=int,default=64)
@@ -1205,6 +1502,7 @@ def main(argv=None):
     if a.stage=="prepare":print(json.dumps(prepare(a.out,source_out=a.source_out),indent=2))
     elif a.stage=="smoke":print(json.dumps(smoke(a.out,source_out=a.source_out,device=a.device),indent=2))
     elif a.stage=="tune":print(json.dumps(tune(a.out,source_out=a.source_out,device=a.device,epochs=a.epochs,batch_size=a.batch_size),indent=2))
+    elif a.stage=="diagnostics":print(json.dumps(run_noise_history_diagnostics(a.out,source_out=a.source_out,device=a.device),indent=2))
     elif a.stage=="train":print(json.dumps(train_selected(a.out,source_out=a.source_out,device=a.device,batch_size=a.batch_size),indent=2))
     elif a.stage=="evaluate":print(json.dumps(evaluate(a.out,source_out=a.source_out,device=a.device),indent=2))
     else:print(json.dumps(report(a.out),indent=2))

@@ -298,3 +298,51 @@ def test_eval_refuses_to_use_step1_metrics_before_api_handoff(tmp_path):
     # Avoid reading any Eval labels or silently substituting a private evaluator.
     with pytest.raises((FileNotFoundError, RuntimeError)):
         v2.evaluate(tmp_path, source_out=tmp_path, device="cpu")
+
+
+def test_multiseed_gate_uses_r0_mean_and_twice_its_sample_sd():
+    baseline={"top1_type_error_mean":.02,"spearman_positive_mean":.40,"spearman_positive_sd":.01}
+    good={"top1_type_error_mean":.0203,"spearman_positive_mean":.421}
+    bad_error={"top1_type_error_mean":.0205,"spearman_positive_mean":.50}
+    bad_rho={"top1_type_error_mean":.019,"spearman_positive_mean":.42}
+    assert v2.multiseed_acceptance(good,baseline)["accepted"]
+    assert not v2.multiseed_acceptance(bad_error,baseline)["accepted"]
+    assert not v2.multiseed_acceptance(bad_rho,baseline)["accepted"]
+
+
+def test_seed_aggregation_reports_sample_standard_deviation():
+    rows=[{"seed":4101,"top1_type_error":1.,"recovery":.2,"spearman_positive":.3,"mean_query_token_cosine":None},
+          {"seed":4102,"top1_type_error":3.,"recovery":.4,"spearman_positive":.5,"mean_query_token_cosine":None},
+          {"seed":4103,"top1_type_error":2.,"recovery":.6,"spearman_positive":.7,"mean_query_token_cosine":None}]
+    got=v2.aggregate_seed_metrics(rows)
+    assert got["top1_type_error_mean"]==2.
+    assert got["top1_type_error_sd"]==1.
+    assert got["recovery_mean"]==pytest.approx(.4)
+
+
+def test_other_history_is_deterministic_and_from_a_different_episode():
+    data={"history":np.arange(6*10*7,dtype=np.float32).reshape(6,10,7),
+          "episode":np.array([10,10,20,20,30,30])}
+    ids=np.array([0,2,4])
+    got=v2.history_variant(data,ids,"other_episode",seed=9)
+    again=v2.history_variant(data,ids,"other_episode",seed=9)
+    np.testing.assert_array_equal(got["history"],again["history"])
+    for row in ids:
+        source=np.flatnonzero(data["episode"]!=data["episode"][row])
+        assert any(np.array_equal(got["history"][row],data["history"][j]) for j in source)
+    zero=v2.history_variant(data,ids,"zero")
+    assert not zero["history"][ids].any()
+    np.testing.assert_array_equal(zero["history"][1],data["history"][1])
+
+
+def test_legacy_r0_logits_matches_untouched_old_forward_path():
+    torch.manual_seed(84)
+    model=v2.step1._make_model("A",1,32)
+    hist=torch.randn(4,10,7);state=torch.randn(4,8);tokens=torch.randn(4,11,32)
+    pool=torch.randn(13,10,7)
+    mask=torch.ones(tokens.shape[:2],dtype=torch.bool)
+    q,_=model(hist,state,tokens,mask)
+    keys=torch.nn.functional.normalize(model.key(pool.flatten(1)),dim=-1)
+    expected=torch.nn.functional.normalize(q,dim=-1)@keys.T*model.log_scale.exp()
+    actual=v2.legacy_r0_logits(model,hist,state,tokens,pool)
+    torch.testing.assert_close(actual,expected,atol=0,rtol=0)
