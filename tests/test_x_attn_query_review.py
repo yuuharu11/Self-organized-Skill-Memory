@@ -65,18 +65,21 @@ def test_fusion_gate_is_query_conditioned():
     torch = pytest.importorskip('torch')
     torch.set_num_threads(8)
     torch.manual_seed(3)
-    gate = xq.make_fusion_gate(14)
+    gate = xq.make_fusion_gate(14, 16)
     with torch.no_grad():
-        gate[0].weight.fill_(.03); gate[0].bias.zero_()
-        gate[2].weight.fill_(.02); gate[2].bias.zero_()
+        for p in gate.parameters(): p.fill_(.02)
     p5 = torch.tensor([[3., 1., 0.], [.1, 0., -.1]])
     nn = torch.tensor([[0., 2., 1.], [3., 0., -1.]])
     feat = {'hist': torch.ones(2, 10, 7), 'state': torch.ones(2, 8),
-            'context': torch.tensor([[0., 0., 0., 0.], [2., 1., 3., 1.]])}
+            'context': torch.tensor([[0., 0., 0., 0.], [2., 1., 3., 1.]]),
+            'visual_delta': torch.zeros(2, 4, 16)}
     score, alpha = xq.combine_with_gate(gate, p5, nn, feat)
     assert score.shape == (2, 3)
     assert alpha.shape == (2,) and torch.all((alpha > 0) & (alpha < 1))
     assert not torch.isclose(alpha[0], alpha[1])
+    changed = dict(feat); changed['visual_delta'] = torch.ones(2, 4, 16)
+    _, alpha_delta = xq.combine_with_gate(gate, p5, nn, changed)
+    assert not torch.allclose(alpha, alpha_delta)
 
 
 def test_smoke_selection_has_contiguous_windows():
