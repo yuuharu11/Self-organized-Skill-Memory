@@ -150,7 +150,7 @@ def energy():
     cd = _load_cd()
     base = cd._module(cd.PI05 / 'run.py', 'lowfreq_energy_base')
     rows = base.load_rows(cd.RUN)
-    unseen = {p.stem: np.load(p, mmap_mode='r', allow_pickle=False) for p in (cd.UNSEEN / 'unseen_rows').glob('*.npy')}
+    unseen = {p.stem: np.load(p, mmap_mode='r', allow_pickle=False) for p in cd.UNSEEN_ROWS.glob('*.npy')}
     basis = dct_basis()
     out = {}
     for white in ('A-raw', 'A-vm-none', 'A-vm-08'):

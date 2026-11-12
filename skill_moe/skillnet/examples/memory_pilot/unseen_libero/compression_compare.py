@@ -25,7 +25,7 @@ import dct_skill_draft_eval as ev  # noqa: E402
 import dct_tolerance_merge as merge  # noqa: E402
 import optimal_units_eval as opt  # noqa: E402
 import stored_units_eval as stored  # noqa: E402
-from draft_reconstruction import (ROOT, RUN, UNSEEN, CODECS, PI05, dct_roundtrip, keyframe_roundtrip,  # noqa: E402
+from draft_reconstruction import (ROOT, RUN, UNSEEN, UNSEEN_ROWS, CODECS, PI05, dct_roundtrip, keyframe_roundtrip,  # noqa: E402
                                   pca_basis, pca_roundtrip, summarize)
 from representations import resample  # noqa: E402
 from segment_demo import cut  # noqa: E402
@@ -180,7 +180,7 @@ def main():
     Data.memory_state = np.asarray(rows['state'][memory], np.float32)
     Data.memory_feature = np.asarray(pooled[memory], np.float32)
     Data.pca_mean, Data.pca_vt = pca_basis(np.asarray(rows['actions'][train])[:, :, :7])
-    un = {k: np.load(UNSEEN / 'unseen_rows' / f'{k}.npy', mmap_mode='r') for k in ('state', 'pooled', 'is_dev')}
+    un = {k: np.load(UNSEEN_ROWS / f'{k}.npy', mmap_mode='r') for k in ('state', 'pooled', 'is_dev')}
     ev_rows = np.flatnonzero(~np.asarray(un['is_dev']))
     Data.query_state = np.asarray(un['state'][ev_rows], np.float32)
     Data.query_feature = np.asarray(un['pooled'][ev_rows], np.float32)

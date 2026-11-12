@@ -130,7 +130,7 @@
 - [後続のタスク単位の探索的p値](task_significance.md)（9比較のHolm補正、窓を独立試行とは数えない）
 - [先行する再集計・ルーター診断](offline_diagnostics.md)
 - 復元コード：`scripts/complete_memory_evidence_audit.py`。集計：`scripts/summarize_memory_evidence_audit.py`。
-- 9テスト通過：`tests/test_memory_slide_evidence.py`、`tests/test_complete_memory_evidence_audit.py`。
+- 9テスト通過：`tests/test_memory_slide_evidence.py`、`tests/test_complete_memory_evidence_audit.py`（コードは `d7cbd7e` で削除。`git show d7cbd7e^:<パス>` で取り出せる）。
 - 詳細・全入力SHA・seed別値：`.skillnet-state/outputs/memory-pilot/slide-evidence-20261103/completion-01/summary.json`。
 - 全窓の順位・上位単位・抽出窓のノイズ別誤差：同ディレクトリの`diagnostic_arrays.npz`。個別task値と区間：`aggregate.json`。
 - 入力：`fair-compare-20261028T101842Z`、`review-tests-20261028T180100Z`、`emergent-light-20261026T050453Z-0cb536/feature-cache`。

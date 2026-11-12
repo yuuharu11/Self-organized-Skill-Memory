@@ -55,7 +55,7 @@ def _npz(path, **values):
 
 def _load_unseen():
     return {p.stem: np.load(p, mmap_mode="r", allow_pickle=False)
-            for p in (tr.UNSEEN / "unseen_rows").glob("*.npy")}
+            for p in tr.UNSEEN_ROWS.glob("*.npy")}
 
 
 def validate_libero40_train_rows(train_ids, task, validation, *, expected_count=23304):

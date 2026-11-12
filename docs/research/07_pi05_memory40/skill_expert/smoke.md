@@ -2,7 +2,7 @@
 
 ## Scope and artifacts
 
-Implemented the approved skill-draft mixture and bridge training in `examples/memory_pilot/pi05_memory/skill_expert/run.py`; a confidence-adaptive server in `serve.py`; a killable LIBERO worker and paired runner in `trial_worker.py` and `evaluate.py`; plus `run_production.sh` for exp. `tests/test_pi05_skill_expert.py` covers mixture, confidence-boundary, and seed contracts.
+Implemented the approved skill-draft mixture and bridge training in `examples/memory_pilot/pi05_memory/skill_expert/run.py`; a confidence-adaptive server in `serve.py`; a killable LIBERO worker and paired runner in `trial_worker.py` and `evaluate.py`; plus `run_production.sh` for exp. `tests/pi05_memory/test_expert.py` covers mixture, confidence-boundary, and seed contracts.
 
 Only the new Skill Expert checkpoint is trained. The run-01 codec, 6,583-row memory, b-prior, public pi05 checkpoint, and run-01 artifacts remain read-only. The best checkpoint is selected by fixed Dev rows with the b-prior draft at t0=.4, never by Long Eval. Old comparison loads `run-01/best_bridge.json`, not `latest_bridge.json`.
 

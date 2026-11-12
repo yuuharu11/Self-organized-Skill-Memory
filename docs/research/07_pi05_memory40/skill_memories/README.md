@@ -47,7 +47,7 @@ Long除外の生行動メモリは、Long hard 63行で正解との最良距離�
 ## 再現
 
 - Builder：[build.py](../../../../skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_memories/build.py)
-- CPU test：[test_pi05_skill_memories.py](../../../../tests/test_pi05_skill_memories.py)
+- CPU test：[test_shape_skills.py](../../../../tests/pi05_memory/test_shape_skills.py)
 - 出力：`.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/skill-memories-01`
 - 実行例：`cd "$SKILLNET_REPO_ROOT" && source env/activate.sh && OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 taskset -c 8-15 nice -n 10 python -u skill_moe/skillnet/examples/memory_pilot/pi05_memory/skill_memories/build.py`
 

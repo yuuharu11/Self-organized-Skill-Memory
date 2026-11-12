@@ -2,24 +2,23 @@
 import ast
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
 
 import jax
 import jax.numpy as jnp
 import pytest
+from openpi.models import pi0 as plain_pi0
+from openpi.models import pi0_moe_skill
+from openpi.models.model import Observation
+from openpi.models.pi0_optimus_r_config import Pi0OptimusRConfig
+from openpi.policies.policy import Policy
 
-REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO / "skill_moe/skillnet/src"))
-EXAMPLES = REPO / "skill_moe/skillnet/examples"
-PI05 = EXAMPLES / "memory_pilot/pi05_memory"
-
-from openpi.models import pi0 as plain_pi0  # noqa: E402
-from openpi.models import pi0_moe_skill  # noqa: E402
-from openpi.models.model import Observation  # noqa: E402
-from openpi.models.pi0_optimus_r_config import Pi0OptimusRConfig  # noqa: E402
-from openpi.policies.policy import Policy  # noqa: E402
+from tests.support import (
+    EXAMPLES,
+    PI05,
+    REPO,
+)
 
 
 def _load_helper():

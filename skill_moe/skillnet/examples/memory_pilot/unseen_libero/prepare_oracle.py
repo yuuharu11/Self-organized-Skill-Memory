@@ -7,11 +7,12 @@ import h5py
 import numpy as np
 
 HERE=Path(__file__).resolve().parent
+if str(HERE) not in sys.path:sys.path.insert(0,str(HERE))
+from unseen_paths import UNSEEN_ROWS,IMAGE_ORIENTATION,orient_libero_frame
 REPO_ROOT=Path(__file__).resolve().parents[5]
 STATE_DIR=Path(os.environ.get('SKILLNET_STATE_DIR',REPO_ROOT/'.skillnet-state')).expanduser()
 ROOT=Path(os.environ.get('SKILLNET_PI05_ROOT',STATE_DIR/'outputs/memory-pilot/pi05-memory40-20261104')).expanduser()
 RUN=ROOT/'run-01'
-DEFAULT_OUT=Path(os.environ.get('UNSEEN_LIBERO_OUT',STATE_DIR/'outputs/memory-pilot/unseen-libero/oracle-01')).expanduser()
 DEFAULT_H5=Path(os.environ.get('SKILLNET_LIBERO_HDF5',STATE_DIR/'data/LIBERO')).expanduser()
 CHECKPOINT=Path(os.environ.get('SKILLNET_PI05_CHECKPOINT',STATE_DIR/'checkpoints/openpi-assets/checkpoints/pi05_libero')).expanduser()
 
@@ -32,8 +33,9 @@ def fixed_tasks():
     if {x['task_id'] for x in evaluation}&{x['task_id'] for x in dev}:raise AssertionError('Dev/Eval task overlap')
     return dev,evaluation
 
-def prepare(out:Path,h5root:Path,checkpoint:Path):
-    if (out/'unseen_rows/manifest.json').exists():raise FileExistsError('prepared dataset already exists; resume is read-only')
+def prepare(rd:Path,h5root:Path,checkpoint:Path):
+    """Write the Dev/Eval windows to ``rd`` (a new directory; an existing one is never overwritten)."""
+    if rd.exists():raise FileExistsError(f'{rd} already exists; prepared rows are never overwritten')
     import pyarrow
     from PIL import Image
     from openpi.transforms import Normalize,ResizeImages,TokenizePrompt,PadStatesAndActions
@@ -74,7 +76,9 @@ def prepare(out:Path,h5root:Path,checkpoint:Path):
                     # Preserve the public LIBERO input transform exactly; the
                     # HDF5 source images are 128x128 and are padded to 224 by
                     # ResizeImages, while actions/state use pi05_libero stats.
-                    x={'observation/image':base[start],'observation/wrist_image':wrist[start],
+                    # HDF5 frames are stored as rendered (upside down): rotate
+                    # them 180 degrees exactly as the closed-loop worker does.
+                    x={'observation/image':orient_libero_frame(base[start]),'observation/wrist_image':orient_libero_frame(wrist[start]),
                        'observation/state':state[start],'actions':actions[start:start+10],
                        'prompt':task['instruction']}
                     x=inputs(x)
@@ -88,7 +92,7 @@ def prepare(out:Path,h5root:Path,checkpoint:Path):
                                 'split':task['split'],'episode':epi,'source_demo':name,'source_hdf5':task['hdf5'],
                                 'source_steps':int(n),'rows':int(count),'subsample':'every other HDF5 frame (10Hz)'} )
     if not rows:raise ValueError('no windows created')
-    rd=out/'unseen_rows';rd.mkdir(parents=True,exist_ok=False)
+    rd.mkdir(parents=True,exist_ok=False)
     fields={'image_base':(np.uint8,(224,224,3)),'image_wrist':(np.uint8,(224,224,3)),
             'state':(np.float32,(32,)),'actions':(np.float32,(10,32)),
             'prompt':(np.int32,(200,)),'prompt_mask':(bool,(200,)),'task':(np.int32,()),
@@ -103,34 +107,35 @@ def prepare(out:Path,h5root:Path,checkpoint:Path):
     write_json(rd/'manifest.json',{'rows':len(rows),'episodes':len(records),'dev_tasks':[x['task_id'] for x in dev],
         'eval_tasks':[x['task_id'] for x in ev],'dev_episodes_each':10,'eval_episodes_each':10,
         'windows':'10 action frames, stride 10, source 10Hz (HDF5 every other frame)',
-        'actions_normalized_with':str(norm_path),'norm_sha256':hashlib.sha256(norm_path.read_bytes()).hexdigest(),
+        'image_orientation':IMAGE_ORIENTATION,'actions_normalized_with':str(norm_path),'norm_sha256':hashlib.sha256(norm_path.read_bytes()).hexdigest(),
         'source_records':records,'source_note':'held-out demonstrations only; excluded from LIBERO-40 memory and Expert gradient updates'})
     print(json.dumps({'stage':'prepare','rows':len(rows),'dev_rows':int(split.sum()),'eval_rows':int((~split).sum())}),flush=True)
 
-def extract(out:Path,checkpoint:Path,batch=4):
+def extract(rd:Path,checkpoint:Path,batch=4):
     started=time.monotonic()
     import flax.nnx as nnx
     import jax
     from openpi.shared.nnx_utils import module_jit
     base=module(HERE.parent/'pi05_memory'/'run.py','unseen_oracle_run_base')
-    rows={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in (out/'unseen_rows').glob('*.npy')}
+    if (rd/'features.json').exists():raise FileExistsError(f'{rd}/features.json exists; features are never overwritten')
+    rows={p.stem:np.load(p,mmap_mode='r',allow_pickle=False) for p in rd.glob('*.npy')}
     n=len(rows['actions']);model,_=base.load_policy(checkpoint);encode=module_jit(model.prefix_features)
-    tok=np.lib.format.open_memmap(out/'unseen_rows/tokens.npy',mode='w+',dtype='float16',shape=(n,712,2048))
-    grp=np.lib.format.open_memmap(out/'unseen_rows/groups.npy',mode='w+',dtype='int8',shape=(n,712))
-    pooled=np.lib.format.open_memmap(out/'unseen_rows/pooled.npy',mode='w+',dtype='float32',shape=(n,2048))
+    tok=np.lib.format.open_memmap(rd/'tokens.npy',mode='w+',dtype='float16',shape=(n,712,2048))
+    grp=np.lib.format.open_memmap(rd/'groups.npy',mode='w+',dtype='int8',shape=(n,712))
+    pooled=np.lib.format.open_memmap(rd/'pooled.npy',mode='w+',dtype='float32',shape=(n,2048))
     for st in range(0,n,batch):
         ids=np.arange(st,min(st+batch,n));obs=base.obs_batch(rows,ids);h,g=encode(obs);h,g=np.asarray(h),np.asarray(g)
         tok[ids]=h.astype(np.float16);grp[ids]=g.astype(np.int8)
         valid=g>=0;pooled[ids]=(h*valid[...,None]).sum(1)/np.maximum(valid.sum(1),1)[:,None]
         if st%(batch*100)==0:
             tok.flush();grp.flush();pooled.flush()
-            write_json(out/'unseen_rows/feature_progress.json',{'rows':min(st+batch,n),'total':n,'seconds_elapsed':time.monotonic()-started})
+            write_json(rd/'feature_progress.json',{'rows':min(st+batch,n),'total':n,'seconds_elapsed':time.monotonic()-started})
     tok.flush();grp.flush();pooled.flush()
-    write_json(out/'unseen_rows/features.json',{'rows':n,'shape_tokens':[712,2048],'checkpoint':str(checkpoint),'complete':True})
+    write_json(rd/'features.json',{'rows':n,'shape_tokens':[712,2048],'checkpoint':str(checkpoint),'complete':True})
     print(json.dumps({'stage':'extract','rows':n}),flush=True)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('stage',choices=['prepare','extract']);p.add_argument('--out',type=Path,default=DEFAULT_OUT);p.add_argument('--hdf5-root',type=Path,default=DEFAULT_H5);p.add_argument('--checkpoint',type=Path,default=CHECKPOINT);p.add_argument('--batch',type=int,default=4);a=p.parse_args()
-    if a.stage=='prepare':prepare(a.out,a.hdf5_root,a.checkpoint)
-    else:extract(a.out,a.checkpoint,a.batch)
+    p=argparse.ArgumentParser();p.add_argument('stage',choices=['prepare','extract']);p.add_argument('--rows-dir',type=Path,default=UNSEEN_ROWS);p.add_argument('--hdf5-root',type=Path,default=DEFAULT_H5);p.add_argument('--checkpoint',type=Path,default=CHECKPOINT);p.add_argument('--batch',type=int,default=4);a=p.parse_args()
+    if a.stage=='prepare':prepare(a.rows_dir,a.hdf5_root,a.checkpoint)
+    else:extract(a.rows_dir,a.checkpoint,a.batch)
 if __name__=='__main__':main()

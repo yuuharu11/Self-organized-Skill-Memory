@@ -101,6 +101,6 @@ M6はassign/pending/register/merge、κ=[.01,.025,.05,.1,.2,.4,.8,1.6]、最小�
 ## 成果物
 
 - コード: `skill_moe/skillnet/examples/memory_pilot/pi05_memory/shape_skills/vq.py`
-- テスト: `tests/test_pi05_shape_skills_vq.py`
+- テスト: `tests/pi05_memory/test_shape_skills.py`
 - FORMAT bundles: `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-01/representations/vq_<segment>_<mode>_K<k>/r{0,4,8}/`
 - run summary: `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-01/vq_summary.json`; training log: `/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/shape-skills-01/vq_progress.jsonl`

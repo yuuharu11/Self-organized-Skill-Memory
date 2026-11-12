@@ -98,8 +98,8 @@ python data_process/skill_hierarchy/skill_hierarchy_tokenizer.py \
 
 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 \
   CUDA_VISIBLE_DEVICES='' JAX_PLATFORMS=cpu python -m pytest -q \
-  tests/test_skill_methods_m1.py tests/test_pi05_memory_core.py \
-  tests/test_pi05_fair_expert.py tests/test_pi05_key_mechanism.py \
+  tests/emergent/test_bottlenecks.py tests/pi05_memory/test_retrieval.py \
+  tests/pi05_memory/test_expert.py \
   skill_memory_core/tests/test_core.py
 ```
 
