@@ -346,3 +346,7 @@ def test_legacy_r0_logits_matches_untouched_old_forward_path():
     expected=torch.nn.functional.normalize(q,dim=-1)@keys.T*model.log_scale.exp()
     actual=v2.legacy_r0_logits(model,hist,state,tokens,pool)
     torch.testing.assert_close(actual,expected,atol=0,rtol=0)
+    tokens_half=tokens.half().float();q_half,_=model(hist,state,tokens_half,mask)
+    expected_half=torch.nn.functional.normalize(q_half,dim=-1)@keys.T*model.log_scale.exp()
+    half=v2.legacy_r0_logits(model,hist,state,tokens.half(),pool)
+    torch.testing.assert_close(half,expected_half,atol=0,rtol=0)

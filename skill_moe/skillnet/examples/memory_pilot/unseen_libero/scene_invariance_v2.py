@@ -715,6 +715,7 @@ def legacy_r0_logits(model, history, state, tokens, pool_actions):
     """Old A-L0 forward/key path used by the new optimizer loop control."""
     import torch
     import torch.nn.functional as F
+    tokens=tokens.to(dtype=next(model.parameters()).dtype)
     mask=torch.ones(tokens.shape[:2],device=tokens.device,dtype=torch.bool)
     q,_=model(history,state,tokens,mask)
     keys=F.normalize(model.key(pool_actions.flatten(1)),dim=-1)
@@ -765,9 +766,14 @@ def _metric_record(value, cfg, data, tokens, groups, ids, *, device):
         "mean_query_token_cosine":value.get("mean_query_token_cosine")}
 
 
-def _evaluate_history_variants(model,cfg,data,tokens,groups,ids,*,device,seed):
+def _evaluate_history_variants(model,cfg,data,tokens,groups,ids,*,device,seed,base_record=None):
     rows={}
-    for offset,name in enumerate(("true","zero","other_episode")):
+    if base_record is not None:
+        rows["true"]={k:base_record[k] for k in ("top1_type_error","recovery","spearman_positive")}
+        names=("zero","other_episode")
+    else:
+        names=("true","zero","other_episode")
+    for offset,name in enumerate(names):
         d=history_variant(data,ids,name,seed=seed+offset)
         v=_score_ablation_candidate(model,cfg,d,tokens,groups,ids,device=device)
         rows[name]=_metric_record(v,cfg,d,tokens,groups,ids,device=device)
@@ -827,7 +833,7 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
                     # Stage R0 itself is also exposed under the compact key.
                     pass
                 history_rows[stage_id][str(seed)]=_evaluate_history_variants(
-                    model,cfg,data,tokens,groups,ids,device=device,seed=seed*10)
+                    model,cfg,data,tokens,groups,ids,device=device,seed=seed*10,base_record=record)
                 seed_models.setdefault(stage_id,{})[str(seed)]=str(cp)
                 if hasattr(model,"cpu"):model.cpu()
                 del model
@@ -868,9 +874,8 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
         row=_metric_record(vals,nohist_cfg,zero_data,tokens,groups,ids,device=device)
         row.update(seed=seed,checkpoint=str(cp),train_log=logs,history_input="zero for fit and evaluation")
         nohist_rows.append(row)
-        nohist_history[str(seed)]={v:_metric_record(_score_ablation_candidate(model,nohist_cfg,
-            history_variant(zero_data,ids,"zero" if v!="true" else "true",seed=seed),tokens,groups,ids,device=device),
-            nohist_cfg,zero_data,tokens,groups,ids,device=device) for v in ("true","zero","other_episode")}
+        same={k:row[k] for k in ("top1_type_error","recovery","spearman_positive")}
+        nohist_history[str(seed)]={v:dict(same) for v in ("true","zero","other_episode")}
         if hasattr(model,"cpu"):model.cpu()
         del model
 
@@ -888,7 +893,7 @@ def run_noise_history_diagnostics(out=OUT, *, source_out=step1.OUT, device="cuda
         row.update(seed=seed,checkpoint=str(cp),train_log=logs)
         r0new_rows.append(row)
         r0new_history[str(seed)]=_evaluate_history_variants(model,r0new_cfg,data,tokens_a,groups_a,ids,
-            device=device,seed=seed*10)
+            device=device,seed=seed*10,base_record=row)
         if hasattr(model,"cpu"):model.cpu()
         del model
 
