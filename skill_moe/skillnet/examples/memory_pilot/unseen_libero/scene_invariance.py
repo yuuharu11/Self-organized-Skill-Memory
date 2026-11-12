@@ -734,16 +734,30 @@ def _step1_score_factory(device="cuda", batch=16):
             pool=query_rows["_pool"];selected=rank[:,0]
             decoded=kq.decode_pool_actions(pool,selected[:,None],vs,theta_source="src")[:,0,:,:6]
             truth=np.asarray(query_rows["target_action"],np.float32)
-            mse=np.mean((decoded-truth)**2,axis=(1,2))
+            # Match the established six-axis metric used by memory_closed_loop.check:
+            # sum the six active-axis errors, then divide by seven (the 7D action
+            # normalization convention).  A scalar-element mean is larger by 7/6.
+            mse=_six_axis_mse_over7(decoded,truth)
             hist=np.asarray(query_rows["history"],np.float32);hold=np.repeat(hist[:,-1:,:6],truth.shape[1],axis=1)
-            hmse=np.mean((hold-truth)**2,axis=(1,2));hard=np.asarray(query_rows["hard"],bool);ep=np.asarray(query_rows["episode_bootstrap"])
+            hmse=_six_axis_mse_over7(hold,truth);hard=np.asarray(query_rows["hard"],bool);ep=np.asarray(query_rows["episode_bootstrap"])
             extras["action_mse"]={"all_mean":float(mse.mean()),"hard_mean":float(mse[hard].mean()),
                 "vs_hold_last":_bootstrap_diff(mse,hmse,ep),
                 "vs_hold_last_hard":_bootstrap_diff(mse[hard],hmse[hard],ep[hard]),
                 "hold_last_all":float(hmse.mean()),"hold_last_hard":float(hmse[hard].mean()),
+                "raw_component_mse_all":float(np.mean((decoded-truth)**2)),
+                "raw_component_mse_hard":float(np.mean((decoded[hard]-truth[hard])**2)),
+                "metric_definition":"mean over time of sum of six active-axis squared errors divided by 7",
                 "hard_rows":int(hard.sum()),"rows":len(mse)}
         return {"scores":scores,"extras":extras}
     return score_fn
+
+
+def _six_axis_mse_over7(pred, target):
+    """Per-query six-axis MSE on the closed-loop convention: mean_t(sum_6(err²))/7."""
+    p=np.asarray(pred);y=np.asarray(target)
+    if p.shape!=y.shape or p.ndim<2 or p.shape[-1]<6:
+        raise ValueError(f"expected matching arrays ending in >=6 action axes, got {p.shape} and {y.shape}")
+    return np.square(p[..., :6]-y[..., :6]).sum(axis=-1).mean(axis=-1)/7.0
 
 
 def step1(out=OUT/"step1", *, data_root=OUT, device="cuda", batch=64, epochs=8):

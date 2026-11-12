@@ -141,3 +141,13 @@ def test_step1_api_excludes_held_group_and_flips_spearman_sign(tmp_path):
         assert fold not in candidates
     assert result["eval"]["P5-L0"]["metrics"]["spearman_mean"] > .99
 
+
+def test_step1_six_axis_mse_uses_sum_over_seven_scale():
+    pred=np.zeros((2,10,7),np.float32)
+    target=np.ones_like(pred)
+    got=si._six_axis_mse_over7(pred,target)
+    # Six active axes each have unit error; the standard metric divides by 7.
+    assert np.allclose(got,6/7)
+    scalar_mean=np.mean((pred[...,:6]-target[...,:6])**2,axis=(1,2))
+    assert np.allclose(got,scalar_mean*6/7)
+
