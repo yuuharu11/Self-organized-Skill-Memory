@@ -61,7 +61,7 @@ git rev-parse HEAD > "$SKILLNET_STATE_DIR/validation/source_commit.txt"
 ```
 
 `SKILLNET_STATE_DIR` は容量のある別ディスクのディレクトリにも変更できます。
-Git はソース・設定・小さな注釈を管理します。データ・重み・キャッシュ・実行結果はこの保存先で管理します。
+Git はソース・設定・小さな注釈を管理します。データ・重み・キャッシュ・実行結果はこの保存先で管理します（中身と持ち出し方は [7 節](#7-成果物の置き場所と別環境への持ち出し)）。
 元のコンテナの一時 venv や既存のデータは、新しい clone にはありません。
 
 ### Python と LIBERO
@@ -187,3 +187,70 @@ sha256sum env/requirements.lock > "$SKILLNET_STATE_DIR/validation/requirements.s
 GPU 実験は `nvidia-smi` の出力も保存します。
 重みの確定 revision、データの版、実行コマンド、seed と試行数、出力ディレクトリを結果に添付し、
 CPU の実装確認・小規模な疎通・全条件の再実行を区別して報告してください。
+
+## 7. 成果物の置き場所と別環境への持ち出し
+
+### Git に入るもの・入らないもの
+
+| 中身 | 置き場所 | Git |
+| --- | --- | --- |
+| コード、テスト、環境の固定 | リポジトリ | 入る |
+| 結論と主な結果の表 | `docs/research/<番号>_<内容>/README.md`、`experiments.md` | 入る |
+| 主な結果の元データ（数 MB 以内の集計） | `docs/research/<番号>_<内容>/evidence/` | 入る |
+| 実験の出力（指標、試行ごとの記録、ログ、下書き、特徴量） | `$SKILLNET_STATE_DIR/outputs/` | 入らない |
+| データセット、公開重み、学習した重み | `$SKILLNET_STATE_DIR/data/`、`checkpoints/`、`outputs/` 内 | 入らない |
+| venv、ダウンロードキャッシュ、外部ソース | `$SKILLNET_STATE_DIR/{envs,cache,sources}/` | 入らない |
+
+`.gitignore` は `outputs/`、`checkpoints/`、`data/`、`*.npy`、`*.npz`、`*.pt` などを除外します。
+結果を Git に残すときは、表の元になった小さな集計（json、csv）だけを `evidence/` に置き、どの出力から作ったかを書きます。
+
+主な結果の元データ：
+
+| 流れ | 置き場所 | 中身 |
+| --- | --- | --- |
+| 09 未学習 LIBERO | [evidence/](research/09_unseen_libero/evidence/) | 閉ループの全試行の成否と集計、オフライン MSE の比較、正解で選ぶ上限 |
+| 05・06 | [05 evidence/](research/05_skillnet_diagnosis/evidence/)、[06 evidence/](research/06_memory_evidence/evidence/) | SkillNet の診断、メモリ検証の集計 |
+
+### 学習した重みの扱い
+
+結論が出て打ち切った実験の学習済み重みは、保存先から削除しています。数値は文書と `evidence/`、各出力の `results.json`・`report.md` に残っています。
+作り直す場合は、表の段階から学習し直してください。消した対象と一覧は `$SKILLNET_STATE_DIR/cleanup/`（`deleted-files.jsonl.gz`）にあります。
+
+| 削除した重み | 作り直す手順 |
+| --- | --- |
+| 09 段階 2 の既存 Expert（`unseen-libero/oracle-01/experts/`） | [09 の再現手順](research/09_unseen_libero/reproduce.md) 段階 2 の `train-queue` |
+| 09 段階 3 のデノイズ Expert（`unseen-libero/compressed-denoise-01/*/experts/`） | 同 段階 3。段階 7 の `expert_refine.py` と、閉ループの `MEM_EXPERT` もこれを読む |
+| 07 の圧縮×まとめ×正解の Expert（`pi05-memory40-*/compress-cluster-oracle-01/experts/`）、圧縮と生の比較の Expert（`compress-vs-raw-01/` の `bridge/`） | `pi05_memory/compress_cluster_oracle/`、`compress_vs_raw/` |
+| 03〜05 の学習（`anchor-s2-train-*`、`r012-*`、`recovery-distill-*`、`head-ft-x0-*`、`skill-expert-bridge-*`、`dmp-route-*`、`optimus-r-*`、`subtask-pi05-*` の重み） | コードは Git タグ `archive/before-cleanup` |
+| 再現確認の作業場所（`reproduce-e2e-01/`、`reproduce-robocasa-02/` の venv・データ・出力） | ログとレポートだけ残した。手順は本書と [RoboCasa365](robocasa365.md) |
+
+下書き、行データ、特徴量、試行の記録は消していません。
+
+### 別環境へ持ち出すもの
+
+目的ごとに、保存先から次をコピーします。パスは `$SKILLNET_STATE_DIR` 以下、サイズは目安です。
+
+| 目的 | 必要なもの | サイズ |
+| --- | --- | ---: |
+| 結果を見るだけ | なし（文書と `evidence/`） | 0 |
+| 公開 π0.5 で閉ループを回す | `checkpoints/openpi-assets/checkpoints/pi05_libero/`（初期状態は `env/setup.sh` が取る LIBERO 本体から読む） | 12 GB |
+| 09 の単位メモリ閉ループ（段階 11〜12） | 上に加えて `outputs/memory-pilot/unseen-libero/{baseline-01,key-query-01/production,cluster-pools-01}/` | ＋ 13 GB |
+| 09 のオフライン比較の続き（段階 13 以降） | 上に加えて `unseen-libero/{unseen-rows-02,scale-only-01,scale-only-02,orientation-fix-01,fast-query-01,draft-reconstruction-01}/` と、段階 0 の `pi05-memory40-20261104/run-01/` | ＋ 約 100 GB |
+| 未学習行を作り直す（09 段階 2） | LIBERO-90 の HDF5（`data/libero/datasets/libero_90/`）。移し先で `SKILLNET_LIBERO_HDF5` をその親に向ける | ＋ 62 GB |
+| π0-FAST との比較 | `checkpoints/openpi-assets/checkpoints/pi0_fast_libero/` | ＋ 11 GB |
+
+venv（`envs/`、`.venv`）とキャッシュ（`cache/`）は持ち出さず、移した先で `env/setup.sh` を実行して作り直します。sudo がない場合は、2 節の `env/check_host.sh` の案内に従います。
+
+```bash
+# 移し先で clone とセットアップを済ませてから実行する。SRC は元の保存先。
+SRC=user@host:/path/to/.skillnet-state
+DST="$SKILLNET_STATE_DIR"
+U=outputs/memory-pilot/unseen-libero
+for p in checkpoints/openpi-assets/checkpoints/pi05_libero \
+         $U/baseline-01 $U/key-query-01/production $U/cluster-pools-01; do
+  mkdir -p "$DST/$(dirname "$p")"
+  rsync -a --info=progress2 "$SRC/$p" "$DST/$(dirname "$p")/"
+done
+```
+
+コピーした後は、[09 の再現手順](research/09_unseen_libero/reproduce.md) の「確認のしかた」で `evidence/` の数値と比べてください。
