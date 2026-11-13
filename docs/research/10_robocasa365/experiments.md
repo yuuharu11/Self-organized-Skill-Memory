@@ -15,6 +15,7 @@
 11. [ベースラインを下回る原因の切り分け](#11-ベースラインを下回る原因の切り分け)
 12. [今の見立て](#12-今の見立て)
 13. [潜在トークンによるクエリ](#13-潜在トークンによるクエリ)
+14. [振幅と時間長のオフライン上限（MAG1-R）](#14-振幅と時間長のオフライン上限mag1-r)
 
 ---
 
@@ -545,3 +546,68 @@
 
 潜在 query は通常 π0.5 を大きく下回り、特に SinkFaucet は 0/25 だった。eval300 との対比較では合計差を示す統計的証拠は得られなかった。失敗の多くは規定ステップ上限までの未完了であり、オフライン型誤差の良さだけでは閉ループ成功を保証しない。
 
+## 14. 振幅と時間長のオフライン上限（MAG1-R）
+
+2026-11-13 に、Expert 学習をせず、既存の U プールと Expert 推論だけで「正しい型に振幅・時間長を与えた場合」の上限を評価した。gt-def2 と同一の 2,133 窓を使い、候補は 7,062 単位の現行 U プールから選んだ。各問い合わせでは自タスクと自エピソードを候補から除外した。MSE は checkpoint 正規化の policy 順 active7（EEF6＋文脈グリッパー）で、送る先頭5ステップと続く5–9ステップを分けた。評価6タスク外の OOD Dev は atomic 18 の12タスクから特徴キャッシュのある487窓を取り、規則選択にだけ使った。
+
+### 同一窓ベースライン
+
+| 条件 | active7 MSE |
+|---|---:|
+| π0.5 単発（seed 4101） | .6297 |
+| π0.5 3 seed平均 | .4735 |
+| 直前保持 | .2228 |
+| 行動 oracle | .1684 |
+| gt-def2 の既存型 oracle（自タスク除外なし） | .5314 |
+
+### 要約
+
+| 条件 | 規則 | 先頭5 MSE7 [episode bootstrap 95%] | 続き5–9 MSE7 |
+|---|---|---:|---:|
+| 振幅だけ oracle | A1/T3 | .5179 [.4349, .5586] | .6505 |
+| 時間だけ oracle | A2/T1 | .6308 [.5277, .6709] | .8026 |
+| 振幅と時間の oracle | A1/T1 | .5210 [.4328, .5591] | .6327 |
+| OOD Dev 選択の非 oracle | A6/T2 | .7147 [.5981, .7740] | .8300 |
+
+OOD Dev で A6/T2 が最良（487窓、Dev 先頭5 MSE7 .5820）だった。評価6タスクでは .7147 となり、π0.5 単発の .6297 を下回らなかった。A1/T1 の .5210 は正解型に正解振幅と正解区間長を与えた診断上限で、通常 π0.5 より低い。A1 の倍率は時間ルールが決めた区間全体（最大50ステップ）に対して最小二乗で合わせた。
+
+A1–A4 と A6 の全組は [MAG1-R report](../../../../outputs/robocasa-memory/magnitude-01/report.md) に記録した。A3 は同じ行の π0.5 seed 4101 の保存済み単発予測、A6 は凍結済み magnitude-v2 ヘッドの再推論を使った。A3/A5 は OOD Dev に同条件の保存出力がなく選択候補にできなかった。A5（Expert-03 step3000/t0=.2、step500/t0=.4）は同一行推論を試みたが、共有 GPU の JAX 15% 上限で基礎モデル復元時に4.50 GiB割当が失敗し、上限を上げずに中止したため未測定。したがって全24組のうちA5の4組は未完了である。
+
+gt-def2 の型 oracle .5314 は候補から自エピソードのみを除く旧定義であり、MAG1-R の自タスク＋自エピソード除外とは候補集合が異なる。MSE基準値の .63/.22/.17 は同一2,133行で再確認できた。新規コードは `magnitude_01.py`、計算の単体テスト5件は `tests/test_robocasa_magnitude_01.py`。
+
+
+
+## 区間分割キーの RoboCasa オフライン比較
+
+問い：LIBERO KS-a の区間分割 motion key は、RoboCasa の可変長 DCT-3 motion unit の検索でも、実際に送る行動の active7 MSE を下げるか。gt-def2 と同一の 2,133 stride-5 query（gt-def3 と task/episode/frame が全行一致）を使い、同じ query を持つ Context＋history と split key を比較した。episode fold は5分割、seed 4101–4103、最大12 epoch、teacher は同じ type-error soft listwise、自エピソード候補は除外。履歴スケジュールは zero 50%、破損25%（同エピソード±10/±20 frame、または同タスク別episode）、correct25%。split key は DCT-3 shape を10×6へ再標本化し stored grip を加えた10×7入力を5つの2-frame tokenへ分割する。
+
+| key | history | first5 MSE（seed平均） | top1 type error | frame0 type error | R@5 | Spearman |
+|---|---|---:|---:|---:|---:|---:|
+| context | correct | 1.042 | 0.005984 | 0.007279 | 0.600 | 0.726 |
+| context | zero | 1.130 | 0.006239 | 0.007279 | 0.572 | 0.717 |
+| context | replace | 1.123 | 0.006401 | 0.007058 | 0.560 | 0.712 |
+| split | correct | 1.005 | 0.005687 | 0.006548 | 0.579 | 0.836 |
+| split | zero | 1.199 | 0.006048 | 0.006548 | 0.543 | 0.825 |
+| split | replace | 1.190 | 0.006222 | 0.006635 | 0.527 | 0.821 |
+
+| key | history | first5 MSE | steps 5–9 MSE | steps 10–14 MSE |
+|---|---|---:|---:|---:|
+| context | correct | 1.042 | 1.348 | 1.714 |
+| context | zero | 1.130 | 1.406 | 1.933 |
+| context | replace | 1.123 | 1.388 | 1.847 |
+| split | correct | 1.005 | 1.244 | 1.511 |
+| split | zero | 1.199 | 1.409 | 1.806 |
+| split | replace | 1.190 | 1.417 | 1.712 |
+
+first5 の episode bootstrap CI は各 seed で個別に求め、完全表を `$SKILLNET_STATE_DIR/outputs/robocasa-memory/key-split-01/report.md` に記録した。継続窓は demo suffix と selected unit の双方で実在する区間のみ。
+
+Expert-03 bridge（seed4101、同一 fold-in noise、10積分）：| Expert/t0 | draft | output-target first5/50 | output-draft first5/50 | output-π0.5 first5/50 |
+|---|---|---:|---:|---:|
+| step3000 t0.2 | split_top1 | 0.883/0.923 | 0.219/0.909 | 0.631/0.647 |
+| step3000 t0.2 | type_oracle | 0.548/0.822 | 0.200/0.818 | 0.623/0.710 |
+| step500 t0.4 | split_top1 | 0.598/0.711 | 0.394/1.402 | 0.327/0.479 |
+| step500 t0.4 | type_oracle | 0.446/0.689 | 0.363/1.191 | 0.383/0.551 |
+
+既存の別診断 bridge：rerank-01 Expert03 K20 .520/1.269、K50 .515/1.336（first5/horizon50）；key-diag Expert03 e_truth_draft .078/.177、d_greedy_action_oracle_truth .348/.561。設定・候補サンプルが異なるので直接差の検定ではない。今回の split top1 は .883/.923 (t0=.2)、.598/.711 (t0=.4)。
+
+split key は全3 seed・履歴条件で型誤差が低く Spearman が高かった。一方、行動 MSE は correct の seed 4101 で低下、4102 と4103では差のCIが0を含む。zero/replace は平均 MSE が改善しない。RoboCasaで区間分割キーが実際の行動MSEを下げるとは結論できない。これはオフライン診断で、閉ループ結果を主張しない。
