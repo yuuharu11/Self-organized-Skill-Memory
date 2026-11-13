@@ -86,17 +86,47 @@ def test_history_corruption_respects_configured_mixture():
 
 def test_pose_scale_fit_recovers_synthetic_rotation_and_magnitude():
     from scipy.spatial.transform import Rotation
-    rng=np.random.default_rng(8)
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(sc.__file__).resolve().parent))
+    import variable_shape_memory as vs
     shape=np.zeros((12,6),np.float32)
     for j in range(6):shape[2*j,j]=.1;shape[2*j+1,j]=-.1
     expected_rotation=Rotation.from_euler('xyz',[.12,-.08,.05]).as_matrix()
-    target=np.concatenate([shape[:,:3]@expected_rotation.T,
-                           shape[:,3:6]@expected_rotation.T],axis=1)*1.7
-    theta=sc.fit_pose_scale(shape,target)
+    target_physical=np.concatenate([shape[:,:3]@expected_rotation.T,
+                                    shape[:,3:6]@expected_rotation.T],axis=1)*1.7
+    shape_norm=vs.to_normalized(shape);target_norm=vs.to_normalized(target_physical)
+    theta=sc.fit_pose_scale(shape_norm,target_norm)
     assert theta[3]==pytest.approx(np.log(1.7),abs=1e-4)
     recovered=np.concatenate([shape[:,:3]@Rotation.from_rotvec(theta[:3]).as_matrix().T,
                               shape[:,3:6]@Rotation.from_rotvec(theta[:3]).as_matrix().T],axis=1)*np.exp(theta[3])
-    assert np.allclose(recovered,target,atol=5e-4)
+    assert np.allclose(recovered,target_physical,atol=5e-4)
+
+
+def test_segment_dct_and_rotation_are_computed_in_physical_space():
+    from scipy.fft import dct
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(sc.__file__).resolve().parent))
+    import variable_shape_memory as vs
+    physical=np.linspace(-.2,.3,70,dtype=np.float32).reshape(10,7)
+    normalized=np.column_stack([vs.to_normalized(physical[:,:6]),physical[:,6]])
+    coeff,mag,_=sc.segment_value_encode(normalized)
+    p=vs.to_physical(normalized[:,:6]);want_mag=np.sqrt(np.mean(p.astype(np.float64)**2))
+    want=dct(p/want_mag,type=2,norm='ortho',axis=0)[:3]
+    assert mag==pytest.approx(want_mag,rel=1e-6)
+    assert np.allclose(coeff,want,atol=1e-6)
+    # An axis-angle rotation in normalized space is incorrect when Q01/Q99
+    # spreads differ; the implementation rotates after denormalization.
+    from scipy.spatial.transform import Rotation
+    theta=np.array([.2,-.1,.05,np.log(1.3)],np.float32)
+    grip=np.zeros(10,np.float32)
+    got=sc.offline_draft(coeff,mag,10,theta,grip_actions=grip)[0]
+    rot=Rotation.from_rotvec(theta[:3]).as_matrix().T
+    shape_phys=sc.segment_value_decode(coeff,mag,10)
+    expected_phys=np.concatenate([shape_phys[:,:3]@rot,shape_phys[:,3:6]@rot],axis=-1)*np.exp(theta[3])
+    expected=np.column_stack([vs.to_normalized(expected_phys),grip])
+    assert np.allclose(got,expected,atol=1e-6)
 
 
 def test_pose_head_initializes_at_identity_and_loss_is_finite():
@@ -159,6 +189,18 @@ def test_retrieval_scores_mask_same_episode_and_same_task():
     assert int(sc.select_memory(score,mask)[0])==2
 
 
+def test_retrieval_scores_scales_cosine_before_continuity_like_training():
+    q=torch.tensor([[1.,0.]])
+    mem=torch.tensor([[.8,.6],[.9,.4358899]])
+    continuity=torch.tensor([[-.2,-.5]])
+    scores,mask=sc.retrieval_scores(q,mem,query_episode=[1],memory_episode=[2,3],
+        exclude_same_task=False,continuity=continuity,continuity_weight=.4,score_scale=7.)
+    expected=torch.nn.functional.normalize(q,dim=-1) @ torch.nn.functional.normalize(mem,dim=-1).T
+    expected=expected*7.+.4*continuity
+    assert torch.allclose(scores,expected,atol=1e-6)
+    assert mask.all()
+
+
 def test_training_objective_runs_with_shared_encoder_and_pose_supervision():
     torch.set_num_threads(2)
     model=sc.SegmentContextModel(sc.SegmentConfig(token_dim=12,width=16,heads=4))
@@ -177,6 +219,34 @@ def test_training_objective_runs_with_shared_encoder_and_pose_supervision():
     result=sc.training_objective(model.encoder,model.pose_head,batch,generator=torch.Generator().manual_seed(4))
     result['loss'].backward();opt.step()
     assert result['loss'].isfinite() and result['query_keys'].shape==(b,16)
+
+
+def test_learned_continuity_score_receives_gradient_and_pose_uses_positive_memory_key():
+    torch.set_num_threads(2)
+    model=sc.SegmentContextModel(sc.SegmentConfig(token_dim=12,width=16,heads=4,continuity_weight='learned'))
+    b=3
+    batch={'query_tokens':torch.randn(b,5,12),'query_token_mask':torch.ones(b,5,dtype=torch.bool),
+        'memory_tokens':torch.randn(b,5,12),'memory_token_mask':torch.ones(b,5,dtype=torch.bool),
+        'history_actions':torch.randn(b,4,7),'history_states':torch.randn(b,4,8),
+        'memory_history_actions':torch.randn(b,4,7),'memory_history_states':torch.randn(b,4,8),
+        'query_state':torch.randn(b,8),'memory_state':torch.randn(b,8),
+        'query_episode':torch.arange(b),'memory_episode':torch.arange(b)+10,
+        'query_task':torch.arange(b),'memory_task':torch.arange(b)+10,
+        'type_error':torch.rand(b,b),'action_distance':torch.rand(b,b),
+        'continuity_features':-torch.rand(b,b),'positive_memory_index':torch.arange(b),
+        'positive_coefficients':torch.randn(b,3,6),'pose_target':torch.zeros(b,4)}
+    res=sc.training_objective(model.encoder,model.pose_head,batch,generator=torch.Generator().manual_seed(3))
+    res['loss'].backward()
+    assert model.encoder.learned_continuity_scale.grad is not None
+    assert torch.isfinite(model.encoder.learned_continuity_scale.grad)
+
+
+def test_split_value_key_mode_uses_scene_invariance_encode_keys():
+    torch.set_num_threads(2)
+    model=sc.SegmentContextModel(sc.SegmentConfig(value_head_mode='split'))
+    actions=torch.randn(2,10,7);coeff=torch.randn(2,3,6)
+    encoded=model.encode_value(actions,coeff)
+    assert encoded.shape==(2,5*256)
 
 
 def test_selection_is_dev_only():
@@ -200,6 +270,25 @@ def test_resumable_extractor_and_cache_audit(tmp_path):
     assert np.load(out/'tokens.npy').shape==(4,2,3)
 
 
+def test_extractor_packs_only_real_tokens_and_keeps_aligned_frame_metadata(tmp_path):
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_extract as ex
+    keys=[(2,4,5),(2,4,15)]
+    def observe(k):
+        return {'state':np.full((8,),k[2],np.float32),
+                'actions':np.full((10,7),k[2],np.float32)}
+    def encode(batch):
+        token=np.arange(len(batch)*6*3,dtype=np.float32).reshape(len(batch),6,3)
+        group=np.array([[0,1,-1,2,1,-1] for _ in batch],np.int8)
+        return token,group
+    out=tmp_path/'packed'
+    ex.extract_prefix_memmap(keys,observe,encode,out,token_shape=(4,3),valid_only=True)
+    groups=np.load(out/'groups.npy');tokens=np.load(out/'tokens.npy')
+    assert groups[0].tolist()==[0,1,2,1]
+    assert np.array_equal(tokens[0],np.arange(18,dtype=np.float32).reshape(6,3)[[0,1,3,4]])
+    assert np.load(out/'state.npy').shape==(2,8)
+    assert np.load(out/'actions.npy')[1,0,0]==15
+
+
 def test_prefix_stride_and_eval_mse_axes():
     assert sc.stride_query_frames(21,stride=5).tolist()==[0,5,10,15,20]
     scores=np.array([[.9,.1],[.1,.9]])
@@ -209,6 +298,21 @@ def test_prefix_stride_and_eval_mse_axes():
     assert out['all']['recall_at_1']==1
     assert out['all']['mse_first5_x6_7']==pytest.approx(3/7)
     assert out['hard']['rows']==1
+
+
+def test_unseen_stride5_overlap_is_not_double_counted(tmp_path):
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_run as runner
+    root=tmp_path/'unseen';root.mkdir();n=3
+    actions=np.zeros((n,10,32),np.float32)
+    full=np.arange(20,dtype=np.float32)
+    for i,f in enumerate((0,5,10)):
+        actions[i,:,:7]=np.arange(f,f+10,dtype=np.float32)[:,None]
+    np.save(root/'actions.npy',actions);np.save(root/'state.npy',np.zeros((n,32),np.float32))
+    np.save(root/'task.npy',np.zeros(n,np.int32));np.save(root/'episode.npy',np.zeros(n,np.int32))
+    np.save(root/'frame.npy',np.array([0,5,10],np.int32));np.save(root/'is_dev.npy',np.array([1,1,0],bool))
+    np.save(root/'tokens.npy',np.zeros((n,712,2048),np.float16));np.save(root/'groups.npy',np.zeros((n,712),np.int8))
+    store,q=runner.build_unseen_queries(root,split='dev')
+    assert len(q['key'])==2 and np.array_equal(q['actions'][1,:,0],np.arange(5,15,dtype=np.float32))
 
 
 def test_heldout_and_memory_rows_are_removed_from_fit_mask():

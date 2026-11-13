@@ -459,3 +459,64 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 ---
 
 出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/unseen_libero/`。
+
+## SEG2: segment-context retrieval
+
+### 問いと方法
+
+可変長区間の文脈検索で、未学習LIBERO-90の次行動を選べるかを評価した。40-task memoryから8 holdoutを除外し、32タスク・2,535区間のbankを使用。検索キーは区間開始時のπ0.5最終prefix tokenと因果的な直前区間履歴、値は10-step actionのDCT表現。pose/scale head、区間先頭の速度continuity項、同じ直前区間の候補除外を含む。Devで8条件（τ、cross-attention層、continuity）を選び、3 seedを学習した。
+
+**監査修正：** 初回評価はメモリ項目埋め込みをquery側のUnseenStoreから誤読しており無効だった。修正版はメモリ埋め込みをLIBERO-40 FrameStoreから、query埋め込みをLIBERO-90 UnseenStoreから別々に読み、training/Dev selection/Eval/closed-loopを再実行した。後述の値は修正版だけを指す。初回attemptは上書きせず、出力ディレクトリに残す。
+
+### オフライン結果
+
+採用設定はτ=.03、2層、学習continuity重み、DCT value head（Dev-only selection）。Evalは619窓、hard 134窓。正規化active 6-axis MSEはsum-of-six / 7。
+
+| 条件 | 型誤差 all | recovery@1 | Spearman | MSE6/7 all (seed mean±SD) | hard |
+|---|---:|---:|---:|---:|---:|
+| SEG2 selected | .0407±.0018 | .227±.018 | −.249±.046 | .1617±.0147 | .3042±.0217 |
+| π0.5 normal | — | — | — | .1140 | .2499 |
+| hold-last | — | — | — | .1140 | — |
+| prior LIB1 R5 | — | — | — | .1305 | .2662 |
+
+| Ablation | MSE6/7 all | hard |
+|---|---:|---:|
+| selected | .1617±.0147 | .3042±.0217 |
+| pose/scale head off, π0.5 Procrustes | .1656±.0080 | .2966±.0133 |
+| GRU history off | .1618±.0127 | .3057±.0202 |
+| continuity score off | .1903±.0113 | .3400±.0222 |
+| exclude previous segment | .1619±.0150 | .3032±.0221 |
+
+Selected minus normal episode-bootstrap 95% CI, by seed, was positive for all three seeds: all-window [.0477,.0641], [.0243,.0372], [.0483,.0651]; hard [.0389,.0831], [.0168,.0442], [.0562,.0898]. Offline result is negative; Eval was only scored after choices were frozen.
+
+### サーバー整合性と閉ループ
+
+修正サーバーはFeatureStoreをメモリとqueryで分離。Dev10窓のサーバー／offline下書き差は6軸最大 **0.0**（許容1e-5）、選択unit 10/10一致。
+
+同一 task/init seed の各100試行が完了し、技術エラーは各条件0件。McNemar exact two-sided:
+
+| 条件 | success | baseline対 (both / 条件only / baseline only), p | unit_08対 (both / 条件only / unit_08 only), p | R5対 (both / 条件only / R5 only), p | state_only対 (both / 条件only / state_only only), p |
+|---|---:|---|---|---|---|
+| SEG2 selected | 5/100 | 2 / 3 / 30, 1.40e-6 | 3 / 2 / 40, 4.11e-10 | 4 / 1 / 29, 5.77e-8 | 3 / 2 / 35, 1.02e-8 |
+| pose-head off | 32/100 | 28 / 4 / 4, 1.000 | 28 / 4 / 15, .0192 | 24 / 8 / 9, 1.000 | 28 / 4 / 10, .180 |
+
+| task id | selected | pose-head off | baseline | unit_08 | R5 | state_only |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 3 | 4 | 0 | 5 | 7 | 2 |
+| 10 | 0 | 9 | 10 | 10 | 9 | 9 |
+| 13 | 0 | 0 | 0 | 0 | 1 | 2 |
+| 31 | 0 | 0 | 0 | 5 | 1 | 0 |
+| 35 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 43 | 0 | 0 | 1 | 4 | 0 | 5 |
+| 57 | 2 | 10 | 10 | 9 | 6 | 10 |
+| 61 | 0 | 9 | 10 | 10 | 9 | 9 |
+| 84 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 88 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+診断：selected fallback率 .084、平均32.07 distinct units/trial、隣接同一unit再選択 .481、回転補正中央値 .027 rad、倍率 .977。pose-head offは .109、28.77 units、.418、Procrustes回転1.954 rad、倍率 .562。selectedは姿勢ヘッドがほぼ恒等の補正を出して5/100。pose-head offはbaselineと同数だがunit_08より低く、改善は確認されなかった。
+
+### 結論と成果物
+
+この区間文脈方式はオフラインでも閉ループでも優位性を示さなかった。特に正しいメモリ/query分離後は、選択unitの順位と行動誤差の相関が負になり、連続性項を外すと誤差がさらに増えた。初回の誤った特徴参照による数値は破棄せず無効attemptとして保持し、結論から除外した。
+
+出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/seg-context-01/`（修正試行 `attempt-memory-store-fix1/`）。コード／テスト：`seg_context_extract.py`, `seg_context_retrieval.py`, `seg_context_run.py`, `seg_context_server.py`, `seg_context_rollout.py`, `tests/unseen_libero/test_seg_context_retrieval.py`, `tests/unseen_libero/test_seg_context_run.py`。

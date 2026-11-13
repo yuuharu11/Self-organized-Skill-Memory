@@ -60,11 +60,33 @@ class SegmentConfig:
     max_history: int = 40
     dct_coefficients: int = 3
     exclude_same_task: bool = True
-    continuity_weight: float = 0.0
+    continuity_weight: float | str = 0.0
     boundary_blend: bool = False
     loop_exclude_previous_unit: bool = False
     use_history: bool = True
     use_pose_scale_head: bool = True
+    value_head_mode: str = "dct"  # dct or split (scene_invariance_v2 action-key encoder)
+
+    def __post_init__(self):
+        if self.value_head_mode not in ('dct','split'):raise ValueError(self.value_head_mode)
+
+
+def _physical6(values):
+    import sys
+    from pathlib import Path
+    here=Path(__file__).resolve().parent
+    if str(here) not in sys.path:sys.path.insert(0,str(here))
+    import variable_shape_memory as vs
+    return np.asarray(vs.to_physical(np.asarray(values)[...,:6]),np.float64)
+
+
+def _normalized6(values):
+    import sys
+    from pathlib import Path
+    here=Path(__file__).resolve().parent
+    if str(here) not in sys.path:sys.path.insert(0,str(here))
+    import variable_shape_memory as vs
+    return np.asarray(vs.to_normalized(np.asarray(values)[...,:6]),np.float32)
 
 
 def _motion_speed(actions: np.ndarray) -> np.ndarray:
@@ -206,6 +228,7 @@ class SharedContextEncoder(nn.Module):
         self.ffn_norms = nn.ModuleList([nn.LayerNorm(d) for _ in self.cross])
         self.out = nn.Sequential(nn.Linear(d, d), nn.LayerNorm(d))
         self.logit_scale = nn.Parameter(torch.tensor(np.log(10.), dtype=torch.float32))
+        self.learned_continuity_scale = nn.Parameter(torch.tensor(0., dtype=torch.float32))
 
     def context(self, history_actions, history_states, state, history_mask=None):
         if not self.config.use_history:
@@ -265,13 +288,27 @@ class SegmentContextModel(nn.Module):
     def __init__(self, config: SegmentConfig):
         super().__init__()
         self.encoder=SharedContextEncoder(config)
-        self.pose_head=PoseScaleHead(config.width,config.dct_coefficients*6)
+        value_dim=config.dct_coefficients*6
+        self.action_value_encoder=None
+        if config.value_head_mode=='split':
+            import sys
+            from pathlib import Path
+            here=Path(__file__).resolve().parent
+            if str(here) not in sys.path:sys.path.insert(0,str(here))
+            import scene_invariance_v2 as inv2
+            self.action_value_encoder=inv2._build_model('A',k=5,key_mode='split')
+            value_dim=5*256
+        self.pose_head=PoseScaleHead(config.width,value_dim)
+
+    def encode_value(self,actions10,coefficients):
+        if self.action_value_encoder is None:return coefficients.flatten(1)
+        return self.action_value_encoder.encode_keys(actions10).flatten(1)
 
 
 def fit_pose_scale(shape: np.ndarray, target: np.ndarray) -> np.ndarray:
     """Least-squares SO(3) + shared scale target [axis-angle xyz, log-scale]."""
     from scipy.spatial.transform import Rotation
-    x, y = np.asarray(target, np.float64), np.asarray(shape, np.float64)
+    x, y = _physical6(np.asarray(target,np.float64)), _physical6(np.asarray(shape,np.float64))
     if x.shape != y.shape or x.ndim != 2 or x.shape[1] < 6:
         raise ValueError("shape and target must both be [T,>=6]")
     cross = y[:, :3].T @ x[:, :3] + y[:, 3:6].T @ x[:, 3:6]
@@ -310,13 +347,24 @@ def training_objective(encoder: SharedContextEncoder, pose_head: PoseScaleHead, 
               batch['memory_history_actions'],batch['memory_history_states'],batch['memory_state'],
               batch.get('memory_history_mask'))
     scores=q@k.T*encoder.logit_scale.exp().clamp(max=100.)
+    if 'continuity_features' in batch:
+        if encoder.config.continuity_weight == 'learned':
+            scale=F.softplus(encoder.learned_continuity_scale).clamp(max=10.)
+        else:
+            scale=float(encoder.config.continuity_weight)
+        scores=scores+scale*batch['continuity_features']
     candidate=(batch['query_episode'][:,None]!=batch['memory_episode'][None,:])
     if same_task_exclusion:
         candidate &= batch['query_task'][:,None]!=batch['memory_task'][None,:]
     target=soft_action_targets(batch['type_error'],batch['action_distance'],candidate,
                                tau_candidates=(.01,.03),tau_action=tau_action,tau_type=tau)
     contrastive=soft_infonce(scores,target,candidate)
-    pred=pose_head(q,batch['positive_memory_key'],batch['positive_coefficients'])
+    value=batch.get('positive_value_features',batch['positive_coefficients'].flatten(1))
+    if 'positive_memory_index' in batch:
+        pkey=k[batch['positive_memory_index'].long()]
+    else:
+        pkey=batch['positive_memory_key']
+    pred=pose_head(q,pkey,value)
     pose=pose_scale_loss(pred,batch['pose_target'])
     return {'loss':contrastive+float(pose_weight)*pose,'contrastive':contrastive,
             'pose':pose,'history_corruption':modes,'query_keys':q,'memory_keys':k}
@@ -333,7 +381,7 @@ def segment_value_encode(actions: np.ndarray, *, coefficients=3):
     a = np.asarray(actions, np.float32)
     if a.ndim != 2 or a.shape[1] < 6 or len(a) < 1:
         raise ValueError("segment actions must be [T,>=6]")
-    motion = a[:, :6]
+    motion = _physical6(a[:, :6])
     magnitude = float(np.sqrt(np.mean(motion.astype(np.float64) ** 2)))
     magnitude = max(magnitude, 1e-6)
     shape = motion / magnitude
@@ -411,6 +459,10 @@ def encode_segment_bank(actions_by_episode: dict, *, min_length=10, max_history=
             out['coefficients'].append(c);out['magnitude'].append(m);out['length'].append(l)
             out['task'].append(int(task));out['episode'].append(int(episode));out['start'].append(int(start))
             out['source'].append((int(task),int(episode),int(start),int(end)))
+            source=np.asarray(a[start:end],np.float32)
+            src_t=np.linspace(0.,1.,len(source),dtype=np.float32);dst_t=np.linspace(0.,1.,10,dtype=np.float32)
+            out.setdefault('value_actions10',[]).append(np.stack([np.interp(dst_t,src_t,source[:,j])
+                for j in range(7)],axis=-1).astype(np.float32))
     if out['coefficients']:
         out['coefficients']=np.asarray(out['coefficients'],np.float32)
         out['magnitude']=np.asarray(out['magnitude'],np.float32)
@@ -419,6 +471,7 @@ def encode_segment_bank(actions_by_episode: dict, *, min_length=10, max_history=
     out['length']=np.asarray(out['length'],np.int32);out['task']=np.asarray(out['task'],np.int32)
     out['episode']=np.asarray(out['episode'],np.int32);out['start']=np.asarray(out['start'],np.int32)
     out['source']=np.asarray(out['source'],np.int32).reshape(-1,4)
+    out['value_actions10']=np.asarray(out.get('value_actions10',[]),np.float32).reshape(-1,10,7)
     return out
 
 
@@ -447,12 +500,15 @@ def build_memory_segments(rows, memory_row_ids, *, holdout_tasks=HELDOUT_TASKS,
         if len(b['length']):
             b['source'][:,2]+=int(fs[0]);b['source'][:,3]+=int(fs[0])
             b['row_id']=np.asarray([rids[min(len(rids)-1,int(s)//10)] for s in b['start']],np.int64)
+            b['start_velocity']=np.stack([_physical6(trace[int(s):int(s)+1,:6])[0,:3]
+                                          for s in b['start']]).astype(np.float32)
             banks.append(b)
     if not banks:
         return {'coefficients':np.empty((0,coefficients,6),np.float32),'magnitude':np.empty(0,np.float32),
             'length':np.empty(0,np.int32),'task':np.empty(0,np.int32),'episode':np.empty(0,np.int32),
-            'start':np.empty(0,np.int32),'source':np.empty((0,4),np.int32),'row_id':np.empty(0,np.int64)}
-    keys=('coefficients','magnitude','length','task','episode','start','source','row_id')
+            'start':np.empty(0,np.int32),'source':np.empty((0,4),np.int32),'row_id':np.empty(0,np.int64),
+            'start_velocity':np.empty((0,3),np.float32),'value_actions10':np.empty((0,10,7),np.float32)}
+    keys=('coefficients','magnitude','length','task','episode','start','source','row_id','start_velocity','value_actions10')
     return {name:np.concatenate([b[name] for b in banks],axis=0) for name in keys}
 
 
@@ -507,9 +563,11 @@ def select_dev_configuration(candidates, dev_evaluator: Callable, *, split_name)
 def retrieval_scores(query_keys, memory_keys, *, query_episode, memory_episode,
                      query_task=None, memory_task=None, previous_unit=None,
                      memory_unit=None, exclude_same_task=True, loop_exclude=False,
-                     continuity=None, continuity_weight=0.):
+                     continuity=None, continuity_weight=0., score_scale=1.):
     """Cosine scores and eligibility mask; exclusions are explicit and auditable."""
-    scores = F.normalize(query_keys, dim=-1) @ F.normalize(memory_keys, dim=-1).T
+    # Match training/offline evaluation: contrastive cosine logits are scaled
+    # before the additive continuity term is applied.
+    scores = (F.normalize(query_keys, dim=-1) @ F.normalize(memory_keys, dim=-1).T) * float(score_scale)
     eligible = torch.ones_like(scores, dtype=torch.bool)
     eligible &= torch.as_tensor(query_episode, device=scores.device)[:, None] != torch.as_tensor(memory_episode, device=scores.device)[None]
     if exclude_same_task:
@@ -571,6 +629,7 @@ def offline_draft(coefficients, magnitudes, lengths, query_pose_scale, *, grip_a
             rot=Rotation.from_rotvec(rvec).as_matrix().T
             base=np.concatenate([base[:,:3]@rot,base[:,3:6]@rot],axis=-1)
         base*=float(np.exp(np.clip(pose[i,3],-5,5)))
+        base=_normalized6(base)
         grip=np.asarray(grips[i],np.float32).reshape(out_length,-1)[:,:1]
         action=np.concatenate([base,grip],-1)
         if boundary_blend_enabled and previous_action is not None:
@@ -592,10 +651,11 @@ class SegmentContextPolicy:
     """Small online adapter; caller owns the frozen pi05 prefix/action functions."""
     def __init__(self, encoder: SharedContextEncoder, bank: dict, *, prefix_fn: Callable,
                  pi05_fn: Callable, config: SegmentConfig, decode_fn: Callable | None=None,
-                 pose_head: PoseScaleHead | None=None):
+                 pose_head: PoseScaleHead | None=None,value_encoder: Callable | None=None):
         self.encoder, self.bank = encoder, bank
         self.prefix_fn, self.pi05_fn, self.decode_fn = prefix_fn, pi05_fn, decode_fn
         self.pose_head=pose_head
+        self.value_encoder=value_encoder
         if decode_fn is None and config.use_pose_scale_head and pose_head is None:
             raise ValueError("pose_head is required for the learned pose/scale path")
         self.config = config
@@ -616,13 +676,18 @@ class SegmentContextPolicy:
             action = self.pi05_fn(observation)
             return action, {"fallback": True, "unit_id": None}
         tokens, mask = self.prefix_fn(observation)
+        # Match the offline cache exactly: left-aligned fixed-length history
+        # tensors plus an explicit mask. This also keeps the GRU path stable
+        # between server (single query) and offline scoring.
         history_a,history_s,_=history
-        hist_a=torch.as_tensor(history_a[None],device=next(self.encoder.parameters()).device)
-        hist_s=torch.as_tensor(history_s[None],device=hist_a.device)
+        packed_a,packed_s,packed_mask=pack_histories([(history_a,history_s)],max_length=self.config.max_history)
+        hist_a=torch.as_tensor(packed_a,device=next(self.encoder.parameters()).device)
+        hist_s=torch.as_tensor(packed_s,device=hist_a.device)
+        hist_mask=torch.as_tensor(packed_mask,device=hist_a.device)
         tok=torch.as_tensor(tokens[None] if np.asarray(tokens).ndim==2 else tokens,device=hist_a.device,dtype=torch.float32)
         m=torch.as_tensor(mask[None] if np.asarray(mask).ndim==1 else mask,device=hist_a.device,dtype=torch.bool)
         st=torch.as_tensor(np.asarray(state)[None],device=hist_a.device,dtype=torch.float32)
-        q=self.encoder(tok,m,hist_a,hist_s,st)
+        q=self.encoder(tok,m,hist_a,hist_s,st,hist_mask)
         continuity=None
         if self.config.continuity_weight and self.previous_velocity is not None and 'start_velocity' in self.bank:
             cv=continuity_bonus(torch.as_tensor(self.bank['start_velocity'],device=hist_a.device),
@@ -633,8 +698,10 @@ class SegmentContextPolicy:
             query_task=[task_id],memory_task=self.bank["task"],previous_unit=[self.previous_unit] if self.previous_unit is not None else None,
             memory_unit=self.bank["unit"],exclude_same_task=self.config.exclude_same_task,
             loop_exclude=self.config.loop_exclude_previous_unit,continuity=continuity,
-            continuity_weight=self.config.continuity_weight)
+            continuity_weight=self.config.continuity_weight,
+            score_scale=float(self.encoder.logit_scale.detach().exp().clamp(max=100.).cpu()))
         ix=int(select_memory(scores,eligible)[0].item())
+        theta=None
         if ix<0:
             action=self.pi05_fn(observation);unit=None
         else:
@@ -646,19 +713,28 @@ class SegmentContextPolicy:
                 baseline=baseline[:10]
                 coeff=np.asarray(self.bank['coefficients'][ix]);mag=float(self.bank['magnitude'][ix])
                 length=int(self.bank['length'][ix])
+                if self.config.value_head_mode=='split':
+                    if self.value_encoder is None or 'value_actions10' not in self.bank:
+                        raise ValueError('split value head requires scene_invariance_v2 encode_keys adapter')
+                    value=self.value_encoder(self.bank['value_actions10'][ix:ix+1])
+                    if not torch.is_tensor(value):value=torch.as_tensor(value,device=q.device,dtype=q.dtype)
+                    value=value.reshape(1,-1)
+                else:
+                    value=torch.as_tensor(coeff.reshape(1,-1),device=q.device,dtype=q.dtype)
                 if self.config.use_pose_scale_head:
                     with torch.no_grad():
                         theta=self.pose_head(q,self.bank['keys'][ix:ix+1],
-                            torch.as_tensor(coeff[None],device=q.device,dtype=q.dtype)).cpu().numpy()[0]
+                            value).cpu().numpy()[0]
                 else:
                     source=segment_value_decode(coeff,mag,length,out_length=10)
-                    theta=fit_pose_scale(source,baseline[:,:6])
+                    theta=fit_pose_scale(_normalized6(source),baseline[:,:6])
                 action=draft_one_unit(coeff,mag,length,theta,baseline[:,6])
             unit=int(self.bank["unit"][ix])
             if self.config.boundary_blend and self.previous_action is not None:
                 action=blend_boundary(action,self.previous_action)
         if unit is not None:self.previous_unit=unit
-        return action,{"fallback":False,"unit_id":unit,"score":float(scores[0,ix]) if ix>=0 else None}
+        return action,{"fallback":ix<0,"unit_id":unit,"score":float(scores[0,ix]) if ix>=0 else None,
+            "pose_scale":None if theta is None else np.asarray(theta).tolist()}
 
     def observe_executed(self, actions, states):
         """Append only actions/states actually executed by the environment."""
@@ -671,7 +747,7 @@ class SegmentContextPolicy:
         self.previous_actions.extend(row[:7].copy() for row in a)
         self.previous_states.extend(row[:8].copy() for row in s)
         self.previous_action=a[-1,:7].copy()
-        self.previous_velocity=(a[-1,:3]-a[-2,:3]) if len(a)>1 else np.zeros(3,np.float32)
+        self.previous_velocity=_physical6(a[-1:,:6])[0,:3]
 
 
 def evaluate_retrieval(scores, type_error, action_error, *, row_episode, hard=None, type_tolerance=0.01):
