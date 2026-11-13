@@ -48,9 +48,11 @@ def test_oracle_type_selection_uses_type_and_pi05_gripper():
     target = np.zeros((1, 10, 7), np.float32)
     target[:, :, :6] = vs.to_normalized(physical)[0]
     target[:, :, 6] = np.where(t < .5, -1, 1)
+    # Stored pool shapes are pose-removed physical motion (SkillMemory.shape),
+    # not quantile-normalized actions, so pass them as stored.
     pool = np.zeros((2, 10, 7), np.float32)
-    pool[0, :, :6] = vs.to_normalized(physical[0] * .5)
-    pool[1, :, :6] = vs.to_normalized(physical[0][::-1] + np.array([0, .2, 0, 0, 0, 0]))
+    pool[0, :, :6] = physical[0] * .5
+    pool[1, :, :6] = physical[0][::-1] + np.array([0, .2, 0, 0, 0, 0])
     pool[:, :, 6] = -0.25
     normal = target.copy()
     normal[:, :, 6] = .75

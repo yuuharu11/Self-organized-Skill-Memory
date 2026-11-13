@@ -55,13 +55,7 @@ def _json_default(x):
     return str(x)
 
 
-def bootstrap_mean(values, episode, *, reps=5000, seed=SEED):
-    x=np.asarray(values,np.float64);ep=np.asarray(episode)
-    unique,inv=np.unique(ep,return_inverse=True)
-    sums=np.bincount(inv,weights=x);counts=np.bincount(inv)
-    rng=np.random.default_rng(seed);draw=rng.integers(len(unique),size=(reps,len(unique)))
-    means=sums[draw].sum(1)/counts[draw].sum(1)
-    return [float(np.quantile(means,.025)),float(np.quantile(means,.975))]
+bootstrap_mean = step1.bootstrap_mean  # single episode-clustered CI implementation
 
 
 def _log(out, **row):
@@ -1250,9 +1244,11 @@ def _api_callbacks(out, data, tokens, groups, key_actions, *, device, batch):
             pool=query_rows["_pool"]
             pred=kq.decode_pool_actions(pool,chosen[:,None],vs,theta_source="src")[:,0,:,:6]
             truth=np.asarray(query_rows["target_action"],np.float32)
-            mse=np.mean((pred-truth)**2,axis=(1,2))
+            # Same closed-loop six-axis convention as the R0 path (sum of the
+            # six active-axis squared errors divided by 7), not a scalar mean.
+            mse=step1._six_axis_mse_over7(pred,truth)
             hold=np.repeat(np.asarray(query_rows["history"],np.float32)[:,-1:,:6],truth.shape[1],axis=1)
-            hmse=np.mean((hold-truth)**2,axis=(1,2));hard=np.asarray(query_rows["hard"],bool)
+            hmse=step1._six_axis_mse_over7(hold,truth);hard=np.asarray(query_rows["hard"],bool)
             episode=np.asarray(query_rows["episode_bootstrap"])
             extras["action_mse"]={"all_mean":float(mse.mean()),"hard_mean":float(mse[hard].mean()),
                 "all_ci95":bootstrap_mean(mse,episode),"hard_ci95":bootstrap_mean(mse[hard],episode[hard]),
@@ -1434,9 +1430,9 @@ def evaluate_ablation(out=OUT, *, source_out=step1.OUT, device="cuda", batch=16)
         if "target_action" in query_rows:
             rank=np.argsort(-scores,axis=1,kind="stable");chosen=rank[:,0]
             pred=kq.decode_pool_actions(query_rows["_pool"],chosen[:,None],vs,theta_source="src")[:,0,:,:6]
-            truth=np.asarray(query_rows["target_action"],np.float32);mse=np.mean((pred-truth)**2,axis=(1,2))
+            truth=np.asarray(query_rows["target_action"],np.float32);mse=step1._six_axis_mse_over7(pred,truth)
             hist=np.asarray(query_rows["history"],np.float32);hold=np.repeat(hist[:,-1:,:6],truth.shape[1],axis=1)
-            hmse=np.mean((hold-truth)**2,axis=(1,2));hard=np.asarray(query_rows["hard"],bool);ep=np.asarray(query_rows["episode_bootstrap"])
+            hmse=step1._six_axis_mse_over7(hold,truth);hard=np.asarray(query_rows["hard"],bool);ep=np.asarray(query_rows["episode_bootstrap"])
             extras["action_mse"]={"all_mean":float(mse.mean()),"hard_mean":float(mse[hard].mean()),
                 "all_ci95":bootstrap_mean(mse,ep),"hard_ci95":bootstrap_mean(mse[hard],ep[hard]),
                 "vs_hold_last":step1._bootstrap_diff(mse,hmse,ep),
