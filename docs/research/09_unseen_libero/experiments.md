@@ -460,7 +460,7 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 
 出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/unseen_libero/`。
 
-## SEG2: segment-context retrieval
+## §13 SEG2: segment-context retrieval
 
 ### 問いと方法
 
