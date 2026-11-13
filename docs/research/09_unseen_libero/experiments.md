@@ -478,6 +478,7 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 | π0.5 normal | — | — | — | .1140 | .2499 |
 | hold-last | — | — | — | .1140 | — |
 | prior LIB1 R5 | — | — | — | .1305 | .2662 |
+| prior unit_08 offline proxy (MAG3 O2/A3, converted to MSE6/7) | — | — | — | .1348 | — |
 
 | Ablation | MSE6/7 all | hard |
 |---|---:|---:|
@@ -487,7 +488,7 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 | continuity score off | .1903±.0113 | .3400±.0222 |
 | exclude previous segment | .1619±.0150 | .3032±.0221 |
 
-Selected minus normal episode-bootstrap 95% CI, by seed, was positive for all three seeds: all-window [.0477,.0641], [.0243,.0372], [.0483,.0651]; hard [.0389,.0831], [.0168,.0442], [.0562,.0898]. Offline result is negative; Eval was only scored after choices were frozen.
+Selected minus normal episode-bootstrap 95% CI, by seed, was positive for all three seeds: all-window [.0477,.0641], [.0243,.0372], [.0483,.0651]; hard [.0389,.0831], [.0168,.0442], [.0562,.0898]. 既存MAG3のunit_08 / π0.5-pose / π0.5-scale行は六軸MSEのfirst5 .145974・continuation .168635で、SEG2と同じ×6/7規則へ換算し平均すると.1348だった。SEG2 selectedもこのオフライン比較値を上回る。Eval was only scored after choices were frozen.
 
 ### サーバー整合性と閉ループ
 
