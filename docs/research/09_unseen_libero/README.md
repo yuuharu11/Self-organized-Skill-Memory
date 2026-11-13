@@ -87,6 +87,7 @@
 | [experiments.md](experiments.md) | 全実験の問い・やり方・結果（取り組んだ順） |
 | [image_orientation_fix.md](image_orientation_fix.md) | 未学習行の画像が180度回っていた件。影響を受ける数値と取り直しの状況 |
 | [reproduce.md](reproduce.md) | 新しい clone から結果を作り直す手順 |
+| [evidence/](evidence/) | 主な結果の表の元データ（閉ループの全試行の成否、オフライン MSE、正解で選ぶ上限）。どの出力から作ったかは [reproduce.md](reproduce.md#確認のしかた) |
 | [segmentation_demo/](segmentation_demo/README.md) | 切り出しの基準を動画で確かめたもの |
 
 コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、出力は `.skillnet-state/outputs/memory-pilot/unseen-libero/`（Git 管理外）。PR を操作するときは `gh` に `-R yuuharu11/Self-organized-Skill-Memory` を付ける。

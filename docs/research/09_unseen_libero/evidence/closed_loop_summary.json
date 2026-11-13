@@ -1,0 +1,125 @@
+{
+ "note": "Success counts recomputed from rollouts.jsonl under .skillnet-state/outputs/memory-pilot/unseen-libero/ (paths in 'source').",
+ "conditions": {
+  "pi05": {
+   "libero_90": {
+    "success": 32,
+    "trials": 100,
+    "source": "baseline-01/production/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 46,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10/normal/rollouts.jsonl"
+   }
+  },
+  "pi05_dct3_lowpass": {
+   "libero_90": {
+    "success": 34,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90/lowpass/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 47,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10/lowpass/rollouts.jsonl"
+   }
+  },
+  "unit_memory_no_merge": {
+   "libero_90": {
+    "success": 27,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_none/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 19,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_none/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.04": {
+   "libero_90": {
+    "success": 43,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_04/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 11,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_04/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.08": {
+   "libero_90": {
+    "success": 43,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_08/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 17,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_08/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.16": {
+   "libero_90": {
+    "success": 33,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_16/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 14,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_16/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.08_expert_t0.2": {
+   "libero_90": {
+    "success": 35,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_08_dn02/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 37,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_08_dn02/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.08_expert_t0.4": {
+   "libero_90": {
+    "success": 34,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_08_dn04/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 47,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_08_dn04/memory/rollouts.jsonl"
+   }
+  },
+  "unit_memory_tau0.08_expert_t0.6": {
+   "libero_90": {
+    "success": 33,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90_unit_08_dn06/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 45,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10_unit_08_dn06/memory/rollouts.jsonl"
+   }
+  },
+  "window_memory": {
+   "libero_90": {
+    "success": 39,
+    "trials": 100,
+    "source": "closed-loop-memory-01/libero90/memory/rollouts.jsonl"
+   },
+   "libero_10": {
+    "success": 20,
+    "trials": 50,
+    "source": "closed-loop-memory-01/libero10/memory/rollouts.jsonl"
+   }
+  }
+ }
+}
