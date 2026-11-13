@@ -461,6 +461,7 @@ def run(out=OUT, *, include_a5=True):
                         for base_name in ('pi05', 'previous_hold', 'action_oracle'):
                             bv = pdata['baseline'][f'{base_name}|{axes_name}'][metric]
                             base_compare[base_name] = paired_bootstrap(bv, pdata['episode'])
+                            base_compare[f'{base_name}_hard'] = paired_bootstrap(bv, pdata['episode'], pdata['hard'])
                         matrix.append({'split': split, 'amp': ak, 'duration': tk, 'axes': axes_name,
                             'window': metric,
                             **paired_bootstrap(rec[metric], pdata['episode']),
@@ -475,6 +476,9 @@ def run(out=OUT, *, include_a5=True):
                                'pi05': paired_bootstrap(pdata['baseline']['pi05|active7']['first5'], pdata['episode']),
                                'previous_hold': paired_bootstrap(pdata['baseline']['previous_hold|active7']['first5'], pdata['episode']),
                                'action_oracle': paired_bootstrap(pdata['baseline']['action_oracle|active7']['first5'], pdata['episode']),
+                               'pi05_hard': paired_bootstrap(pdata['baseline']['pi05|active7']['first5'], pdata['episode'], pdata['hard']),
+                               'previous_hold_hard': paired_bootstrap(pdata['baseline']['previous_hold|active7']['first5'], pdata['episode'], pdata['hard']),
+                               'action_oracle_hard': paired_bootstrap(pdata['baseline']['action_oracle|active7']['first5'], pdata['episode'], pdata['hard']),
                                'hard': paired_bootstrap(rec, pdata['episode'], pdata['hard'])})
     normal_check = np.load(DEN / 'predictions/A-vm-08/eval_rows.npz')
     eval_rows_aligned = np.array_equal(inputs['eval']['row'], normal_check['row_ids'])
@@ -527,16 +531,16 @@ def render_report(report):
     lines = ['# MAG1-L result', '',
              f"Dev selected non-oracle pair: **{report['dev_selected_nonoracle']['amp']} + {report['dev_selected_nonoracle']['duration']}** (Dev active7 first-5 MSE {report['dev_selected_nonoracle']['dev_active7_first5_mse']:.6f}).",
              '', '## Four-row summary (active7, first five steps)', '',
-             '| Summary | Split | Amplitude | Duration | MSE [95% CI] | π0.5 | Previous hold | Action oracle | Hard rows |',
-             '|---|---|---|---|---:|---:|---:|---:|---:|']
+             '| Summary | Split | Amplitude | Duration | MSE [95% CI] | π0.5 | Previous hold | Action oracle | Hard MSE | Hard π0.5 | Hard hold |',
+             '|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|']
     for r in report['summary']:
         ci = r['ci95']
-        lines.append(f"| {r['summary']} | {r['split']} | {r['amp']} | {r['duration']} | {r['mean']:.6f} [{ci[0]:.6f}, {ci[1]:.6f}] | {r['pi05']['mean']:.6f} | {r['previous_hold']['mean']:.6f} | {r['action_oracle']['mean']:.6f} | {r['hard']['rows']} |")
-    lines += ['', '## Full combinations', '', '| Split | Amplitude | Duration | Axes | Window | Mean MSE | 95% CI | π0.5 | Previous hold | Action oracle | Hard mean |', '|---|---|---|---|---|---:|---:|---:|---:|---:|---:|']
+        lines.append(f"| {r['summary']} | {r['split']} | {r['amp']} | {r['duration']} | {r['mean']:.6f} [{ci[0]:.6f}, {ci[1]:.6f}] | {r['pi05']['mean']:.6f} | {r['previous_hold']['mean']:.6f} | {r['action_oracle']['mean']:.6f} | {r['hard']['mean']:.6f} | {r['pi05_hard']['mean']:.6f} | {r['previous_hold_hard']['mean']:.6f} |")
+    lines += ['', '## Full combinations', '', '| Split | Amplitude | Duration | Axes | Window | Mean MSE | 95% CI | π0.5 | Previous hold | Action oracle | Hard mean | Hard π0.5 | Hard hold |', '|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|']
     for r in report['all_combinations']:
         ci = r['ci95']
         b = r['baselines']
-        lines.append(f"| {r['split']} | {r['amp']} | {r['duration']} | {r['axes']} | {r['window']} | {r['mean']:.6f} | [{ci[0]:.6f}, {ci[1]:.6f}] | {b['pi05']['mean']:.6f} | {b['previous_hold']['mean']:.6f} | {b['action_oracle']['mean']:.6f} | {r['hard']['mean']:.6f} |")
+        lines.append(f"| {r['split']} | {r['amp']} | {r['duration']} | {r['axes']} | {r['window']} | {r['mean']:.6f} | [{ci[0]:.6f}, {ci[1]:.6f}] | {b['pi05']['mean']:.6f} | {b['previous_hold']['mean']:.6f} | {b['action_oracle']['mean']:.6f} | {r['hard']['mean']:.6f} | {b['pi05_hard']['mean']:.6f} | {b['previous_hold_hard']['mean']:.6f} |")
     lines += ['', '## Baselines', '', '```json', json.dumps(report['baselines'], indent=2), '```', '',
               '## 1,595-candidate scale-only comparison', '',
               '| Split | A1 active7 first-5 | 95% CI | A1 6-axis first-5 ×6/7 |', '|---|---:|---:|---:|']
