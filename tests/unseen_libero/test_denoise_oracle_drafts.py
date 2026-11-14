@@ -69,4 +69,3 @@ def test_final_gripper_is_copied_from_ordinary_pi05_for_all_conditions():
     paired = den.summarize_condition(fixed, target, np.array([True, False, True]),
                                      np.array([1, 1, 2]), np.array([4, 4, 7]), fixed, ordinary)
     assert 'mse6_sum_div7' in paired['error_delta_vs']['ordinary_pi05']['all']
-

@@ -128,4 +128,3 @@ def test_tau_cover_uses_six_axis_denominator_without_gripper():
     without_grip = tau_neighbor_matrix(coeff, include_gripper=False, tau=.08)
     assert with_grip[0, 1]
     assert not without_grip[0, 1]
-
