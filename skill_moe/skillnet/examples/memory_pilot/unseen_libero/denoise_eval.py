@@ -88,7 +88,11 @@ def pose_oracle_types(target7, normal7, pool_shapes, vs, *, cond="S-shared"):
     if pool_shapes.ndim != 3 or pool_shapes.shape[1:] != (10, 7):
         raise ValueError(pool_shapes.shape)
     q_phys = vs.to_physical(target7[:, :, :6])
-    cand_phys = np.stack([vs.to_physical(s[:, :6]) for s in pool_shapes])
+    # Stored pool shapes are already pose-removed RMS-scaled physical motion
+    # (SkillMemory.shape); to_physical would treat them as quantile-normalized
+    # actions and add per-axis offsets the scale fit cannot absorb. Keep them
+    # as stored, as the Procrustes fit two lines below already does.
+    cand_phys = np.ascontiguousarray(pool_shapes[:, :, :6], dtype=np.float64)
     errors = so.scale_only_error(q_phys, cand_phys, cond)
     selected = errors.argmin(1).astype(np.int64)
     shapes = pool_shapes[selected]

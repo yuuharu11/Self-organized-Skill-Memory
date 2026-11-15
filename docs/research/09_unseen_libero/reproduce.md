@@ -9,6 +9,9 @@
 > 実験を最初から通し直した記録はありません。順序とコマンドは、保存済みの出力の依存関係と実行記録から整理しました。
 > 学習と評価には GPU が要り、全段を通すと数日かかります。
 
+> **保存済みの重み：** 段階 2 の Expert（`oracle-01/experts/`）と段階 3 のデノイズ Expert（`compressed-denoise-01/*/experts/`）の重みは、容量のため削除しました。下書き、行、特徴量、試行の記録、`results.json` は残っています。段階 7（`expert_refine.py`）や `MEM_EXPERT` を使う閉ループを回すときは、段階 2・3 の学習からやり直してください。
+> 別環境に何をコピーすれば途中の段から始められるかは、[再現ガイド 7 節](../../reproduction.md#7-成果物の置き場所と別環境への持ち出し) にあります。
+
 ## 全体の流れ
 
 `$U` は `$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero` です。
@@ -243,6 +246,16 @@ python $UL/segment_demo.py     # 切り出しの動画（segmentation_demo/）
 ## 確認のしかた
 
 各段の結果は、出力の `report.md`（または `summary.json`）に書かれます。研究ノートの表と比べてください。
+主な表の元データは [evidence/](evidence/) にあります。
+
+| ファイル | 対応する表 | 作った元（`$U` 以下） |
+|---|---|---|
+| `closed_loop_summary.json`、`closed_loop_trials.csv` | README 主な結果 1（閉ループ）。試行ごとの成否なので対の比較もできる | `baseline-01/production/`、`closed-loop-memory-01/*/{normal,lowpass,memory}/rollouts.jsonl` |
+| `offline_mse_queries.json` | 主な結果 2 の直前保持、π0.5、π0-FAST、random、VLM 平均、π0.5 最近傍、「正解で選び大きさも正解」 | `fast-query-01/production/results.json` |
+| `offline_mse_scale_only.json` | 主な結果 2 の P5、大きさを π0.5 から、正解で選ぶ、型・向き・大きさを正解、R-so3 | `scale-only-02/production/results.json` |
+| `draft_reconstruction/*.json` | 主な結果 3（圧縮、借りる単位、可変長、τ でまとめる、デノイズ） | `draft-reconstruction-01/` |
+
+閉ループの成功数は `rollouts.jsonl` の `success` を数えたものです（LIBERO-10 の `summary.json` は 0/0 と出るため使いません。段階 11〜12 の注意を参照）。
 学習の乱数とGPUの違いで小数第3位は揺れます。結論（どれが基準より良いか、どれが差の何割を埋めるか）が変わるかで判断してください。
 
 ## テスト

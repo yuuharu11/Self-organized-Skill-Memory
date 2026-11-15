@@ -741,6 +741,7 @@ def _step1_score_factory(device="cuda", batch=16):
             hist=np.asarray(query_rows["history"],np.float32);hold=np.repeat(hist[:,-1:,:6],truth.shape[1],axis=1)
             hmse=_six_axis_mse_over7(hold,truth);hard=np.asarray(query_rows["hard"],bool);ep=np.asarray(query_rows["episode_bootstrap"])
             extras["action_mse"]={"all_mean":float(mse.mean()),"hard_mean":float(mse[hard].mean()),
+                "all_ci95":bootstrap_mean(mse,ep),"hard_ci95":bootstrap_mean(mse[hard],ep[hard]),
                 "vs_hold_last":_bootstrap_diff(mse,hmse,ep),
                 "vs_hold_last_hard":_bootstrap_diff(mse[hard],hmse[hard],ep[hard]),
                 "hold_last_all":float(hmse.mean()),"hold_last_hard":float(hmse[hard].mean()),
@@ -955,6 +956,16 @@ def _bootstrap_diff(values, baseline, episode, *, reps=5000,seed=4101):
     return {"mean":float(v.mean()),"ci95":[float(np.quantile(draws,.025)),float(np.quantile(draws,.975))],"episodes":len(unique)}
 
 
+def bootstrap_mean(values, episode, *, reps=5000, seed=4101):
+    """Episode-clustered bootstrap CI for a mean, matching _bootstrap_diff's seed."""
+    x=np.asarray(values,np.float64);ep=np.asarray(episode)
+    unique,inv=np.unique(ep,return_inverse=True)
+    sums=np.bincount(inv,weights=x);counts=np.bincount(inv)
+    rng=np.random.default_rng(seed);draw=rng.integers(len(unique),size=(reps,len(unique)))
+    means=sums[draw].sum(1)/counts[draw].sum(1)
+    return [float(np.quantile(means,.025)),float(np.quantile(means,.975))]
+
+
 def _history_perturbations(eval_history, fit_history, allowed, pool_shape, *, seed=4101):
     """Deterministic Eval history corruption; never consumes Eval labels."""
     hist=np.asarray(eval_history,np.float32);fit=np.asarray(fit_history,np.float32)
@@ -1003,7 +1014,7 @@ def evaluate(out=OUT,*,device="cuda",batch=16):
     """One final 619-row Eval scoring pass after all selection is frozen."""
     out=Path(out);dest=out/"eval";dest.mkdir(parents=True,exist_ok=True)
     if (dest/"summary.json").exists():return json.loads((dest/"summary.json").read_text())
-    kq,tr,vs,sq,base,rows,unseen,splits=_modules()[0]._production_data_splits(include_eval_targets=True)
+    kq,tr,vs,sq=_modules();base,rows,unseen,splits=kq._production_data_splits(include_eval_targets=True)
     ids=np.asarray(splits["eval"][1],np.int64);ue=np.flatnonzero(~np.asarray(unseen["is_dev"],bool))
     # K1 eval split order is sorted unseen row order; assert the target rows match.
     if len(ids)!=619 or len(ue)!=619 or not np.array_equal(ids,ue):raise ValueError("Eval row order/count changed")

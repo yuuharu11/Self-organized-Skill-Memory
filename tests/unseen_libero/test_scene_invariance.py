@@ -34,6 +34,19 @@ def test_scene_ids_fail_on_unmapped_task():
         raise AssertionError("unknown scene mapping must fail closed")
 
 
+def test_bootstrap_mean_returns_ordered_interval_covering_mean():
+    import numpy as np
+
+    rng = np.random.default_rng(0)
+    values = rng.normal(loc=2.0, scale=1.0, size=60)
+    episode = np.repeat(np.arange(6), 10)
+    lo, hi = si.bootstrap_mean(values, episode)
+    assert lo <= float(values.mean()) <= hi
+    assert lo < hi
+    lo2, hi2 = si.bootstrap_mean(values, episode)
+    assert (lo, hi) == (lo2, hi2)
+
+
 def test_unseen_eval_scene_ids_resolve_from_manifest():
     got = si.unseen_scene_ids(np.array([0, 10, 84, 88]))
     assert got.shape == (4,)

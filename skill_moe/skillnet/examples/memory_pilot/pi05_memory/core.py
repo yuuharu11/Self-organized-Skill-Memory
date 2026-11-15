@@ -53,7 +53,14 @@ def exclude_episode(scores, memory_episodes, query_episode):
     return scores
 
 
-def make_model(*, abstract=False):
+def _disable_memory_model_subtask_by_default(model_class):
+    """Mark a MemoryPi05 subclass as task-only without changing other callers."""
+    model_class.subtask_generation_default = False
+    return model_class
+
+
+def make_model(*, abstract=False, action_horizon=10, discrete_state_input=False, max_token_len=200,
+               robocasa=False):
     """Delayed imports keep pure retrieval/bridge tests CPU-only."""
     import jax
     import jax.numpy as jnp
@@ -101,22 +108,52 @@ def make_model(*, abstract=False):
                 adarms_cond=[None, cond])
             return self.action_out_proj(out[:, -self.action_horizon:])
 
-        def sample_bridge(self, rng, observation, drafts, starts, *, num_steps=10, noise=None):
+        def encode_prefix_context(self, observation):
+            """Encode the image/language prefix once for paired action paths."""
             obs = model_api.preprocess_observation(None, observation, train=False)
             prefix, mask, ar = self.embed_prefix(obs)
             _, cache = self.PaliGemma.llm(
                 [prefix, None], mask=make_attn_mask(mask, ar),
                 positions=jnp.cumsum(mask, axis=1) - 1)
+            return mask, cache
+
+        def sample_actions_with_context(self, rng, observation, prefix_context, *, num_steps=10, noise=None):
+            """Ordinary pretrained π0.5 flow using a caller-provided prefix KV cache."""
+            obs = model_api.preprocess_observation(None, observation, train=False)
+            batch_size = observation.state.shape[0]
+            eps = jax.random.normal(rng, (batch_size, self.action_horizon, self.action_dim)) if noise is None else noise
+
+            def body(i, value):
+                time = jnp.full((batch_size,), 1.0 - i / num_steps, jnp.float32)
+                return value - self.velocity(obs, value, time, prefix_context=prefix_context) / num_steps
+
+            return jax.lax.fori_loop(0, num_steps, body, eps)
+
+        def sample_bridge(self, rng, observation, drafts, starts, *, num_steps=10, noise=None, prefix_context=None):
+            obs = model_api.preprocess_observation(None, observation, train=False)
+            if prefix_context is None:
+                prefix, mask, ar = self.embed_prefix(obs)
+                _, cache = self.PaliGemma.llm(
+                    [prefix, None], mask=make_attn_mask(mask, ar),
+                    positions=jnp.cumsum(mask, axis=1) - 1)
+                prefix_context = (mask, cache)
             eps = jax.random.normal(rng, drafts.shape) if noise is None else noise
             starts = jnp.asarray(starts).reshape(-1)
             x = (1 - starts[:, None, None]) * drafts + starts[:, None, None] * eps
             def body(i, value):
                 t = starts * (1 - i / num_steps)
                 return value - starts[:, None, None] / num_steps * self.velocity(
-                    obs, value, t, prefix_context=(mask, cache))
+                    obs, value, t, prefix_context=prefix_context)
             return jax.lax.fori_loop(0, num_steps, body, x)
 
-    config = Pi0Config(pi05=True, action_horizon=10, action_dim=32,
-                      max_token_len=200, discrete_state_input=False)
+    if robocasa:
+        # Keep LIBERO's existing policy default untouched. This RoboCasa-only
+        # subclass matches the released checkpoint's task-only prompt behavior.
+        _disable_memory_model_subtask_by_default(MemoryPi05)
+
+    # Defaults preserve existing LIBERO memory-bridge behavior. RoboCasa's
+    # released checkpoint uses a 50-step horizon and discrete state tokens.
+    config = Pi0Config(pi05=True, action_horizon=action_horizon, action_dim=32,
+                      max_token_len=max_token_len, discrete_state_input=discrete_state_input)
     create = lambda: MemoryPi05(config, rngs=nnx.Rngs(17))
     return (nnx.eval_shape(create) if abstract else create()), config

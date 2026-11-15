@@ -139,6 +139,9 @@ def create_torch_dataset(
     if repo_id == "robocasa:atomic_seen":
         from openpi.training.data_loader import _create_robocasa_atomic_dataset
         return _create_robocasa_atomic_dataset(data_config, action_horizon)
+    if repo_id == "robocasa:pretrain_human300":
+        from openpi.training.data_loader import _create_robocasa_pretrain_human300_dataset
+        return _create_robocasa_pretrain_human300_dataset(data_config, action_horizon)
     if repo_id == "fake":
         return FakeDataset(model_config, num_samples=1024)
 

@@ -38,10 +38,20 @@ REPLAN = 5
 
 
 def write(path, obj):
+    import tempfile
     path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=True) + "\n")
-    tmp.replace(path)
+    # Unique temp names: concurrent rollout lanes share progress.json, and a
+    # shared ".tmp" path lets one lane rename it before another reaches
+    # replace(), aborting the run with FileNotFoundError.
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=path.name + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=True) + "\n")
+        Path(tmp).replace(path)
+    except BaseException:
+        try: Path(tmp).unlink()
+        except OSError: pass
+        raise
 
 
 def append(path, row):
@@ -139,6 +149,11 @@ def _safe_grip_sign(x):
 
 
 def make_policy(checkpoint, threshold):
+    # The unit pool decoded below is pool_unit_08, so the legacy selector
+    # must use it (and its query checkpoint) instead of its default
+    # C_vm_none pool; otherwise pick() indexes a different candidate space.
+    os.environ.setdefault("MEM_POOL", str(POOL))
+    os.environ.setdefault("MEM_CKPT", str(POOL_CKPT))
     pi05_dir = HERE.parent / "pi05_memory"
     sys.path.insert(0, str(pi05_dir))
     # `memory_closed_loop` deliberately puts its own sibling `run.py` first.
@@ -234,6 +249,9 @@ def make_policy(checkpoint, threshold):
                 theta = np.asarray(track["theta_fix"], np.float32)
             mem = self._decode(self.shapes[idx], theta, src)
             out = normal.copy(); out[:, :6] = mem[:, :6]  # gripper remains the PI0.5 output
+            # Record the executed prefix for the next retrieval, as the legacy
+            # policy does; without this the selector always sees all-zero history.
+            executed.extend(list(out[:REPLAN, :7]))
             actions = self.unnormalize({"actions": out, "state": row["state"]})["actions"][:, :7]
             if not np.isfinite(actions).all():
                 raise FloatingPointError("nonfinite action")

@@ -359,6 +359,25 @@ def _create_robocasa_atomic_dataset(data_config, action_horizon):
     return _PromptedRoboCasaConcat(datasets,prompts)
 
 
+def _create_robocasa_pretrain_human300_dataset(data_config, action_horizon):
+    """Concatenate the six locally mirrored pretrain tasks used by the RM-A baseline."""
+    base=pathlib.Path(data_config.root)
+    tasks=("PickPlaceCounterToCabinet","PickPlaceSinkToCounter","OpenDrawer",
+           "CloseFridge","TurnOnSinkFaucet","TurnOffStove")
+    datasets=[]
+    for task in tasks:
+        matches=sorted((base/'v1.0'/'pretrain'/'atomic'/task).glob('*/lerobot'))
+        if not matches:
+            raise FileNotFoundError(f"Missing pretrain human dataset for {task} below {base}")
+        root=matches[-1]
+        meta=lerobot_dataset.LeRobotDatasetMetadata(f'robocasa/{task}',root=root)
+        datasets.append(lerobot_dataset.LeRobotDataset(
+            f'robocasa/{task}',root=root,
+            delta_timestamps={'action':[t/meta.fps for t in range(action_horizon)]},
+            video_backend=os.environ.get('SKILLNET_ROBOCASA_VIDEO_BACKEND','pyav')))
+    return torch.utils.data.ConcatDataset(datasets)
+
+
 def create_rlds_dataset(
     data_config: _config.DataConfig,
     action_horizon: int,

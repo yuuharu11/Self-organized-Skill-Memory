@@ -1,28 +1,33 @@
-# 計画：RoboCasa365 のatomicスキルメモリ
+# 計画：RoboCasa365 の atomic スキルメモリ
 
 ## 問い
 
-atomic の実演から構築するラベルなしスキルメモリが、target split の Composite-Unseen へゼロショット転移するか。
+atomic のデモから構築するラベルなしスキルメモリで、RoboCasa で微調整された π0.5 を atomic タスクで上回れるか。最終の比較は atomic_seen 18タスク×50試行（target split）の平均で、論文 Table 1 の multitask π0.5（Atomic 39.6%）と、同じ checkpoint を同じ条件で回したベースラインの両方と並べる。Composite-Unseen へのゼロショット転移は、その後の課題とする。
 
-## データ分割と漏洩防止
+## 段階
 
-- 学習・メモリ作成：target の atomic_seen 18タスクだけ。
-- 主評価：target の composite_unseen 16タスクを各50試行。
-- 補助：atomic_seen と composite_seen。
-- Composite-Unseen の正解行動・区間ラベルは評価の採点に限り、学習、メモリ作成、候補選択、閾値選択には使わない。
+1. **開発（6タスク）**：PickPlaceCounterToCabinet、PickPlaceSinkToCounter、OpenDrawer、CloseFridge、TurnOnSinkFaucet、TurnOffStove。メモリ・キー・大きさ・グリッパー・Expert の構成を決める。閉ループの判定は中位3タスク（CounterToCabinet、OpenDrawer、CloseFridge）×12試行を主に使う。
+2. **拡張（18タスク）**：決めた構成のまま、18タスクの pretrain デモでメモリと各モデルを作り直し、target split の 18×50 で評価する。
+
+## 学習の順番
+
+メモリ構築 → クエリ（キー）の学習 → Expert の学習。後の段は前の段の出力に依存する（キーはメモリの型を教師にし、Expert はキーが選んだ下書きを入力にする）ので、前の段を決めてから進める。
+
+## データと漏洩防止
+
+- メモリ・キー・大きさヘッド・グリッパー頭・Expert は、pretrain の human デモのうちメモリ側の分割だけで作る。開発では各タスク100デモを 80/20 に分け、20 を保留にする。
+- 保留デモの正解行動は採点と選択にだけ使い、学習・正規化統計・候補選択には使わない。自エピソードの単位は候補から除く。
 
 ## 比較
 
-1. pi05_base を atomic_seen で微調整した baseline。
-2. 同じ方策と評価予算で raw 区間メモリを利用。
-3. RoboCasa公式の既報値。ただしcheckpoint、試行数、scene sampling、制御設定が一致しない場合は直接比較と扱わない。
+1. 同じ checkpoint の通常 π0.5（同じ seed）。
+2. 論文の既報値。試行数・シーンの抽選・制御設定が一致しない場合は、直接の比較とは扱わない。
+3. 参考：π0.5 の行動出力を選択に使う構成（R2 など）。学習済みタスクでは π0.5 が上限になるため、主張の根拠には使わない。
 
-成功率、Wilson 95%区間、タスク別件数を報告する。シミュレータ初期状態 seed とコード・checkpoint hash を保存する。
+成功率、Wilson 95% 区間、タスク別件数、同じ seed との対応（McNemar 正確検定）を報告する。
 
-## 容量・計算の計画値
+## 計算量の実測
 
-atomic target は18×500=9,000デモ、3カメラ映像を含む。空き容量は圧縮に依存するため0.5〜2TBを準備見積もりとし、実際の smoke/full download 後に更新する。学習を30k updatesで計画する場合、仮に1 update 0.3〜1.0秒なら約2.5〜8.3 GPU時間。評価800試行が1〜10分/試行なら直列で約13〜133時間（並列環境数で短縮）。いずれも実測前の粗い計画値であり、smoke速度で置き換える。ここでは学習も全評価もまだ実行していない。
-
-## 準備済みと残作業
-
-この段階では Python 3.11 venv、registry JSON、import/render smoke、smokeデータの取得・検査、demo replay配線までを確認する。full atomic取得、norm stats全量、pi05学習、メモリ作成、16×50評価は後続作業。
+- 通常 π0.5 の評価：6タスク×50試行が、サーバー1台＋クライアント8〜12並列で約1時間。
+- メモリだけの構成：1回の推論が約0.1秒（VLM の prefix 特徴だけを計算し、action expert は呼ばない）。
+- データ：pretrain atomic は1タスク約500MB（100デモ）。18タスク分を取得済み。

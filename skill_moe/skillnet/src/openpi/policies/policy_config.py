@@ -10,7 +10,7 @@ import openpi.models.model as _model
 import openpi.policies.policy as _policy
 import openpi.shared.download as download
 from openpi.training import checkpoints as _checkpoints
-from openpi.training import config_moe_skill as _config
+from openpi.training import config as _config
 import openpi.transforms as transforms
 
 

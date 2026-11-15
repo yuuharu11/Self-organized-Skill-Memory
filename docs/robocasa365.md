@@ -103,6 +103,8 @@ bash env/robocasa/eval_smoke.sh            # サーバーは $SKILLNET_VENV の 
 
 ## 6. π0.5 での配線確認 [SkillNet] → [RoboCasa]
 
+RoboCasa の方策・parity・MemoryPi05 経路では、フォークとの入力一致のためサブタスク生成は既定で無効です（明示的な `SKILLNET_SUBTASK_GENERATE` / `OPENPI_SUBTASK_GENERATE` は尊重します）。
+
 学習を始める前に、正規化統計、モデル、方策サーバー、クライアントが通ることを確かめます。smoke データは1タスクだけなので、部分集合を許す環境変数を明示します（本番では外す。外すと18タスクが揃うまで止まる）。
 
 ```bash
