@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 import numpy as np
@@ -12,7 +13,7 @@ sys.path.insert(0, str(HERE))
 import compression_seen_cuts as cmp3  # noqa: E402
 import compression_matched as cmp2  # noqa: E402
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
+ROOT = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state')) / 'outputs/memory-pilot/unseen-libero'
 PARENT = ROOT / 'compress-per-axis-01'
 DIM1_RESULTS = PARENT / 'results.json'
 GRIP1_RESULTS = ROOT / 'gripper-split-01' / 'production-20261114' / 'results.json'

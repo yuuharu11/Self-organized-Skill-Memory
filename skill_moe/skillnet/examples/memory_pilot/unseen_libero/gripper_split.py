@@ -16,8 +16,9 @@ import numpy as np
 from scipy.fft import dct, idct
 
 HERE = Path(__file__).resolve().parent
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
-RUN = Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
+STATE = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state'))
+ROOT = STATE / 'outputs/memory-pilot/unseen-libero'
+RUN = STATE / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
 PREP = ROOT / 'scale-only-02/production/prep'
 OUT = ROOT / 'gripper-split-01'
 sys.path.insert(0, str(HERE))

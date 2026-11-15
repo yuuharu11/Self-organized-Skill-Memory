@@ -25,7 +25,7 @@ import compression_per_axis as axis_eval
 import denoise_eval as dn1
 from pi05_reference import ROOT as EXP_ROOT
 
-OUT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/denoise-oracle-01')
+OUT = EXP_ROOT / 'denoise-oracle-01'
 REF = EXP_ROOT / 'pi05-reference-01'
 RUN = EXP_ROOT.parent / 'pi05-memory40-20261104' / 'run-01'
 UNSEEN = EXP_ROOT / 'unseen-rows-02'

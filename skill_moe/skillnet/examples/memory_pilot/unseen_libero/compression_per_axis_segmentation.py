@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -15,7 +16,7 @@ sys.path.insert(0, str(HERE))
 import compression_seen_cuts as cmp3  # noqa: E402
 import compression_matched as cmp2  # noqa: E402
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
+ROOT = Path(os.environ.get('SKILLNET_STATE_DIR', '/work/.skillnet-state')) / 'outputs/memory-pilot/unseen-libero'
 CMP3_PROD = ROOT / 'compress-seen-cuts-01' / 'production' / 'results.json'
 DIM1 = ROOT / 'compress-per-axis-01' / 'results.json'
 OUTPUT = ROOT / 'compress-per-axis-01' / 'segmentation' / 'attempt-01'
