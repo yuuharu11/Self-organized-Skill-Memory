@@ -707,3 +707,29 @@ Selected minus normal episode-bootstrap 95% CI, by seed, was positive for all th
 - 可変長 U の10点補間上限と、自然長で単位を実行する評価は同じ指標ではない。閉ループの有効性は別途確認が必要。
 
 出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-split-01/attempt-08/report.md`、`results.json`、`figure_data.json`。コード／テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/gripper_split.py`、`tests/unseen_libero/test_gripper_split.py`。
+
+## LP：潜在トークンで大きさとグリッパーを読む診断
+
+### 問いと方法
+
+V-JEPA などの潜在トークンから、単位の大きさ（振幅）とグリッパー開閉を読めるかを調べる。LIBERO-40 の SEG2 適合クエリ 30,324 行を対象に、V-JEPA 2（ViT-L、MIT）の 2 フレーム入力から空間平均プーリングした 1024 次元トークンを取り出す。読み出しはグリッパー・型・大きさの3ヘッドで、グリッパーは LIBERO-40 保持、型・大きさは LIBERO-90 密 Dev で選択する。Eval は報告のみ。データ準備（行・保存の一覧、画素一致、スモーク）は `latent_probe_data.py`、読み出しは `latent_probe_readout.py`、閉ループは `noro_closed_loop.py`。
+
+### 主な表（smoke、結論は出さない）
+
+Dev 選択（グリッパー AUC／型 top-1／大きさ log-MAE、かっこ内は固定参照）：
+
+| 条件 | グリッパー | 型 top-1 | 大きさ |
+|---|---|---:|---:|
+| 潜在なし＋prefix あり | .8529 | .04210 | .6096 |
+| V-JEPA＋prefix なし | .8700 | .06228 | .6585 |
+| V-JEPA＋prefix あり | .8957 | .04057 | .6369 |
+| VLM＋prefix なし | .9871 | .04177 | .6459 |
+| VLM＋prefix あり | .9086 | .03607 | .6186 |
+
+閉ループ（noro、メモリ形状→π0.5 姿勢、グリッパー π0.5）：メモリ 19/100、通常 π0.5 32/100。ベースラインを下回る。
+
+### 結論
+
+スモークの範囲では、潜在トークンの有無で型・大きさの改善は確認できず、閉ループもベースラインに届かない。最終の表現品質や 3 seed 性能の結論は出さない。データ準備の画素一致（Eval 行の base・wrist とも resize 後完全一致）と V-JEPA スモーク（2 カメラ 1 行 0.0831 秒、fp16 695 MB）は通っている。全量の画像・特徴抽出は未実施。
+
+出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/latent-probe-01/`（`data/`、`gate/`、`repair-01/smoke-05/`、`lpc1-closed-loop/`）。コード／テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/latent_probe_{data,features,readout}.py`、`noro_{closed_loop,run}.py`、`tests/unseen_libero/test_latent_probe_{data,readout}.py`、`test_noro_closed_loop.py`。
