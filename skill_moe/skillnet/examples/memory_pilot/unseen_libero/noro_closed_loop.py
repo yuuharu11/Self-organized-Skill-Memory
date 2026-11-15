@@ -23,7 +23,7 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
-ROOT = Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
+ROOT = Path(os.environ.get('SKILLNET_STATE_DIR', Path(__file__).resolve().parents[5] / '.skillnet-state')).expanduser() / 'outputs/memory-pilot/unseen-libero'
 SCALE = ROOT / 'scale-only-02/production'
 DEV_INPUTS = SCALE / 'prep/W_inputs_dev.npz'
 DEV_PI05 = ROOT / 'fast-query-01/production/predictions/pi05_dev_rot180.npz'

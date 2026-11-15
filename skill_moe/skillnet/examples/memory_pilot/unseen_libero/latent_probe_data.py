@@ -20,7 +20,7 @@ from typing import Iterable
 import numpy as np
 
 
-DEFAULT_STATE = Path(os.environ.get("SKILLNET_STATE_DIR", "/work/.skillnet-state"))
+DEFAULT_STATE = Path(os.environ.get("SKILLNET_STATE_DIR", Path(__file__).resolve().parents[5] / ".skillnet-state")).expanduser()
 DEFAULT_MEMORY = DEFAULT_STATE / "outputs/memory-pilot/pi05-memory40-20261104/run-01"
 DEFAULT_UNSEEN = DEFAULT_STATE / "outputs/memory-pilot/unseen-libero/unseen-rows-02"
 DEFAULT_CHECKPOINT = DEFAULT_STATE / "checkpoints/openpi-assets/checkpoints/pi05_libero"

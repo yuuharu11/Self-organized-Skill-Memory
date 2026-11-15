@@ -62,7 +62,8 @@ def test_raw_live_camera_inputs_are_flipped_180_degrees():
 def test_dev_server_composer_matches_lpg_t_p5_s_pi05_on_ten_rows(tmp_path):
     required = [policy.DEV_INPUTS, policy.DEV_PI05,
                 policy.SCALE/'prep/W_pool.npz', policy.SCALE/'selection.json',
-                policy.ROOT/'latent-probe-01/gate-full/summary.json']
+                policy.ROOT/'latent-probe-01/gate-full/summary.json',
+                policy.ROOT/'compressed-denoise-01/production/drafts/C_vm_none_train.npz']
     if not all(p.exists() for p in required):
         pytest.skip('LPG actual-cache artifacts unavailable; online/offline parity smoke skipped')
     result = policy.dev_parity(tmp_path/'parity', n=10)
