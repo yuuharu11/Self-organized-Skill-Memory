@@ -121,6 +121,18 @@ def _prepare_vector_sources(part: dict[str,np.ndarray]) -> dict[str,np.ndarray]:
     return prepared
 
 
+def exact_candidate_row_ids(query_keys: np.ndarray, candidate_keys: np.ndarray) -> np.ndarray:
+    """Map query identities to candidate indices without assuming row order."""
+    q=np.asarray(query_keys);c=np.asarray(candidate_keys)
+    if q.ndim!=2 or c.ndim!=2 or q.shape[1]!=c.shape[1]:
+        raise ValueError(f'query/candidate keys must be aligned matrices, got {q.shape}, {c.shape}')
+    lookup={tuple(map(int,key)):i for i,key in enumerate(c)}
+    if len(lookup)!=len(c):raise ValueError('candidate keys are not unique')
+    missing=[tuple(map(int,key)) for key in q if tuple(map(int,key)) not in lookup]
+    if missing:raise KeyError(f'{len(missing)} query keys absent from candidate bank; first={missing[0]}')
+    return np.asarray([lookup[tuple(map(int,key))] for key in q],np.int64)
+
+
 def _score_vectors(model: PairMLPRanker, queries: np.ndarray, candidates: np.ndarray,
                    *, device: str, batch: int=128) -> np.ndarray:
     model.eval();keys=[]
@@ -151,7 +163,11 @@ def _train_one(input_name: str, shared: bool, fit_q: np.ndarray, fit_k: np.ndarr
         for step in range(steps):
             qi=qids[step*batch_size:min((step+1)*batch_size,n)]
             random_ids=rng.choice(len(fit_k),size=min(random_candidates,len(fit_k)),replace=False)
-            cids,allowed=key2.contrastive_candidate_set(qi,random_ids,train['task'][qi],train['episode'][qi],
+            # Query rows and candidate-bank rows have different indexing after
+            # the held-out learned episodes are removed. Positive IDs are
+            # explicitly mapped by exact row key before forming the candidate set.
+            positive_ids=train['_query_candidate_ids'][qi]
+            cids,allowed=key2.contrastive_candidate_set(positive_ids,random_ids,train['task'][qi],train['episode'][qi],
                                                         train['_candidate_task'],train['_candidate_episode'])
             q=torch.as_tensor(fit_q[qi],device=device,dtype=torch.float32)
             k=torch.as_tensor(fit_k[cids],device=device,dtype=torch.float32)
@@ -230,12 +246,16 @@ def run_keygrid(output: Path, *, device: str='cuda:0', seed: int=1,
     fit_full_ids=np.asarray([fit_key_to_full[tuple(map(int,k))] for k in fit_bi['key']],np.int64)
     fit_candidate_actions=candidate_actions[fit_full_ids]
     train_for_fit={**train,'_candidate_task':fit_bank['task'],'_candidate_episode':fit_bank['episode']}
+    query_candidate_ids=exact_candidate_row_ids(train['key'],fit_bi['key'])
+    train_for_fit['_query_candidate_ids']=query_candidate_ids
     # Limit only smoke fixtures; production always uses all rows and fixed grid.
     if smoke:
         maxtrain=32;maxcand=128;maxdev=24;maxeval=16
         fit_x={k:v[:maxcand] for k,v in fit_x.items()};fit_candidate_actions=fit_candidate_actions[:maxcand]
-        train_x={k:v[:maxtrain] for k,v in train_x.items()}
-        train_for_fit={k:(v[:maxtrain] if isinstance(v,np.ndarray) and len(v)==len(train['key']) else v)
+        smoke_query_ids=np.flatnonzero(query_candidate_ids<maxcand)[:maxtrain]
+        if len(smoke_query_ids)<maxtrain:raise AssertionError('smoke candidate subset lacks enough mapped positive queries')
+        train_x={k:v[smoke_query_ids] for k,v in train_x.items()}
+        train_for_fit={k:(v[smoke_query_ids] if isinstance(v,np.ndarray) and len(v)==len(train['key']) else v)
                        for k,v in train_for_fit.items()}
         train_for_fit['_candidate_task']=fit_bank['task'][:maxcand]
         train_for_fit['_candidate_episode']=fit_bank['episode'][:maxcand]
@@ -362,13 +382,17 @@ def _write_report(output: Path, r: dict[str,Any]) -> None:
       '|入力|連結＋別MLP|連結＋共有MLP|潜在E|','|---|---:|---:|---:|']
     modes={'vlm':'e_vlm','history_state':'e_h','vlm_history_state':'e_vlm_h',
            'vjepa_history_state':'e_vj_h','vjepa_vlm_history_state':'e_vj_vlm_h'}
+    existing_mlp={'vlm':'p0','vlm_history_state':'p5'}
     names={'vlm':'VLM','history_state':'履歴＋状態','vlm_history_state':'VLM＋履歴＋状態',
            'vjepa_history_state':'V-JEPA＋履歴＋状態','vjepa_vlm_history_state':'V-JEPA＋VLM＋履歴＋状態'}
     for inp in INPUTS:
       row=r.get('new_models',{}).get(inp,{}).get('variants',{});e=r.get('existing_reselected',{}).get(modes[inp])
+      mlp_existing=r.get('existing_reselected',{}).get(existing_mlp.get(inp,''))
       if row:
         m=row['two_tower_mlp']['evaluation']['unseen']['metrics'];sep=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
         m=row['shared_mlp']['evaluation']['unseen']['metrics'];shared=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
+      elif mlp_existing:
+        m=mlp_existing['evaluation']['unseen']['metrics'];sep=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}";shared='—'
       else:sep=shared='—'
       if e:
         m=e['evaluation']['unseen']['metrics'];ev=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
@@ -379,8 +403,9 @@ def _write_report(output: Path, r: dict[str,Any]) -> None:
       '|---|---:|---:|---:|']
     for inp in INPUTS:
       row=r.get('new_models',{}).get(inp,{}).get('variants',{});e=r.get('existing_reselected',{}).get(modes[inp])
+      mlp_existing=r.get('existing_reselected',{}).get(existing_mlp.get(inp,''))
       def fmt(metrics):return f"{metrics['spearman_positive']:.4f} / {metrics['recall@1']:.4f} / {metrics['recovery']:.4f}"
-      a=fmt(row['two_tower_mlp']['evaluation']['unseen']['metrics']) if row else '—'
+      a=fmt(row['two_tower_mlp']['evaluation']['unseen']['metrics']) if row else (fmt(mlp_existing['evaluation']['unseen']['metrics']) if mlp_existing else '—')
       b=fmt(row['shared_mlp']['evaluation']['unseen']['metrics']) if row else '—'
       c=fmt(e['evaluation']['unseen']['metrics']) if e else '—'
       lines.append(f'|{names[inp]}|{a}|{b}|{c}|')
@@ -411,9 +436,12 @@ def _write_report(output: Path, r: dict[str,Any]) -> None:
       '|入力|連結＋別MLP|連結＋共有MLP|潜在E|','|---|---:|---:|---:|']
     for inp in INPUTS:
       row=r.get('new_models',{}).get(inp,{}).get('variants',{});e=r.get('existing_reselected',{}).get(modes[inp])
+      mlp_existing=r.get('existing_reselected',{}).get(existing_mlp.get(inp,''))
       if row:
         m=row['two_tower_mlp']['evaluation']['learned']['metrics'];sep=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
         m=row['shared_mlp']['evaluation']['learned']['metrics'];shared=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
+      elif mlp_existing:
+        m=mlp_existing['evaluation']['learned']['metrics'];sep=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}";shared='—'
       else:sep=shared='—'
       if e:
         m=e['evaluation']['learned']['metrics'];ev=f"{m['top1_arm6_mse']:.5f}/{m['top1_arm6_mse_hard']:.5f}"
@@ -424,8 +452,9 @@ def _write_report(output: Path, r: dict[str,Any]) -> None:
       '|---|---:|---:|---:|']
     for inp in INPUTS:
       row=r.get('new_models',{}).get(inp,{}).get('variants',{});e=r.get('existing_reselected',{}).get(modes[inp])
+      mlp_existing=r.get('existing_reselected',{}).get(existing_mlp.get(inp,''))
       def fmt(metrics):return f"{metrics['spearman_positive']:.4f} / {metrics['recall@1']:.4f} / {metrics['recovery']:.4f}"
-      a=fmt(row['two_tower_mlp']['evaluation']['learned']['metrics']) if row else '—'
+      a=fmt(row['two_tower_mlp']['evaluation']['learned']['metrics']) if row else (fmt(mlp_existing['evaluation']['learned']['metrics']) if mlp_existing else '—')
       b=fmt(row['shared_mlp']['evaluation']['learned']['metrics']) if row else '—'
       c=fmt(e['evaluation']['learned']['metrics']) if e else '—'
       lines.append(f'|{names[inp]}|{a}|{b}|{c}|')

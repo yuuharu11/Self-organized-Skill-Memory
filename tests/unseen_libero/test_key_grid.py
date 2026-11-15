@@ -50,3 +50,15 @@ def test_input_rows_and_existing_e_conditions_match_keygrid_table():
     assert kg.EXISTING_E['history_state']=='e_h'
     assert kg.EXISTING_E['vjepa_history_state']=='e_vj_h'
     assert kg.EXISTING_E['vjepa_vlm_history_state']=='e_vj_vlm_h'
+
+
+def test_candidate_positive_indices_join_by_identity_not_array_order():
+    q=np.asarray([[8,2,30],[4,1,10],[8,2,40]],np.int32)
+    c=np.asarray([[4,1,10],[8,2,40],[8,2,30]],np.int32)
+    assert np.array_equal(kg.exact_candidate_row_ids(q,c),[2,0,1])
+
+
+def test_candidate_positive_mapping_rejects_missing_or_duplicate_keys():
+    import pytest
+    with pytest.raises(KeyError):kg.exact_candidate_row_ids([[1,2,3]],[[1,2,4]])
+    with pytest.raises(ValueError):kg.exact_candidate_row_ids([[1,2,3]],[[1,2,3],[1,2,3]])
