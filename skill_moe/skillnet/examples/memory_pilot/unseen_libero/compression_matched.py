@@ -17,7 +17,6 @@ from pathlib import Path
 
 import numpy as np
 from scipy.fft import dct, idct
-from sklearn.cluster import MiniBatchKMeans
 
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE), str(HERE.parent / 'pi05_memory')]
@@ -235,6 +234,7 @@ def pca_task_fit(rows: dict, actions: np.ndarray, dims: int, task_subset: list[i
 
 
 def run_full(out: Path) -> dict:
+    from sklearn.cluster import MiniBatchKMeans
     """Full offline comparison. This path is for the experiment owner, not smoke."""
     d = prepare()
     rows = d['rows']
@@ -501,6 +501,7 @@ def low_frequency_concentration(actions: list[np.ndarray]) -> dict:
 
 
 def between_within_ratio(phase: np.ndarray, clusters: int, seed: int = SEED) -> dict:
+    from sklearn.cluster import MiniBatchKMeans
     x = np.asarray(phase, np.float32).reshape(len(phase), -1)
     k = min(int(clusters), len(x))
     model = MiniBatchKMeans(n_clusters=k, random_state=seed, batch_size=min(1024, max(64, k * 4)),
@@ -567,6 +568,7 @@ def prepare():
 
 
 def run_smoke(out: Path, n_eval: int = 8, n_fit: int = 2500, n_diag: int = 500) -> dict:
+    from sklearn.cluster import MiniBatchKMeans
     d = prepare()
     hard_ids = np.flatnonzero(d['hard'])[:max(1, n_eval // 2)]
     easy_ids = np.flatnonzero(~d['hard'])[:max(0, n_eval - len(hard_ids))]
