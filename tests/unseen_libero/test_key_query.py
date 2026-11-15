@@ -6,9 +6,9 @@ import pytest
 
 from tests.support import UNSEEN, load_script
 
-PROBE_SCRIPT = UNSEEN / "key_query_probe.py"
+PROBE_SCRIPT = UNSEEN / "queries/key_query_probe.py"
 probe = load_script(PROBE_SCRIPT)
-k2 = load_script(UNSEEN / "key_query_k2.py")
+k2 = load_script(UNSEEN / "queries/key_query_k2.py")
 
 
 # ── K1 probe ──────────────────────────────────────────────────────────────────────────────────────

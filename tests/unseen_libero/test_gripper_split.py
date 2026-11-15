@@ -1,6 +1,6 @@
 import numpy as np
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero.gripper_split import (
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes.gripper_split import (
     GripperPolicyHook,
     action_parts_mse,
     dct_roundtrip,

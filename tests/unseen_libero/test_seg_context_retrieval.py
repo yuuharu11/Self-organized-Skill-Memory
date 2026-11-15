@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_retrieval as sc
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_retrieval as sc
 
 
 def _trace(n=48):
@@ -257,7 +257,7 @@ def test_selection_is_dev_only():
 
 
 def test_resumable_extractor_and_cache_audit(tmp_path):
-    from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_extract as ex
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_extract as ex
     wanted=ex.required_query_keys([1,1],[2,2],[0,10],stride=5,segment_starts=[(1,2,7)])
     assert wanted==[(1,2,0),(1,2,5),(1,2,7),(1,2,10)]
     out=tmp_path/'features'
@@ -271,7 +271,7 @@ def test_resumable_extractor_and_cache_audit(tmp_path):
 
 
 def test_extractor_packs_only_real_tokens_and_keeps_aligned_frame_metadata(tmp_path):
-    from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_extract as ex
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_extract as ex
     keys=[(2,4,5),(2,4,15)]
     def observe(k):
         return {'state':np.full((8,),k[2],np.float32),
@@ -301,7 +301,7 @@ def test_prefix_stride_and_eval_mse_axes():
 
 
 def test_unseen_stride5_overlap_is_not_double_counted(tmp_path):
-    from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_run as runner
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_run as runner
     root=tmp_path/'unseen';root.mkdir();n=3
     actions=np.zeros((n,10,32),np.float32)
     full=np.arange(20,dtype=np.float32)

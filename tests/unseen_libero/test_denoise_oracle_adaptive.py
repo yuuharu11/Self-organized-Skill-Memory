@@ -1,6 +1,6 @@
 import numpy as np
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero.denoise_oracle_adaptive import (
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.analysis.denoise_oracle_adaptive import (
     arm6_mse,
     apply_fixed_pi05_gripper,
     apply_quantile_policy,

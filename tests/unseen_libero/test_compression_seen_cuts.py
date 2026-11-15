@@ -1,11 +1,6 @@
-import sys
-from pathlib import Path
-
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'skill_moe' / 'skillnet' / 'examples' / 'memory_pilot' / 'unseen_libero'))
-import compression_seen_cuts as cs  # noqa: E402
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.analysis import compression_seen_cuts as cs
 
 
 def test_gripper_switches_are_mandatory_and_cover_trace():

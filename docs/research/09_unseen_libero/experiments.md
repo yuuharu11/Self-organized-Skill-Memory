@@ -540,7 +540,7 @@ Paired with the prior unit_08 condition (43/100 on these same initial states), m
 
 The first attempted server run exposed a 3-D/4-D indexing error in Procrustes pose alignment. It was corrected before the final run. Failed attempts remain under each rollout's attempt directory; final paired rollouts use the corrected code and all 100 per condition completed.
 
-Output directory: `.skillnet-state/outputs/memory-pilot/unseen-libero/lib-closed-01/`. Code and test are `skill_moe/skillnet/examples/memory_pilot/unseen_libero/lib_closed.py` and `tests/unseen_libero/test_lib_closed.py`.
+Output directory: `.skillnet-state/outputs/memory-pilot/unseen-libero/lib-closed-01/`. Code and test are `skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/lib_closed.py` and `tests/unseen_libero/test_lib_closed.py`.
 
 ## §13 SEG2: segment-context retrieval
 
@@ -788,7 +788,7 @@ Output directory: `.skillnet-state/outputs/memory-pilot/unseen-libero/lib-closed
 - グリッパーの正解なし規則では、Eval で π0.5 の寄与 MSE .026362 が最小だった。状態初期化後の保持は .051532、分類器は .049217、保存値は .193532。今回の分類器は π0.5 の出力を上回らなかった。
 - 可変長 U の10点補間上限と、自然長で単位を実行する評価は同じ指標ではない。閉ループの有効性は別途確認が必要。
 
-出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-split-01/attempt-08/report.md`、`results.json`、`figure_data.json`。コード／テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/gripper_split.py`、`tests/unseen_libero/test_gripper_split.py`。
+出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-split-01/attempt-08/report.md`、`results.json`、`figure_data.json`。コード／テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/gripper_split.py`、`tests/unseen_libero/test_gripper_split.py`。
 
 ## LP：潜在トークンで大きさとグリッパーを読む診断
 
@@ -820,4 +820,4 @@ Dev 選択（グリッパー AUC／型 top-1／大きさ log-MAE、かっこ内�
 
 ユーザー判断で打ち切り。D1 診断（型のまとまり）は完了していたが、D2・D3・Dev関門・閉ループは未実施のまま終了し、本番値としての報告はない。小規模スモーク値は設定・データ量が本番と異なるため結果表に転記しない。既存の部分出力は `.skillnet-state/outputs/memory-pilot/unseen-libero/eef-frame-01*/` に保持しているが、参照用であり結論には使わない。
 
-コード：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/eef_frame_units.py`（打ち切り実験として残す）。テスト：`tests/unseen_libero/test_eef_frame_units.py`。
+コード：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/eef_frame_units.py`（打ち切り実験として残す）。テスト：`tests/unseen_libero/test_eef_frame_units.py`。

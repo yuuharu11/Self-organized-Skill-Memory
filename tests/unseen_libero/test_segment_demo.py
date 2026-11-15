@@ -3,7 +3,7 @@ import numpy as np
 
 from tests.support import UNSEEN, load_script
 
-CODE = UNSEEN / "segment_demo.py"
+CODE = UNSEEN / "analysis/segment_demo.py"
 demo = load_script(CODE)
 
 

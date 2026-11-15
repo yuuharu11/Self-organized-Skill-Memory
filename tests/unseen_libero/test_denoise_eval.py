@@ -5,7 +5,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/denoise_eval.py"
+SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/analysis/denoise_eval.py"
 spec = importlib.util.spec_from_file_location("dn1_denoise_eval_test", SCRIPT)
 dn = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(dn)

@@ -13,10 +13,10 @@ from tests.support import (
     load_script,
 )
 
-oracle = load_script(UNSEEN / "oracle_repr.py")
-bundles = load_script(UNSEEN / "draft_reconstruction_bundles.py")
-lf = load_script(UNSEEN / "low_freq_denoise.py")
-cd = load_script(UNSEEN / "compressed_denoise.py")
+oracle = load_script(UNSEEN / "analysis/oracle_repr.py")
+bundles = load_script(UNSEEN / "analysis/draft_reconstruction_bundles.py")
+lf = load_script(UNSEEN / "analysis/low_freq_denoise.py")
+cd = load_script(UNSEEN / "analysis/compressed_denoise.py")
 
 
 # ── Oracle representations ────────────────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ def test_pool_shuffle_returns_unique_cross_task_rows():
 
 
 def test_zero_bridge_draft_uses_model_padded_action_width():
-    p=REPO / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/oracle_experiment.py'
+    p=REPO / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/analysis/oracle_experiment.py'
     s=importlib.util.spec_from_file_location('unseen_oracle_experiment_test',p)
     m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
     active7=np.ones((3,10,7),np.float32)

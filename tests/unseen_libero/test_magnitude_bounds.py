@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-MODULE = Path(__file__).parents[2] / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/magnitude_bounds.py'
+MODULE = Path(__file__).parents[2] / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/magnitude_bounds.py'
 spec = importlib.util.spec_from_file_location('magnitude_bounds', MODULE)
 mb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mb)

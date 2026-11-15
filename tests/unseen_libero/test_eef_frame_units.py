@@ -2,7 +2,7 @@ import numpy as np
 import json
 from types import SimpleNamespace
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero.eef_frame_units import (
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes.eef_frame_units import (
     axis_angle_matrix,
     d1_summary,
     from_eef_normalized,

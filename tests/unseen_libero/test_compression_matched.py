@@ -1,12 +1,6 @@
-import sys
-from pathlib import Path
-
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / 'skill_moe' / 'skillnet' / 'examples' / 'memory_pilot' / 'unseen_libero'
-sys.path.insert(0, str(SCRIPT))
-import compression_matched as cm  # noqa: E402
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.analysis import compression_matched as cm
 
 
 def test_dct_roundtrip_full_coefficients_and_truncation():

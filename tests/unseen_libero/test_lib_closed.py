@@ -1,6 +1,6 @@
 import numpy as np
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero import lib_closed as lc
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import lib_closed as lc
 
 
 def test_metric_uses_only_allowed_candidates_and_returns_recovery():

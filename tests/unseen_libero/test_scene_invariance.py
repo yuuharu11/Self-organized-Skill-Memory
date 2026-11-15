@@ -7,7 +7,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/scene_invariance.py"
+SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/scene_invariance.py"
 spec = importlib.util.spec_from_file_location("scene_invariance_test", SCRIPT)
 si = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(si)

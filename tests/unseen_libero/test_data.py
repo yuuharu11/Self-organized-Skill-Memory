@@ -13,7 +13,7 @@ from tests.support import (
     load_script,
 )
 
-tasks = load_script(UNSEEN / "tasks.py")
+tasks = load_script(UNSEEN / "closed_loop/tasks.py")
 UL = UNSEEN
 RUN_CASE = MEMORY_PILOT / "anchor_flow/run_case.py"
 
@@ -65,7 +65,7 @@ def _load(name, path):
     spec.loader.exec_module(mod); return mod
 
 
-P = _load('unseen_paths_test', UL / 'unseen_paths.py')
+P = _load('unseen_paths_test', UL / 'probes/unseen_paths.py')
 
 
 def closed_loop_transform(frame):
@@ -84,12 +84,12 @@ def test_closed_loop_still_rotates_both_cameras():
     src = RUN_CASE.read_text()
     for cam in ('agentview_image', 'robot0_eye_in_hand_image'):
         assert re.search(r'obs\["%s"\]\[::-1, ::-1\]' % cam, src), cam
-    w = (UL / 'worker.py').read_text()
+    w = (UL / 'closed_loop/worker.py').read_text()
     assert "obs['agentview_image'][::-1,::-1]" in w and "obs['robot0_eye_in_hand_image'][::-1,::-1]" in w
 
 
 def test_prepare_rotates_both_hdf5_cameras_and_writes_a_new_directory():
-    src = (UL / 'prepare_oracle.py').read_text()
+    src = (UL / 'queries/prepare_oracle.py').read_text()
     assert "'observation/image':orient_libero_frame(base[start])" in src
     assert "'observation/wrist_image':orient_libero_frame(wrist[start])" in src
     assert 'never overwritten' in src

@@ -1,12 +1,10 @@
-import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero'))
-import x_attn_query as xq
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.queries import x_attn_query as xq
 
 
 def test_predecessor_is_within_same_episode_only():

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
 
-MODULE = Path(__file__).parents[2] / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_split_ablation.py"
+MODULE = Path(__file__).parents[2] / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/key_split_ablation.py"
 spec = importlib.util.spec_from_file_location("key_split_ablation_test", MODULE)
 ks = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ks)

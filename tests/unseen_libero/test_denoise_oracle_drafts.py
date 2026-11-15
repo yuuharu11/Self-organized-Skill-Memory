@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-MODULE = Path(__file__).parents[2] / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/denoise_oracle_drafts.py'
+MODULE = Path(__file__).parents[2] / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/analysis/denoise_oracle_drafts.py'
 SPEC = importlib.util.spec_from_file_location('denoise_oracle_drafts_test', MODULE)
 den = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(den)

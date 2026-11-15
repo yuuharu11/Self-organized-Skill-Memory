@@ -1,11 +1,9 @@
-import sys
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero'))
-import x_attn_query as xq
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.queries import x_attn_query as xq
 
 
 def test_detector_swap_respects_fit_task_rows_only():

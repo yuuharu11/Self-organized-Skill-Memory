@@ -438,10 +438,10 @@ def _teacher_tau(err, allowed, frac=.1):
 
 
 def _load_make_net():
-    source_dir = Path("/work/skill_moe/skillnet/examples/memory_pilot/unseen_libero")
-    if str(source_dir) not in sys.path:
-        sys.path.insert(0, str(source_dir))
-    import scale_only_query as so
+    from skill_moe.skillnet.examples.memory_pilot.unseen_libero.queries import (
+        scale_only_query as so,
+    )
+
     return so.make_net
 
 

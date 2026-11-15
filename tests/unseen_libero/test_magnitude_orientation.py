@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero import magnitude_orientation as mag3
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import magnitude_orientation as mag3
 
 
 def test_minimal_row_rotation_maps_leading_direction():

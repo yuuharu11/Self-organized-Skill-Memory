@@ -89,7 +89,7 @@ CKPT="$SKILLNET_STATE_DIR/checkpoints/openpi-assets/checkpoints/pi05_libero"
 ## 段階 1：通常 π0.5 の閉ループ
 
 ```bash
-python $UL/run.py --output "$U/baseline-01" --checkpoint "$CKPT" --servers 4
+python $UL/closed_loop/run.py --output "$U/baseline-01" --checkpoint "$CKPT" --servers 4
 ```
 
 10タスク×初期状態0〜9。期待値は 32/100。段階 12 はこの結果と同じ初期状態・seed で対にします。
@@ -97,12 +97,12 @@ python $UL/run.py --output "$U/baseline-01" --checkpoint "$CKPT" --servers 4
 ## 段階 2：未学習デモの窓と VLM 特徴、既存 Expert の比較
 
 ```bash
-python $UL/prepare_oracle.py prepare --hdf5-root "$SKILLNET_LIBERO_HDF5/libero_90"
-python $UL/prepare_oracle.py extract --batch 4
-python $UL/oracle_experiment.py drafts
-python $UL/oracle_experiment.py train-queue --max-parallel 2
-python $UL/oracle_experiment.py evaluate-all
-python $UL/oracle_experiment.py finalize
+python $UL/queries/prepare_oracle.py prepare --hdf5-root "$SKILLNET_LIBERO_HDF5/libero_90"
+python $UL/queries/prepare_oracle.py extract --batch 4
+python $UL/analysis/oracle_experiment.py drafts
+python $UL/analysis/oracle_experiment.py train-queue --max-parallel 2
+python $UL/analysis/oracle_experiment.py evaluate-all
+python $UL/analysis/oracle_experiment.py finalize
 ```
 
 `prepare_oracle.py` は `unseen-rows-02/` に Dev と Eval の窓、VLM の特徴を書きます。画像は HDF5 のフレームを `[::-1, ::-1]` で180度回してから入力変換に通します（閉ループと同じ）。
@@ -114,13 +114,13 @@ python $UL/oracle_experiment.py finalize
 ## 段階 3：圧縮した単位の下書きとデノイズ
 
 ```bash
-python $UL/compressed_denoise.py run                 # 下書きと候補（production/drafts）、全条件の学習と評価
-python $UL/low_freq_denoise.py energy
+python $UL/analysis/compressed_denoise.py run                 # 下書きと候補（production/drafts）、全条件の学習と評価
+python $UL/analysis/low_freq_denoise.py energy
 for c in L-vm-none-k3 L-vm-none-k3-wide L-vm-none-k5 L-vm-08-k3 L-raw-k3; do
-  python $UL/low_freq_denoise.py train --condition $c
-  python $UL/low_freq_denoise.py evaluate --condition $c
+  python $UL/analysis/low_freq_denoise.py train --condition $c
+  python $UL/analysis/low_freq_denoise.py evaluate --condition $c
 done
-python $UL/low_freq_denoise.py report
+python $UL/analysis/low_freq_denoise.py report
 ```
 
 出力の既定は `compressed-denoise-01/production/` です（`--output` で変えられますが、後の段はこの場所を読みます）。1条件ずつ回す場合は `train --condition <条件>` と `evaluate --condition <条件>` を使います。
@@ -128,10 +128,10 @@ python $UL/low_freq_denoise.py report
 ## 段階 4：θ 回帰と LoRA
 
 ```bash
-python $UL/theta_regression.py run --device cuda     # 特徴抽出、学習、評価（production/）
-python $UL/theta_regression.py shape-select --split dev
-python $UL/theta_regression.py shape-select --split eval
-python $UL/theta_regression_lora.py run --device cuda   # Dev で選んだ条件で L-vlm / L-expert
+python $UL/probes/theta_regression.py run --device cuda     # 特徴抽出、学習、評価（production/）
+python $UL/probes/theta_regression.py shape-select --split dev
+python $UL/probes/theta_regression.py shape-select --split eval
+python $UL/probes/theta_regression_lora.py run --device cuda   # Dev で選んだ条件で L-vlm / L-expert
 ```
 
 LoRA の出力の既定は `theta-regression-01/lora/production/` です（`THETA_LORA_OUT` で変えられます）。
@@ -140,7 +140,7 @@ LoRA の出力の既定は `theta-regression-01/lora/production/` です（`THET
 
 ```bash
 for s in extract train select calibrate-p8 evaluate report; do
-  python $UL/key_query_probe.py --stage $s --output "$U/key-query-01" --threads 8
+  python $UL/queries/key_query_probe.py --stage $s --output "$U/key-query-01" --threads 8
 done
 ```
 
@@ -149,9 +149,9 @@ done
 ## 段階 6〜7：θ のデノイズと Expert での仕上げ
 
 ```bash
-python $UL/lora_theta_on_selected.py                       # LoRA θ を K1 で選んだ型に当てる
-python $UL/theta_flow.py --stage all --epochs 30 --device cuda
-python $UL/expert_refine.py
+python $UL/probes/lora_theta_on_selected.py                       # LoRA θ を K1 で選んだ型に当てる
+python $UL/closed_loop/theta_flow.py --stage all --epochs 30 --device cuda
+python $UL/experts/expert_refine.py
 ```
 
 `theta_flow.py` は `prepare → train → evaluate → report` を順に行います。`lora_theta_on_selected.py` を先に実行しないと、表から LoRA θ の行が抜けます。
@@ -160,9 +160,9 @@ python $UL/expert_refine.py
 
 ```bash
 for s in extract train select evaluate report; do
-  python $UL/key_query_k2.py --stage $s --output "$U/key-query-02" --threads 16
+  python $UL/queries/key_query_k2.py --stage $s --output "$U/key-query-02" --threads 16
 done
-python $UL/k2_unseen_layers.py
+python $UL/queries/k2_unseen_layers.py
 ```
 
 `train` と `evaluate` は `--batch-size 64 --device cuda` で実行しました。`train` は `--epochs 8`。
@@ -170,40 +170,40 @@ python $UL/k2_unseen_layers.py
 ## 段階 9：K3・K4
 
 ```bash
-python $UL/k3_query.py        # prep → 学習 → 評価（key-query-03/）
-python $UL/k4_query.py        # key-query-03/prep.npz を使う（key-query-04/）
+python $UL/queries/k3_query.py        # prep → 学習 → 評価（key-query-03/）
+python $UL/queries/k4_query.py        # key-query-03/prep.npz を使う（key-query-04/）
 ```
 
 ## 段階 10：可変長単位での検索
 
 ```bash
-python $UL/unit_retrieval.py
+python $UL/queries/unit_retrieval.py
 ```
 
 ## 段階 11〜12：単位メモリと閉ループ
 
 ```bash
-python $UL/cluster_pools.py   # pool_unit_{none,04,08,16}.npz と query_unit_*.pt
+python $UL/probes/cluster_pools.py   # pool_unit_{none,04,08,16}.npz と query_unit_*.pt
 P="$U/cluster-pools-01"; O="$U/closed-loop-memory-01"
 
 # 窓の断片メモリ（K1 の履歴クエリ）
-python $UL/memory_closed_loop.py run --output "$O/libero90" --checkpoint "$CKPT" --suite libero_90 --inits 10 --conditions memory
+python $UL/closed_loop/memory_closed_loop.py run --output "$O/libero90" --checkpoint "$CKPT" --suite libero_90 --inits 10 --conditions memory
 
 # 単位メモリ（τ ごと）
 for name in unit_none unit_04 unit_08 unit_16; do
   MEM_POOL="$P/pool_$name.npz" MEM_CKPT="$P/query_$name.pt" \
-    python $UL/memory_closed_loop.py run --output "$O/libero90_$name" --checkpoint "$CKPT" \
+    python $UL/closed_loop/memory_closed_loop.py run --output "$O/libero90_$name" --checkpoint "$CKPT" \
       --suite libero_90 --inits 10 --conditions memory
 done
 
 # π0.5 の Expert で下書きをデノイズ（t0 = .2 / .4 / .6）
 for t0 in 0.2 0.4 0.6; do
   MEM_POOL="$P/pool_unit_08.npz" MEM_CKPT="$P/query_unit_08.pt" MEM_T0=$t0 \
-    python $UL/memory_closed_loop.py run --output "$O/libero90_unit_08_dn${t0/./}" --checkpoint "$CKPT" \
+    python $UL/closed_loop/memory_closed_loop.py run --output "$O/libero90_unit_08_dn${t0/./}" --checkpoint "$CKPT" \
       --suite libero_90 --inits 10 --conditions memory
 done
 
-python $UL/memory_closed_loop.py report --output "$O/libero90_unit_08" --suite libero_90
+python $UL/closed_loop/memory_closed_loop.py report --output "$O/libero90_unit_08" --suite libero_90
 ```
 
 LIBERO-10 は `--suite libero_10 --inits 5` にします（各タスクと同じタスク由来の単位は自動で除かれます）。
@@ -217,13 +217,13 @@ LIBERO-10 は `--suite libero_10 --inits 5` にします（各タスクと同じ
 LIBERO-40 側は正しい向きだったので、学習済みのクエリは学習し直しません。未学習行の画像から作る入力だけを取り直します。
 
 ```bash
-python $UL/orientation_fix.py all        # π0.5 の予測（同じ固定ノイズ）と VLM 平均を Dev/Eval で（orientation-fix-01/）
+python $UL/probes/orientation_fix.py all        # π0.5 の予測（同じ固定ノイズ）と VLM 平均を Dev/Eval で（orientation-fix-01/）
 O="$U/scale-only-02/production"
-python $UL/scale_only_query.py refresh --out "$O" --src "$U/scale-only-01/production" --fix "$U/orientation-fix-01" --modes P0,P5,P6
-python $UL/scale_only_query.py train --out "$O" --modes P0      # P0（VLM 平均だけ）を P6 と同じ学習・選択で
-python $UL/scale_only_query.py evaluate --out "$O"
-python $UL/scale_only_query.py correlations --out "$O"
-python $UL/scale_only_query.py report --out "$O"
+python $UL/queries/scale_only_query.py refresh --out "$O" --src "$U/scale-only-01/production" --fix "$U/orientation-fix-01" --modes P0,P5,P6
+python $UL/queries/scale_only_query.py train --out "$O" --modes P0      # P0（VLM 平均だけ）を P6 と同じ学習・選択で
+python $UL/queries/scale_only_query.py evaluate --out "$O"
+python $UL/queries/scale_only_query.py correlations --out "$O"
+python $UL/queries/scale_only_query.py report --out "$O"
 ```
 
 `orientation_fix.py` は、旧い行で K1 の π0.5 予測（差 5e-4 以内、float16 の丸め）と θ 回帰の VLM 平均（差 0）を再現できることを確かめてから、直した行で計算します。
@@ -234,13 +234,13 @@ python $UL/scale_only_query.py report --out "$O"
 正解で単位を選ぶ上限の比較です。GPU は要りません。出力は `$U/draft-reconstruction-01/` の各 JSON です。
 
 ```bash
-python $UL/draft_reconstruction.py
+python $UL/analysis/draft_reconstruction.py
 for s in variable_length_error variable_memory_oracle variable_shape_memory dct_tolerance_merge \
          dct_skill_draft_eval stored_units_eval optimal_units_eval compression_compare \
          dct_coefficients_eval motion_core_eval; do
   python $UL/$s.py
 done
-python $UL/segment_demo.py     # 切り出しの動画（segmentation_demo/）
+python $UL/analysis/segment_demo.py     # 切り出しの動画（segmentation_demo/）
 ```
 
 ## 確認のしかた

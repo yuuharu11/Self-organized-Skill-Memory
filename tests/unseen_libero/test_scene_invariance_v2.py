@@ -9,7 +9,7 @@ import torch
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "8")))
 
 
-MODULE = Path(__file__).parents[2] / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/scene_invariance_v2.py"
+MODULE = Path(__file__).parents[2] / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/scene_invariance_v2.py"
 spec = importlib.util.spec_from_file_location("scene_invariance_v2_test", MODULE)
 v2 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(v2)

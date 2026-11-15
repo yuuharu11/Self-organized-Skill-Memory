@@ -11,9 +11,9 @@ from tests.support import (
     load_script,
 )
 
-THETA_SCRIPT = UNSEEN / "theta_regression.py"
+THETA_SCRIPT = UNSEEN / "probes/theta_regression.py"
 tr = load_script(THETA_SCRIPT)
-lora = load_script(UNSEEN / "theta_regression_lora.py")
+lora = load_script(UNSEEN / "probes/theta_regression_lora.py")
 
 
 # ── Theta regression ──────────────────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ def test_rot6_representation_roundtrips_axis_angle():
 
 def test_axis_angle_log_scale_decodes_in_canonical_physical_space():
     from scipy.spatial.transform import Rotation
-    vs_path=THETA_SCRIPT.parent/'variable_shape_memory.py'
+    vs_path=THETA_SCRIPT.parent.parent/'analysis'/'variable_shape_memory.py'
     spec=importlib.util.spec_from_file_location('theta_test_variable_shape_memory',vs_path)
     vs=importlib.util.module_from_spec(spec);spec.loader.exec_module(vs)
     shape=np.arange(70,dtype=np.float32).reshape(10,7)/50

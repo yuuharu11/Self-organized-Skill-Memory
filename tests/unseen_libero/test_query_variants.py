@@ -10,8 +10,8 @@ from tests.support import (
     load_script,
 )
 
-so = load_script(UNSEEN / "scale_only_query.py")
-fq = load_script(UNSEEN / "fast_query.py")
+so = load_script(UNSEEN / "queries/scale_only_query.py")
+fq = load_script(UNSEEN / "queries/fast_query.py")
 add_path(UNSEEN)
 import l90x_rows as lr  # noqa: E402
 import x_attn_query as xq  # noqa: E402

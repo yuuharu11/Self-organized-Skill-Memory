@@ -22,8 +22,8 @@ def load_module(name, path):
     return module
 
 
-features = load_module("latent_probe_features_test", BASE / "latent_probe_features.py")
-readout = load_module("latent_probe_readout_test", BASE / "latent_probe_readout.py")
+features = load_module("latent_probe_features_test", BASE / "probes/latent_probe_features.py")
+readout = load_module("latent_probe_readout_test", BASE / "probes/latent_probe_readout.py")
 
 
 def test_vjepa_token_pool_and_frozen_encoder():

@@ -9,7 +9,7 @@ import pytest
 
 
 MODULE_PATH = (Path(__file__).resolve().parents[2] / "skill_moe" / "skillnet" / "examples" /
-               "memory_pilot" / "unseen_libero" / "latent_probe_data.py")
+               "memory_pilot" / "unseen_libero" / "probes/latent_probe_data.py")
 SPEC = importlib.util.spec_from_file_location("latent_probe_data", MODULE_PATH)
 latent_probe_data = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

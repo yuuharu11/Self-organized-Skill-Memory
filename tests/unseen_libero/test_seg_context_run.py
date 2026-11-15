@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_run as runner
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero.seg_context_run import build_unseen_queries
-from skill_moe.skillnet.examples.memory_pilot.unseen_libero import seg_context_retrieval as sc
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_run as runner
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes.seg_context_run import build_unseen_queries
+from skill_moe.skillnet.examples.memory_pilot.unseen_libero.probes import seg_context_retrieval as sc
 
 
 def test_eval_stride10_filter_and_previous_velocity(tmp_path):

@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 
-ROOT = Path('/work/.skillnet-state/worktrees/latent-probe')
-MODULE = ROOT / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/noro_closed_loop.py'
+ROOT = Path(__file__).resolve().parents[2]
+MODULE = ROOT / 'skill_moe/skillnet/examples/memory_pilot/unseen_libero/probes/noro_closed_loop.py'
 spec = importlib.util.spec_from_file_location('noro_closed_loop', MODULE)
 policy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(policy)

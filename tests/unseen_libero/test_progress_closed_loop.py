@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/progress_closed_loop.py"
+SCRIPT = ROOT / "skill_moe/skillnet/examples/memory_pilot/unseen_libero/closed_loop/progress_closed_loop.py"
 sys.path.insert(0, str(SCRIPT.parent))
 spec = importlib.util.spec_from_file_location("progress_closed_loop_test", SCRIPT)
 mod = importlib.util.module_from_spec(spec)
