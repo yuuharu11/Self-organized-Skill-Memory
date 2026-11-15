@@ -87,3 +87,13 @@ def test_selector_uses_memory_store_for_candidates_and_query_store_for_query_tok
     assert memory_store.calls == 0
     assert query_store.calls == 1
     assert result['top'].tolist() == [0]
+
+
+def test_retrieval_spearman_is_positive_when_high_scores_pick_low_error():
+    # The public convention is corr(score, -type_error): positive is good.
+    scores = np.asarray([[0.9, 0.6, 0.2, -0.1]], np.float32)
+    type_error = np.asarray([[0.01, 0.03, 0.07, 0.12]], np.float32)
+    action_error = np.zeros((1, 4, 10, 6), np.float32)
+    result = sc.evaluate_retrieval(scores, type_error, action_error,
+                                   row_episode=np.asarray([1]))
+    assert result['all']['spearman_mean'] == 1.0
