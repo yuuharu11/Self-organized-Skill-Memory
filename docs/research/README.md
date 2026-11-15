@@ -31,7 +31,7 @@
 | 09 | [未学習LIBEROタスクへの転移](09_unseen_libero/README.md) | LIBERO-40で作った運動を未学習タスクへ持ち込む余地があるか | 単位メモリで未学習 LIBERO-90 が 43/100（π0.5 32/100）。学習済みの LIBERO-10 では落ちる。律速は型の選び方と向き・大きさ |
 | 10 | [RoboCasa365](10_robocasa365/README.md) | atomic のデモから作ったスキルメモリで、RoboCasa で微調整した π0.5 を atomic タスクで上回れるか | 6タスク×50試行で、メモリ＋学習 Expert 118/300、π0.5 173/300。先頭5ステップの誤差では方策の良し悪しを順位づけできないと判明。いったん保留し、LIBERO で単位の進み具合の管理とクエリの場面不変性を検証する |
 
-横断の文献調査は [surveys/](surveys/README.md)。発表の流れと各段の根拠の対応は [storyline.md](storyline.md)。
+横断の文献調査は [surveys/](surveys/README.md)。発表の流れと各段の根拠の対応は [storyline.md](storyline.md)、スライドごとの内容と数値は [slide.md](slide.md)。
 
 完了した実験のコードはリポジトリから外しました。ノートに書かれたスクリプトは Git タグ `archive/before-cleanup` で確認できます。
 
