@@ -129,6 +129,17 @@ def test_key2_injection_replaces_only_observations_and_keeps_eval_targets_separa
     assert np.array_equal(fitted['eval']['actions'],raw['eval']['actions'])
 
 
+def test_ax_only_feature_injection_cannot_fall_back_to_cached_vjepa():
+    key=np.array([[2,8,30]])
+    ax=(key,np.ones((1,10,256),np.float16),np.full((1,10),2,np.int8))
+    data={'query':{'key':key,'tokens':np.zeros((1,2,2048)),
+                   'vjepa_tokens':np.full((1,3,1024),99,np.float16),
+                   'vjepa_groups':np.zeros((1,3),np.int8)}}
+    got=src.inject_condition_features(data,condition='E-AX+H',ax_cache=ax)['query']
+    assert got['tokens'].shape==(1,10,256)
+    assert 'vjepa_tokens' not in got and 'vjepa_groups' not in got
+
+
 def test_lt1_conditions_use_shared_encoder_and_declared_history():
     assert src.key2_condition_config("E-AX")["encoder_input_mode"]=="e_vlm"
     assert src.key2_condition_config("E-PT+H")["encoder_input_mode"]=="e_vlm_h"
@@ -197,3 +208,48 @@ def test_feature_cache_refuses_accidental_overwrite(tmp_path):
     src.write_feature_cache(path, **kw)
     with pytest.raises(FileExistsError):
         src.write_feature_cache(path, **kw)
+
+
+def test_feature_cache_alignment_preserves_source_axes():
+    keys=np.asarray([[1,0,0],[2,0,0],[3,0,0]])
+    tok=np.arange(3*2*4*5*6,dtype=np.float32).reshape(3,2,4,5,6)
+    grp=np.zeros(tok.shape[:-1],np.int8)
+    aligned,aligned_groups=src.align_feature_cache(keys[[2,0]],keys,tok,grp)
+    np.testing.assert_array_equal(aligned,tok[[2,0]])
+    np.testing.assert_array_equal(aligned_groups,grp[[2,0]])
+
+
+def test_production_restart_reuses_only_completed_candidate_directories(tmp_path):
+    completed=tmp_path/'candidate'
+    completed.mkdir()
+    (completed/'dev_results.json').write_text('{}')
+    assert src._unique_run_dir(completed)==completed
+    partial=tmp_path/'partial'
+    partial.mkdir()
+    (partial/'checkpoint.tmp').write_text('incomplete')
+    retry=src._unique_run_dir(partial)
+    assert retry==partial.with_name('partial-retry01')
+
+
+def test_lt1_fixed_row_sets_are_locked_and_domain_separated():
+    rows=src.lt1_fixed_row_keys()
+    assert {k:len(v) for k,v in rows.items()}=={
+        'memory40':4516,'learned40':621,'unseen90':619,'dev90':217}
+    # Task/episode/frame IDs can collide across LIBERO-40 and LIBERO-90;
+    # the production extractor tags source domains separately.
+    assert rows['memory40'].ndim==rows['unseen90'].ndim==2
+    assert rows['memory40'].shape[1]==rows['unseen90'].shape[1]==3
+
+
+def test_lt1_observation_loader_never_returns_target_actions():
+    import json
+    run=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
+    data=json.loads((run/'data_manifest.json').read_text())
+    records,names,h5=src._lt1_source_records(run)
+    from collections import OrderedDict
+    row=src._lt1_read_observation((6,0,0),domain='libero90',run_root=run,
+            records=records,task_names=names,hdf5_records=h5,parquet_cache=OrderedDict())
+    assert set(row)=={'observation/image','observation/wrist_image','observation/state','prompt'}
+    assert row['observation/image'].shape==(128,128,3)
+    assert row['observation/wrist_image'].shape==(128,128,3)
+    assert row['observation/state'].shape==(8,)
