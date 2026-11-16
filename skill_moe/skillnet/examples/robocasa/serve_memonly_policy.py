@@ -58,8 +58,9 @@ def _network_classes():
     return RankNet, ContextNet, MagnitudeNet
 
 
-def _prefix_feature_fn(model):
-    """Return a JIT prefix-only feature extractor; deliberately no action call."""
+def _prefix_feature_fn(model, *, return_tokens=False):
+    """Return pooled and optionally per-token final VLM features; no action call."""
+    import jax
     import flax.nnx as nnx
     import jax.numpy as jnp
     from openpi.models import model as model_api
@@ -71,6 +72,16 @@ def _prefix_feature_fn(model):
             self.base = base
 
         def __call__(self, observation):
+            original_batch = observation.state.shape[0]
+            if return_tokens and original_batch == 1:
+                # The token cache was extracted in batches of four. Matching
+                # that prefix batch shape avoids backend-dependent attention
+                # rounding differences between batch-1 serving and batch-4
+                # extraction; only the first identical copy is returned.
+                observation = jax.tree.map(
+                    lambda x: jnp.repeat(x, 4, axis=0) if hasattr(x, "ndim") and x.ndim else x,
+                    observation,
+                )
             obs = model_api.preprocess_observation(None, observation, train=False)
             tokens, valid, ar = self.base.embed_prefix(obs)
             positions = jnp.cumsum(valid, axis=1) - 1
@@ -79,6 +90,9 @@ def _prefix_feature_fn(model):
             )
             weights = valid.astype(hidden.dtype)[..., None]
             pooled = jnp.sum(hidden * weights, axis=1) / jnp.maximum(jnp.sum(weights, axis=1), 1)
+            if return_tokens:
+                return (pooled[:original_batch].astype(jnp.float16),
+                        hidden[:original_batch].astype(jnp.float16), valid[:original_batch])
             return pooled.astype(jnp.float16)
 
     return module_jit(PrefixFeature(model).__call__)
@@ -189,7 +203,7 @@ class MemoryOnlyPolicy:
             self.bridge_fn = module_jit(self.model.sample_bridge, static_argnames=("num_steps",))
         elif self.diagnostic_reference_count > 0:
             raise ValueError("--diagnostic-reference-count requires a bridge mode")
-        self.prefix_fn = _prefix_feature_fn(self.model)
+        self.prefix_fn = _prefix_feature_fn(self.model, return_tokens=args.latent_query_checkpoint is not None)
         cfg = train_config.get_config("pi05_robocasa_multitask")
         dc = cfg.data.create(cfg.assets_dirs, cfg.model)
         self.input_transform = transforms.compose([
@@ -203,9 +217,20 @@ class MemoryOnlyPolicy:
             raise ValueError("expected history-aware Context checkpoint")
         self.key_ck = key_ck
         RankNet, ContextNet, MagnitudeNet = _network_classes()
-        self.rank_net = RankNet(int(key_ck["q_dim"]), int(key_ck["k_dim"]))
-        self.rank_net.load_state_dict(key_ck["state"], strict=True)
-        self.rank_net.eval()
+        self.latent_net = None
+        self.latent_ck = None
+        if args.latent_query_checkpoint is None:
+            self.rank_net = RankNet(int(key_ck["q_dim"]), int(key_ck["k_dim"]))
+            self.rank_net.load_state_dict(key_ck["state"], strict=True)
+            self.rank_net.eval()
+        else:
+            from latent_query import _network_classes as _latent_classes
+            self.latent_ck = torch.load(Path(args.latent_query_checkpoint), map_location="cpu", weights_only=False)
+            LatentQuery = _latent_classes()
+            self.latent_net = LatentQuery(int(self.latent_ck["query_dim"]), int(self.latent_ck["candidate_dim"]),
+                                          int(self.latent_ck["token_dim"]), int(self.latent_ck["width"]))
+            self.latent_net.load_state_dict(self.latent_ck["state"], strict=True)
+            self.latent_net.eval()
 
         self.context_rows = np.load(context_dir / "cache/rows.npz", allow_pickle=False)
         self.feature_table = np.asarray(np.load(context_dir / "cache/prefix_mean_fp16.npy", mmap_mode="r"), np.float32)
@@ -224,9 +249,15 @@ class MemoryOnlyPolicy:
         if len(candidate_input) != len(self.pool["length"]):
             raise AssertionError("candidate key rows do not align with memory U order")
         with torch.no_grad():
-            self.candidate_embeddings = torch.nn.functional.normalize(
-                self.rank_net.key(torch.as_tensor(candidate_input, dtype=torch.float32)), dim=-1
-            )
+            if self.latent_net is None:
+                self.candidate_embeddings = torch.nn.functional.normalize(
+                    self.rank_net.key(torch.as_tensor(candidate_input, dtype=torch.float32)), dim=-1
+                )
+            else:
+                latent_types = np.asarray(self.pool["shape"], np.float32).reshape(len(self.pool["length"]), -1)
+                self.candidate_embeddings = torch.nn.functional.normalize(
+                    self.latent_net.key(torch.as_tensor(latent_types, dtype=torch.float32)), dim=-1
+                )
 
         grip_ck = torch.load(Path(args.gripper_checkpoint), map_location="cpu", weights_only=False)
         self.grip_norm = grip_ck["norm"]
@@ -288,8 +319,25 @@ class MemoryOnlyPolicy:
         return np.concatenate(((np.asarray(prefix, np.float32).reshape(-1) - fm) / fs,
                                (np.asarray(state, np.float32).reshape(-1) - sm) / ss)).astype(np.float32)
 
-    def _choose(self, q_context, history, mask):
+    def _choose(self, q_context, history, mask, *, prefix_tokens=None, prefix_mask=None, state=None, prefix=None):
         torch, *_ = self._extra
+        if self.latent_net is not None:
+            norm = self.latent_ck["feature_norm"]
+            p = np.asarray(prefix, np.float32).reshape(-1)
+            s = np.asarray(state, np.float32).reshape(-1)
+            qctx = np.concatenate(((p-np.asarray(norm["prefix_mean"],np.float32))/np.asarray(norm["prefix_std"],np.float32),
+                                   (s-np.asarray(norm["state_mean"],np.float32))/np.asarray(norm["state_std"],np.float32))).astype(np.float32)
+            hmean=np.asarray(norm["history_mean"],np.float32);hstd=np.asarray(norm["history_std"],np.float32)
+            hn=((np.asarray(history,np.float32)-hmean)/hstd)*np.asarray(mask,bool)[:,None]
+            q=np.concatenate((qctx,hn.reshape(-1),np.asarray(mask,np.float32))).astype(np.float32)
+            with torch.no_grad():
+                ts=torch.as_tensor(np.asarray(prefix_tokens,np.float32),dtype=torch.float32)
+                tm=torch.as_tensor(np.asarray(prefix_mask,bool),dtype=torch.bool)
+                qt=torch.as_tensor(q[None],dtype=torch.float32)
+                qemb=self.latent_net.encode_query(ts,tm,qt)
+                scores=(qemb @ self.candidate_embeddings.T)[0]*self.latent_net.log_scale.exp()
+                selected=int(torch.argmax(scores).item())
+            return selected,float(scores[selected].item()),q_context
         hmean = np.asarray(self.key_ck["hist_norm"]["mean"], np.float32)
         hstd = np.asarray(self.key_ck["hist_norm"]["std"], np.float32)
         hist_norm = ((history - hmean) / hstd) * mask[:, None]
@@ -345,7 +393,15 @@ class MemoryOnlyPolicy:
             transformed = self.input_transform(obs_in)
             batched = jax.tree.map(lambda x: jnp.asarray(x)[None, ...], transformed)
             observation = model_api.Observation.from_dict(batched)
-            prefix = np.asarray(self.prefix_fn(observation), np.float32)[0]
+            prefix_features = self.prefix_fn(observation)
+            if self.latent_net is None:
+                prefix = np.asarray(prefix_features, np.float32)[0]
+                prefix_tokens = prefix_mask = None
+            else:
+                prefix, prefix_tokens, prefix_mask = prefix_features
+                prefix = np.asarray(prefix, np.float32)[0]
+                prefix_tokens = np.asarray(prefix_tokens, np.float16)
+                prefix_mask = np.asarray(prefix_mask, bool)
             if prefix.shape != (2048,):
                 raise ValueError(f"prefix feature must be [2048], got {prefix.shape}")
             q_context = self._context_query(prefix, state)
@@ -354,7 +410,8 @@ class MemoryOnlyPolicy:
             selected_records = []
             local_history, local_mask = history.copy(), mask.copy()
             while filled < 50:
-                selected, score, rank_query = self._choose(q_context, local_history, local_mask)
+                selected, score, rank_query = self._choose(q_context, local_history, local_mask,
+                    prefix_tokens=prefix_tokens, prefix_mask=prefix_mask, state=state, prefix=prefix)
                 off0, off1 = int(self.pool["action_offsets"][selected]), int(self.pool["action_offsets"][selected + 1])
                 stored = np.asarray(self.pool["actions_flat"][off0:off1], np.float32)
                 unit = expert_api.ex.action_storage_to_policy(stored).astype(np.float32)
@@ -478,6 +535,7 @@ def main():
     p.add_argument("--memory-dir", type=Path, default=root / "memory-01/policy-order-v2")
     p.add_argument("--context-dir", type=Path, default=root / "ctx-01")
     p.add_argument("--key-checkpoint", type=Path, default=root / "key-lite-01/context_history.pt")
+    p.add_argument("--latent-query-checkpoint", type=Path, default=None)
     p.add_argument("--magnitude-checkpoint", type=Path, default=root / "key-lite-01/magnitude/magnitude_head.pt")
     p.add_argument("--magnitude-multiplier", type=float, default=1.0)
     p.add_argument("--draft-unit-gripper", action="store_true",
