@@ -111,6 +111,31 @@ def make_vector_features(part: dict[str,np.ndarray], input_name: str) -> np.ndar
     return result
 
 
+def exact_candidate_row_ids(query_keys: np.ndarray, candidate_keys: np.ndarray) -> np.ndarray:
+    """Map query identities to candidate-bank rows without assuming order.
+
+    Training queries are also positives in the action-teacher candidate bank.
+    Joining by the immutable ``(task, episode, frame)`` key makes that
+    relationship explicit and prevents a filtered/reordered bank from silently
+    assigning a query's positive label to another unit.
+    """
+    q=np.asarray(query_keys)
+    c=np.asarray(candidate_keys)
+    if q.ndim!=2 or c.ndim!=2 or q.shape[1]!=c.shape[1]:
+        raise ValueError(f"query/candidate keys must be aligned matrices, got {q.shape} and {c.shape}")
+    mapping={}
+    for i,row in enumerate(c):
+        key=tuple(map(int,row))
+        if key in mapping:raise ValueError(f"duplicate candidate identity: {key}")
+        mapping[key]=i
+    result=[]
+    for row in q:
+        key=tuple(map(int,row))
+        if key not in mapping:raise KeyError(f"query identity absent from candidate bank: {key}")
+        result.append(mapping[key])
+    return np.asarray(result,np.int64)
+
+
 def _prepare_vector_sources(part: dict[str,np.ndarray]) -> dict[str,np.ndarray]:
     """Compute expensive token reductions once per aligned split."""
     prepared=dict(part)
@@ -141,6 +166,7 @@ def _score_vectors(model: PairMLPRanker, queries: np.ndarray, candidates: np.nda
 def _train_one(input_name: str, shared: bool, fit_q: np.ndarray, fit_k: np.ndarray,
                train: dict[str,np.ndarray], candidate_actions: np.ndarray, *, seed: int,
                learning_rate: float, epochs: int, teacher_tau: float, device: str,
+               query_candidate_ids: np.ndarray,
                batch_size: int=8, random_candidates: int=256) -> tuple[PairMLPRanker,list[dict[str,Any]]]:
     torch.manual_seed(seed);rng=np.random.default_rng(seed+101)
     model=PairMLPRanker(fit_q.shape[1],shared=shared).to(device)
@@ -151,7 +177,7 @@ def _train_one(input_name: str, shared: bool, fit_q: np.ndarray, fit_k: np.ndarr
         for step in range(steps):
             qi=qids[step*batch_size:min((step+1)*batch_size,n)]
             random_ids=rng.choice(len(fit_k),size=min(random_candidates,len(fit_k)),replace=False)
-            cids,allowed=key2.contrastive_candidate_set(qi,random_ids,train['task'][qi],train['episode'][qi],
+            cids,allowed=key2.contrastive_candidate_set(query_candidate_ids[qi],random_ids,train['task'][qi],train['episode'][qi],
                                                         train['_candidate_task'],train['_candidate_episode'])
             q=torch.as_tensor(fit_q[qi],device=device,dtype=torch.float32)
             k=torch.as_tensor(fit_k[cids],device=device,dtype=torch.float32)
@@ -230,6 +256,10 @@ def run_keygrid(output: Path, *, device: str='cuda:0', seed: int=1,
     fit_full_ids=np.asarray([fit_key_to_full[tuple(map(int,k))] for k in fit_bi['key']],np.int64)
     fit_candidate_actions=candidate_actions[fit_full_ids]
     train_for_fit={**train,'_candidate_task':fit_bank['task'],'_candidate_episode':fit_bank['episode']}
+    # Both arrays are filtered from the same ordered unit bank, but do not
+    # rely on that implementation detail when forming the positive candidate
+    # index for each query.
+    train_candidate_ids=exact_candidate_row_ids(train['key'],fit_bi['key'])
     # Limit only smoke fixtures; production always uses all rows and fixed grid.
     if smoke:
         maxtrain=32;maxcand=128;maxdev=24;maxeval=16
@@ -268,6 +298,7 @@ def run_keygrid(output: Path, *, device: str='cuda:0', seed: int=1,
               continue
           model,history=_train_one(name,shared,train_x[name],fit_x[name],train_for_fit,fit_candidate_actions,
               seed=seed,learning_rate=float(lr),epochs=int(ep),teacher_tau=float(tau),device=device,
+              query_candidate_ids=train_candidate_ids,
               random_candidates=32 if smoke else 256)
           # Score all available Dev candidates. Production uses full bank; smoke uses its fixed prefix.
           dev_bank_x=bank_x[name][:maxcand] if smoke else bank_x[name]
