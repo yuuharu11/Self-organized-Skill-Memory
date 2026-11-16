@@ -233,7 +233,7 @@ R-so3（回転も消す型）を P5 で選ぶと .199 / .317。U でも順位は
 
 保存済みプール別P5履歴クエリとMemorySelector.pose_toを使い、型をπ0.5にProcrustes（回転＋単一スケール）して腕に使う。グリッパーはπ0.5。設定の再選択・再学習は行っていない。学習済みはメモリ外LIBERO-40の621窓（難125）、未学習はLIBERO-90 Evalの619窓（難134）。
 
-以下は10ステップ全体の全体 / 難。active7は二乗誤差和÷70、腕は6軸二乗誤差和÷70。先頭5・続き5〜9の値、対応するπ0.5との差のepisode bootstrap 95%区間は[本番レポート](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/unit-memory-offline-01/production/report.md)に保存した。
+以下は10ステップ全体の全体 / 難。active7は二乗誤差和÷70、腕は6軸二乗誤差和÷70。先頭5・続き5〜9の値、対応するπ0.5との差のepisode bootstrap 95%区間は[本番レポート](evidence/um1/report.md)に保存した。
 
 |推論条件|学習済み active7|未学習 active7|学習済み 腕|未学習 腕|既存閉ループ L90/100・L10/50|
 |---|---:|---:|---:|---:|---:|
@@ -293,7 +293,7 @@ CMP3と同じ学習済み621窓（難125）、未学習619窓（難134）で、�
 
 この作り方では向きと大きさも距離に入るので、同じ動きでも向きや速さが違えば別の代表になる。スキルの定義（型は向きを含み大きさだけ外す）とは違い、閉ループのプール（`cluster_pools.py`、保留8タスクを除く32タスク、向きと大きさを外した正準形）とも違う。
 
-7軸選択の腕計・グリッパー寄与、CMP3の固定窓生/DCT3と通常π0.5の参考値、各軸の内訳は[本番レポート](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/cluster-upper-01/production/report.md)と[数値](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/cluster-upper-01/production/results.json)を参照。
+7軸選択の腕計・グリッパー寄与、CMP3の固定窓生/DCT3と通常π0.5の参考値、各軸の内訳は[本番レポート](evidence/cluster_upper/report.md)と[数値](evidence/cluster_upper/results.json)を参照。
 
 
 出力：`cluster-pools-01/`、`closed-loop-memory-01/`。LIBERO-10 の成功数は `report` では 0/0 と表示されるので、各試行の `result.json` を数える（[再現手順](reproduce.md)）。
@@ -796,7 +796,7 @@ AEは行動だけを入力にし、メモリ400デモでfitした。Dev（LIBERO
 |variable|AE21＋長さ（22）|学習済み|0.014371 / 0.023714|0.017458 / 0.033257|0.015810 / 0.030515|
 |variable|AE21＋長さ（22）|未学習|0.025316 / 0.032108|0.034348 / 0.068246|0.028520 / 0.055397|
 
-固定DCT3・生・キーフレームと可変長DCT3はCMP3の全16セルを許容差2e-6以内で再現した。PCAはAEに合わせメモリ側だけで基底をfitするため、従来CMP3のPCAと学習行が異なる。AEのseed範囲、腕計/グリッパー・各軸、AE−DCT/PCAのepisode bootstrap 95%区間は[本番レポート](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/compress-ae-01/production/report.md)と[数値](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/compress-ae-01/production/results.json)を参照。上限診断であり、検索性能や閉ループ成功率の主張はしない。
+固定DCT3・生・キーフレームと可変長DCT3はCMP3の全16セルを許容差2e-6以内で再現した。PCAはAEに合わせメモリ側だけで基底をfitするため、従来CMP3のPCAと学習行が異なる。AEのseed範囲、腕計/グリッパー・各軸、AE−DCT/PCAのepisode bootstrap 95%区間は[本番レポート](evidence/ae21/report.md)と[数値](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/compress-ae-01/production/results.json)を参照。上限診断であり、検索性能や閉ループ成功率の主張はしない。
 
 <a id="grip1"></a>
 
@@ -1095,7 +1095,7 @@ production-03/04 の潜在ヘッド値は無効のまま。production-03 は1 ep
 
 G-c joint retrieval のarm6 top-1 MSEはlearned .034434 対 frozen E .034979（差 -.000545）、unseen .126899 対 .124963（差 +.001936）。未学習側で小幅に悪化した。π0.5との差、G-e−G-a、G-c−G-aの episode bootstrap 95%区間（5,000回）とswitch指標は結果レポートに記録した。現時点ではπ0.5グリッパーを明確に超えていないため、EX1閉ループ条件への追加根拠はない。
 
-詳細表・hard行・入力/Dev選択設定・参照行・対比較：[production-05 report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/results.json)、[progress.log](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/progress.log)。
+詳細表・hard行・入力/Dev選択設定・参照行・対比較：[production-05 report](evidence/gh1/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/results.json)、[progress.log](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/progress.log)。
 
 ## LA2：連続潜在の学習期間と学習行を増やす
 
@@ -1243,7 +1243,7 @@ AXには実OpenPIモデルadapterを追加した。t=1→0のπ0.5積分と同�
 
 AX は action expert の残差 hidden state ではなく各層の suffix V-cache を使った（OpenPI の scanned Gemma block は residual hidden state を外部に返さない）。PT は CoTracker3 online の過去16フレームのみを用いた。AX 系では Dev MSE .0957〜.1040、未学習 top-1 は .1139〜.1193。AX+PT+H は E-VLM+H より未学習 top-1 が小さかったが、KEY2-F P5 の .10545 には届かなかった。hard 行では誤差が大きく、検索の汎化改善を示す結果とは言えない。タスクID5-fold正解率は AX .5655、PT .1335、AX+PT .5755、未来並進方向 cosine はそれぞれ .9631、.5220、.9627。1 seed・オフライン指標であり、閉ループ性能は未評価。
 
-特徴キャッシュ、Dev選択、全条件の結果、順位指標・対比較・線形プローブは [`LT1 production report`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/production/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/production/results.json)、[dev_selection.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/production/dev_selection.json) を参照。
+特徴キャッシュ、Dev選択、全条件の結果、順位指標・対比較・線形プローブは [`LT1 production report`](evidence/lt1/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/production/results.json)、[dev_selection.json](evidence/lt1/dev_selection.json) を参照。
 
 ### EX1 範囲変更：P0・P5・E-VLM+H
 
@@ -1293,13 +1293,13 @@ Dev 選択（グリッパー AUC／型 top-1／大きさ log-MAE、かっこ内�
 
 CPUテスト8件と構文検査は成功した。実データ1行では入力画像・prompt・maskが既存行と一致し、state差は `1.34e-8`。直接抽出した最終層特徴は `core.prefix_features` と一致したが、既存 run-01 token cache との比較は最大絶対差 `0.502685546875` で失敗した。キャッシュの生成元コード・重み内容のハッシュが残っておらず原因を確定できていない。このため全量抽出・学習・Dev選択・Evalは実施せず、検索性能の結論はない。
 
-コード・テストは `key_kv_cache.py`、`tests/unseen_libero/test_key_kv_cache.py`。部分的なsmoke出力と停止理由は [`key-kv-01 report`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/key-kv-01/report.md) と [`results.json`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/key-kv-01/results.json) に記録した。次の段階は、既存 token cache の生成元と checkpoint 実体を固定した上でパリティを解決することである。
+コード・テストは `key_kv_cache.py`、`tests/unseen_libero/test_key_kv_cache.py`。部分的なsmoke出力と停止理由は [`key-kv-01 report`](evidence/kv1/report.md) と [`results.json`](evidence/kv1/results.json) に記録した。次の段階は、既存 token cache の生成元と checkpoint 実体を固定した上でパリティを解決することである。
 
 ## EX2：キー非依存 Expert と誤差条件付きデノイズ
 
 EX1 の下書き別学習から切り離し、保存した DCT3 運動単位を行動空間距離で抽出して腕6軸を復元する Expert を学習した。Expert B は LIBERO-40 と L90X 77タスクを使用し、欠損 task 51 は補完せず除外。信頼度器は LIBERO-40 のエピソード holdout、スケジュールと重みは Dev で選んだ。グリッパーは全条件で通常 π0.5 に戻した。
 
-結果表、閉ループのタスク別成功数・Wilson 区間・McNemar、および実行条件は [EX2 production report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/expert-ex2-01/report.md) と [results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/expert-ex2-01/results.json) を参照。閉ループは LIBERO-90 Eval 10×10 と LIBERO-10 10×5、seed base 7、replan 5、最大520制御stepであり、既知の π0.5 方策上の環境評価である。
+結果表、閉ループのタスク別成功数・Wilson 区間・McNemar、および実行条件は [EX2 production report](evidence/ex2/report.md) と [results.json](evidence/ex2/results.json) を参照。閉ループは LIBERO-90 Eval 10×10 と LIBERO-10 10×5、seed base 7、replan 5、最大520制御stepであり、既知の π0.5 方策上の環境評価である。
 
 ### 主な結果
 
@@ -1324,7 +1324,7 @@ EX1 の下書き別学習から切り離し、保存した DCT3 運動単位を�
 
 ### 第1段（seed 1・中間結果）
 
-KEY2-F E と同じ LIBERO-40 メモリ側学習行・soft InfoNCE・候補抽選・同一エピソード除外・履歴破損・logit scale を用い、A（履歴＋状態、続いて VLM を別 softmax で読む）と B（A の VLM attention/FFN 残差に独立な tanh(g) を掛ける）を追加実装した。B の VLM ゲートは0初期化。KEYGRID の E-VLM+H から lr=1e-4、teacher τ=.002 を固定し、4/8/16 epoch を Dev top-1 腕 MSE で選択する第1段の結果は [`KEY4 中間レポート`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/report.md) と [`results.json`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/results.json) に記録する。
+KEY2-F E と同じ LIBERO-40 メモリ側学習行・soft InfoNCE・候補抽選・同一エピソード除外・履歴破損・logit scale を用い、A（履歴＋状態、続いて VLM を別 softmax で読む）と B（A の VLM attention/FFN 残差に独立な tanh(g) を掛ける）を追加実装した。B の VLM ゲートは0初期化。KEYGRID の E-VLM+H から lr=1e-4、teacher τ=.002 を固定し、4/8/16 epoch を Dev top-1 腕 MSE で選択する。**第1段は実行中で、まとめた時点ではレポートはまだ出ていない**（A は 4/8/16 epoch、B は 4 epoch まで学習済み）。完了後の出力先は `.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/`（Git 管理外）。
 
 これは各方式 seed 1 本の中間値であり、最終的な安定性・統計差の結論ではない。追加 seed、paired bootstrap、attention 内訳、VLM token 入れ替えは第2段に保留。コードは `key_split_xattn.py`、形状・初期ゲート非依存・既存 E の非変更テストは `tests/unseen_libero/test_key_split_xattn.py`。
 
@@ -1378,4 +1378,4 @@ KEY2-F の共有 E が多数の視覚トークンに引っ張られているか�
 - E-H も未学習 Eval で弱く、さらに潜在トークンが相互に似て低ランクだった。したがって視覚だけが性能差の原因とは結論できない。
 - KEYGRID の top-1 選択 checkpoint 3件も別々に診断した。訓練し直しはしていない。結果は attention 依存と未学習性能の単純な対応を示さなかった。
 
-コード・テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_attn_diag.py`、`tests/unseen_libero/test_key_attn_diag.py`（3件）。結果と head×latent token ごとの注意・各入力 ablation は [ATTN1 report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/key-attn-diag-01/report.md) と `results.json`、`arrays.npz` を参照。共通ゲート文書 `/work/docs/memory_pilot_gates.md` はこの checkout には存在しなかった。
+コード・テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_attn_diag.py`、`tests/unseen_libero/test_key_attn_diag.py`（3件）。結果と head×latent token ごとの注意・各入力 ablation は [ATTN1 report](evidence/attn1/report.md) と `results.json`、`arrays.npz` を参照。共通ゲート文書 `/work/docs/memory_pilot_gates.md` はこの checkout には存在しなかった。

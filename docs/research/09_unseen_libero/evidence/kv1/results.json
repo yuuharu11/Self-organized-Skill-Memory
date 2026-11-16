@@ -1,0 +1,43 @@
+{
+  "experiment": "KV1",
+  "status": "blocked_at_prefix_cache_parity_gate",
+  "implementation": {
+    "module": "/work/skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_kv_cache.py",
+    "tests": "/work/tests/unseen_libero/test_key_kv_cache.py",
+    "test_count_passed": 8,
+    "compile_check": "passed"
+  },
+  "cache_contract": {
+    "stored": "float16",
+    "shape_per_row": [18, 2, 532, 256],
+    "selected_positions": "base[0:256], wrist[0:256], valid prompt tokens; absent-right-camera placeholders removed",
+    "key_identity": ["domain", "task", "episode", "frame"],
+    "requested_domains": {
+      "memory_plus_learned": 5137,
+      "unseen_eval_plus_dev": 836,
+      "l90x": 11030
+    }
+  },
+  "smoke": {
+    "preprocessing_exact_for_checked_row": {
+      "identity": [3, 6, 0],
+      "base_image_max_abs": 0,
+      "wrist_image_max_abs": 0,
+      "prompt_ids_max_abs": 0,
+      "prompt_mask_max_abs": 0,
+      "state_max_abs": 1.3420810685005335e-8
+    },
+    "direct_core_prefix_path": "matched for the first checked row",
+    "existing_final_token_cache_parity": {
+      "passed": false,
+      "observed_max_abs": 0.502685546875,
+      "first_reported_identity": [0, 0, 58, 0]
+    },
+    "partial_memmap": "smoke/features/ exists with done=false; no complete feature rows are asserted"
+  },
+  "training_or_evaluation": "not run; extraction parity requirement failed",
+  "limitations": [
+    "No KV training, Dev selection, Eval scoring, layer selection, task probe, or experiment-notebook result was produced.",
+    "The existing memory_pilot_gates.md path supplied in the request is absent in this checkout."
+  ]
+}
