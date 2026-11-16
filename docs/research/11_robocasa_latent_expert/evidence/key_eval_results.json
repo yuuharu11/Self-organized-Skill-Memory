@@ -1,0 +1,323 @@
+{
+  "e_vlm": {
+    "dev": {
+      "top1_arm6": {
+        "mean": 0.776498216924832,
+        "lo": 0.587629933657144,
+        "hi": 0.9904006406319857
+      },
+      "top1_arm6_hard": 2.0250906944274902,
+      "recovery": 0.7904210090637207,
+      "spearman_positive": 0.6976499761404654,
+      "recall@1": 0.017543859649122806,
+      "mrr": 0.04439265771197529,
+      "top1_grip": 0.05468030273914337,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 1.0403472185134888,
+        "PickPlaceSinkToCounter": 0.5570559501647949,
+        "OpenDrawer": 0.6428001523017883,
+        "CloseFridge": 1.417067527770996,
+        "TurnOnSinkFaucet": 0.22443601489067078,
+        "TurnOffStove": 0.6394800543785095
+      }
+    },
+    "eval": {
+      "top1_arm6": {
+        "mean": 0.8132888280499367,
+        "lo": 0.6798949476700522,
+        "hi": 0.9591395221937314
+      },
+      "top1_arm6_hard": 2.088926315307617,
+      "recovery": 0.7749475240707397,
+      "spearman_positive": 0.6797891932530851,
+      "recall@1": 0.012552301255230125,
+      "mrr": 0.04794902028983712,
+      "top1_grip": 0.04986711964011192,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 1.0250518321990967,
+        "PickPlaceSinkToCounter": 0.4955941140651703,
+        "OpenDrawer": 0.6256386637687683,
+        "CloseFridge": 1.7882654666900635,
+        "TurnOnSinkFaucet": 0.24090956151485443,
+        "TurnOffStove": 0.5648651123046875
+      }
+    }
+  },
+  "e_vlm_h": {
+    "dev": {
+      "top1_arm6": {
+        "mean": 0.5288994364354347,
+        "lo": 0.3884155722796169,
+        "hi": 0.6934838335689373
+      },
+      "top1_arm6_hard": 1.461464524269104,
+      "recovery": 0.8794393539428711,
+      "spearman_positive": 0.7251512889457388,
+      "recall@1": 0.048582995951417005,
+      "mrr": 0.10786730238921409,
+      "top1_grip": 0.055632639676332474,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 0.7438588738441467,
+        "PickPlaceSinkToCounter": 0.4335988461971283,
+        "OpenDrawer": 0.45662131905555725,
+        "CloseFridge": 1.055599331855774,
+        "TurnOnSinkFaucet": 0.17519965767860413,
+        "TurnOffStove": 0.27780839800834656
+      }
+    },
+    "eval": {
+      "top1_arm6": {
+        "mean": 0.5679832009602076,
+        "lo": 0.4774993296265171,
+        "hi": 0.6624470805107293
+      },
+      "top1_arm6_hard": 1.5349003076553345,
+      "recovery": 0.8580116033554077,
+      "spearman_positive": 0.7106548919347523,
+      "recall@1": 0.038586703858670385,
+      "mrr": 0.0957179347440865,
+      "top1_grip": 0.05506161227822304,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 0.8053012490272522,
+        "PickPlaceSinkToCounter": 0.3853447735309601,
+        "OpenDrawer": 0.448556125164032,
+        "CloseFridge": 1.1764910221099854,
+        "TurnOnSinkFaucet": 0.17934787273406982,
+        "TurnOffStove": 0.3361189067363739
+      }
+    }
+  },
+  "e_h": {
+    "dev": {
+      "top1_arm6": {
+        "mean": 0.6973365579119679,
+        "lo": 0.4980670737912401,
+        "hi": 0.9459161766362736
+      },
+      "top1_arm6_hard": 1.9321067333221436,
+      "recovery": 0.8181175589561462,
+      "spearman_positive": 0.6245454762296647,
+      "recall@1": 0.05128205128205128,
+      "mrr": 0.11488553826468209,
+      "top1_grip": 0.03706197813153267,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 1.00052011013031,
+        "PickPlaceSinkToCounter": 0.5508685111999512,
+        "OpenDrawer": 0.5698800683021545,
+        "CloseFridge": 1.4428431987762451,
+        "TurnOnSinkFaucet": 0.24781657755374908,
+        "TurnOffStove": 0.33397752046585083
+      }
+    },
+    "eval": {
+      "top1_arm6": {
+        "mean": 0.6490707505435742,
+        "lo": 0.5538964489765413,
+        "hi": 0.7462690106129858
+      },
+      "top1_arm6_hard": 1.6090312004089355,
+      "recovery": 0.8195124864578247,
+      "spearman_positive": 0.6131810136501322,
+      "recall@1": 0.04416550441655044,
+      "mrr": 0.10727970723522652,
+      "top1_grip": 0.041993364691734314,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 0.8698263168334961,
+        "PickPlaceSinkToCounter": 0.5109535455703735,
+        "OpenDrawer": 0.5667441487312317,
+        "CloseFridge": 1.2737947702407837,
+        "TurnOnSinkFaucet": 0.2484866976737976,
+        "TurnOffStove": 0.3550257980823517
+      }
+    }
+  },
+  "p0": {
+    "dev": {
+      "top1_arm6": {
+        "mean": 0.9106638743007975,
+        "lo": 0.6787508300829477,
+        "hi": 1.177456424403258
+      },
+      "top1_arm6_hard": 2.422865390777588,
+      "recovery": 0.7559512257575989,
+      "spearman_positive": 0.6360388840351883,
+      "recall@1": 0.002699055330634278,
+      "mrr": 0.02286380230164326,
+      "top1_grip": 0.0783301293849945,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 1.21764075756073,
+        "PickPlaceSinkToCounter": 0.6476597785949707,
+        "OpenDrawer": 0.8603184223175049,
+        "CloseFridge": 1.779426097869873,
+        "TurnOnSinkFaucet": 0.2894556224346161,
+        "TurnOffStove": 0.580924391746521
+      }
+    },
+    "eval": {
+      "top1_arm6": {
+        "mean": 0.8771877355700342,
+        "lo": 0.7280099816521204,
+        "hi": 1.0299712292982508
+      },
+      "top1_arm6_hard": 2.401782989501953,
+      "recovery": 0.7603752613067627,
+      "spearman_positive": 0.6196938219937926,
+      "recall@1": 0.00790330079033008,
+      "mrr": 0.03220938942588918,
+      "top1_grip": 0.0845881998538971,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 1.2446712255477905,
+        "PickPlaceSinkToCounter": 0.5769307017326355,
+        "OpenDrawer": 0.6531787514686584,
+        "CloseFridge": 1.8653956651687622,
+        "TurnOnSinkFaucet": 0.2635689079761505,
+        "TurnOffStove": 0.5270711779594421
+      }
+    }
+  },
+  "p5": {
+    "dev": {
+      "top1_arm6": {
+        "mean": 0.6832372267477909,
+        "lo": 0.5261258169114934,
+        "hi": 0.8658079270187689
+      },
+      "top1_arm6_hard": 1.7649827003479004,
+      "recovery": 0.815182089805603,
+      "spearman_positive": 0.7090942552151777,
+      "recall@1": 0.014844804318488529,
+      "mrr": 0.052978541694782236,
+      "top1_grip": 0.07182246446609497,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 0.8890472054481506,
+        "PickPlaceSinkToCounter": 0.5697968006134033,
+        "OpenDrawer": 0.5732944011688232,
+        "CloseFridge": 1.302524209022522,
+        "TurnOnSinkFaucet": 0.2686438262462616,
+        "TurnOffStove": 0.433490514755249
+      }
+    },
+    "eval": {
+      "top1_arm6": {
+        "mean": 0.6951636090920783,
+        "lo": 0.5904176660946986,
+        "hi": 0.8076097794483457
+      },
+      "top1_arm6_hard": 1.6892390251159668,
+      "recovery": 0.7941879630088806,
+      "spearman_positive": 0.6908214846634809,
+      "recall@1": 0.022315202231520222,
+      "mrr": 0.062621373590473,
+      "top1_grip": 0.0760582908987999,
+      "per_task_top1_arm6": {
+        "PickPlaceCounterToCabinet": 0.9927564859390259,
+        "PickPlaceSinkToCounter": 0.4920974373817444,
+        "OpenDrawer": 0.4998571574687958,
+        "CloseFridge": 1.4094842672348022,
+        "TurnOnSinkFaucet": 0.2550671398639679,
+        "TurnOffStove": 0.4231622815132141
+      }
+    }
+  },
+  "references": {
+    "dev": {
+      "oracle_top1": {
+        "arm6_all": {
+          "mean": 0.19199808014286554,
+          "lo": 0.1367095362524711,
+          "hi": 0.2560571089206558
+        },
+        "arm6_hard": 0.6233599185943604,
+        "grip_all": 0.10642421245574951
+      },
+      "hold_last": {
+        "arm6_all": {
+          "mean": 0.49814581765379135,
+          "lo": 0.33019804571730976,
+          "hi": 0.7050144449610205
+        },
+        "arm6_hard": 1.468125343322754,
+        "grip_all": 0.015783432871103287
+      },
+      "zero": {
+        "arm6_all": {
+          "mean": 1.4339325081795207,
+          "lo": 1.1203038022759202,
+          "hi": 1.7867016560725986
+        },
+        "arm6_hard": 3.7360644340515137,
+        "grip_all": 0.13181500136852264
+      },
+      "random_unit": {
+        "arm6_all": {
+          "mean": 2.7118456879889594,
+          "lo": 2.386016176487904,
+          "hi": 3.0701254989715694
+        },
+        "arm6_hard": 4.945125579833984
+      },
+      "per_task_oracle_arm6": {
+        "PickPlaceCounterToCabinet": 0.29011842608451843,
+        "PickPlaceSinkToCounter": 0.149364173412323,
+        "OpenDrawer": 0.16716964542865753,
+        "CloseFridge": 0.38850024342536926,
+        "TurnOnSinkFaucet": 0.05154125392436981,
+        "TurnOffStove": 0.09521935135126114
+      },
+      "rows": 741,
+      "hard_rows": 149
+    },
+    "eval": {
+      "oracle_top1": {
+        "arm6_all": {
+          "mean": 0.17433552719686857,
+          "lo": 0.14646783145517886,
+          "hi": 0.20434234047496694
+        },
+        "arm6_hard": 0.5370766520500183,
+        "grip_all": 0.11072469502687454
+      },
+      "hold_last": {
+        "arm6_all": {
+          "mean": 0.4749859962693302,
+          "lo": 0.3934230684005605,
+          "hi": 0.5624801673212432
+        },
+        "arm6_hard": 1.3404841423034668,
+        "grip_all": 0.018307525664567947
+      },
+      "zero": {
+        "arm6_all": {
+          "mean": 1.4860002985220881,
+          "lo": 1.3081510926604445,
+          "hi": 1.6723002974139538
+        },
+        "arm6_hard": 3.6410934925079346,
+        "grip_all": 0.13360077142715454
+      },
+      "random_unit": {
+        "arm6_all": {
+          "mean": 2.7759420218466606,
+          "lo": 2.5976131770489626,
+          "hi": 2.9641247960723622
+        },
+        "arm6_hard": 4.993794918060303
+      },
+      "per_task_oracle_arm6": {
+        "PickPlaceCounterToCabinet": 0.2363925576210022,
+        "PickPlaceSinkToCounter": 0.13042110204696655,
+        "OpenDrawer": 0.1555800884962082,
+        "CloseFridge": 0.35351958870887756,
+        "TurnOnSinkFaucet": 0.04613199084997177,
+        "TurnOffStove": 0.10164323449134827
+      },
+      "rows": 2151,
+      "hard_rows": 431
+    },
+    "definition": {
+      "metric": "arm6 sum of squares / (10*7) in checkpoint z-score policy space",
+      "hard": "oracle top-1 arm6 >= 80% quantile within the split",
+      "candidate_window": "first 10 steps of the natural-length DCT-3 unit, last step held"
+    }
+  }
+}
