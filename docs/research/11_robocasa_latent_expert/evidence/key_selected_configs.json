@@ -1,0 +1,60 @@
+{
+  "rule": "lowest Dev top-1 arm6 MSE",
+  "selected": {
+    "e_vlm": {
+      "run": "e_vlm_lr0.0003_ep16_tau0.02_s1",
+      "dev_top1_arm6": 0.776498216924832,
+      "config": {
+        "mode": "e_vlm",
+        "lr": 0.0003,
+        "epochs": 16,
+        "teacher_tau": 0.02,
+        "seed": 1
+      }
+    },
+    "e_vlm_h": {
+      "run": "e_vlm_h_lr0.0003_ep16_tau0.02_s1",
+      "dev_top1_arm6": 0.5288994364354347,
+      "config": {
+        "mode": "e_vlm_h",
+        "lr": 0.0003,
+        "epochs": 16,
+        "teacher_tau": 0.02,
+        "seed": 1
+      }
+    },
+    "e_h": {
+      "run": "e_h_lr0.0001_ep16_tau0.02_s1",
+      "dev_top1_arm6": 0.6973365579119679,
+      "config": {
+        "mode": "e_h",
+        "lr": 0.0001,
+        "epochs": 16,
+        "teacher_tau": 0.02,
+        "seed": 1
+      }
+    },
+    "p0": {
+      "run": "p0_lr0.0001_ep16_tau0.002_s1",
+      "dev_top1_arm6": 0.9106638743007975,
+      "config": {
+        "mode": "p0",
+        "lr": 0.0001,
+        "epochs": 16,
+        "teacher_tau": 0.002,
+        "seed": 1
+      }
+    },
+    "p5": {
+      "run": "p5_lr0.0001_ep16_tau0.02_s1",
+      "dev_top1_arm6": 0.6832372267477909,
+      "config": {
+        "mode": "p5",
+        "lr": 0.0001,
+        "epochs": 16,
+        "teacher_tau": 0.02,
+        "seed": 1
+      }
+    }
+  }
+}
