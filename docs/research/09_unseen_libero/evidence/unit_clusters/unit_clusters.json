@@ -1,0 +1,37 @@
+{
+  "units": 4516,
+  "tau": 0.08,
+  "types": 238,
+  "type_size": {
+    "max": 276,
+    "median": 6.5,
+    "singletons": 54,
+    "units_in_8_largest": 1265
+  },
+  "pca_explained_variance_2d": [
+    0.28009119629859924,
+    0.19622394442558289
+  ],
+  "real": {
+    "compactness": 0.10185474039500894,
+    "types": 143,
+    "median_tasks_per_type": 8.0,
+    "share_types_multi_suite": 0.8181818181818182,
+    "mean_task_entropy_bits": 2.454610692242856
+  },
+  "shuffled_labels": {
+    "compactness_mean": 0.9486270598100249,
+    "compactness_sd": 0.0021078205593477303,
+    "median_tasks_per_type": 12.9,
+    "share_types_multi_suite": 0.9993006993006993,
+    "mean_task_entropy_bits": 3.601326196677738
+  },
+  "types_split_by_task": {
+    "compactness": 0.05410040864658461,
+    "types": 274,
+    "median_tasks_per_type": 1.0,
+    "share_types_multi_suite": 0.0,
+    "mean_task_entropy_bits": 0.0
+  },
+  "note": "Units and types exactly as in CMP3/UM2 (cover_units on 32-phase DCT3 values). Non-representatives join their nearest representative. No evaluation data used."
+}

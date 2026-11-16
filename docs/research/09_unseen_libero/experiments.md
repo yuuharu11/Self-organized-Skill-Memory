@@ -1379,3 +1379,22 @@ KEY2-F の共有 E が多数の視覚トークンに引っ張られているか�
 - KEYGRID の top-1 選択 checkpoint 3件も別々に診断した。訓練し直しはしていない。結果は attention 依存と未学習性能の単純な対応を示さなかった。
 
 コード・テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_attn_diag.py`、`tests/unseen_libero/test_key_attn_diag.py`（3件）。結果と head×latent token ごとの注意・各入力 ablation は [ATTN1 report](evidence/attn1/report.md) と `results.json`、`arrays.npz` を参照。共通ゲート文書 `/work/docs/memory_pilot_gates.md` はこの checkout には存在しなかった。
+
+## VIS1：型のまとまりを空間で見る（図）
+
+**問い：** メモリの型は本当に動きでまとまっていて、場面（タスク・suite）をまたいで共有されているか。
+
+**やり方：** UM2 と同じ 4,516 単位（DCT3 を32位相へ再標本化）を `cover_units` で τ=.08 の238型にまとめ、代表以外の単位を最も近い代表に割り当てた。腕6軸だけで PCA を取った（グリッパーは単位の中で ±1 の一定値なので、入れると PC1 が開閉の2つの塊になる）。比較の基準は、型ラベルをシャッフルしたもの（20回）と、型をタスクごとに分けたもの。評価データは使っていない。
+
+| 指標（5単位以上の型） | 型 | シャッフル | タスクごとに分割 |
+|---|---:|---:|---:|
+| 型の数 | 143 | — | 274 |
+| 型の中のばらつき ÷ 全体のばらつき | .10 | .95 | .05 |
+| 型あたりのタスク数（中央値） | 8 | 13 | 1 |
+| 2つ以上の suite から集める型の割合 | 82% | 100% | 0% |
+
+- 型はタスク・suite をまたいで共有されている。ただしシャッフルほどは混ざらず、タスクに依存する部分も残る。
+- 型の中のばらつきが小さいのは、しきい値で型を作る構成上そうなる値で、それだけではまとまりの証拠にならない。
+- 大きく動く型（+y へ運ぶ、下げながら −x、−y へ引く）は PCA 空間で分かれる。最大の型はほぼ動かない単位で、中央で重なる。PCA 2軸の説明率は 28% + 20%。
+
+図と数値：[evidence/unit_clusters/](evidence/unit_clusters/)（`unit_space.png`、`type_members.png`、`type_stats.png`、`unit_clusters.json`）。コード：`plot_unit_clusters.py`（CPU、約10秒）。
