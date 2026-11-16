@@ -460,6 +460,88 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 
 出力フォルダはすべて `.skillnet-state/outputs/memory-pilot/unseen-libero/` 以下。コードは `skill_moe/skillnet/examples/memory_pilot/unseen_libero/`、テストは `tests/unseen_libero/`。
 
+## LIB1: query Eval gate and paired LIBERO-90 closed loop
+
+### Setup and frozen choice
+
+INV2's three-seed stage selection retained R5. The locked R5 selector uses wrist-image prefix tokens, state, and the 78-dimensional context containing recent actions; K=5 split keys and dual-temperature L0 are retained. R0 is the baseline. The state-only arm here follows the earlier INV2 naming: history is clamped to zero, while wrist prefix tokens and state remain inputs; it is not a proprioception-only model.
+
+The 619-window Eval set (134 hard windows) was scored once after selection. Eval labels were loaded only for scoring, not fit, checkpoint choice, or hyperparameter selection. The output is `lib-closed-01/`; the frozen row arrays and protocol make the calculation auditable. Fit/epoch choice remains on LIBERO-40 holdout tasks. The normal π0.5 reference uses the already cached Eval predictions and asserts exact row-order agreement.
+
+### INV2 three-seed selection and history diagnostics
+
+The stage table below is reproduced from `scene-invariance-01/step2/attempt-fix2/noise_history_report.md`. Values are mean ± sample SD over seeds 4101/4102/4103; type error lower is better, recovery and Spearman higher are better.
+
+| Configuration | top-1 type error | recovery | Spearman | K-token cosine | decision |
+|---|---:|---:|---:|---:|---|
+| R0 | .0191 ± .0003 | .7544 ± .0053 | .4607 ± .0039 | — | baseline |
+| R1 | .0193 ± .0004 | .7405 ± .0182 | .4625 ± .0139 | — | reject |
+| R2 | .0199 ± .0005 | .7437 ± .0074 | .4644 ± .0142 | — | reject |
+| R3-c0 | .0233 ± .0002 | .7041 ± .0041 | .4180 ± .0060 | — | reject |
+| R3-c1 | .0245 ± .0008 | .6854 ± .0103 | .3765 ± .0045 | — | reject |
+| R4 | .0144 ± .0003 | .8246 ± .0021 | .6281 ± .0044 | .9997 | pass |
+| R5 | .0145 ± .0002 | .8198 ± .0022 | .6335 ± .0031 | .9997 | pass / retained |
+
+| Model | history | recovery | Spearman | type error |
+|---|---|---:|---:|---:|
+| R0 | correct | .7544 ± .0053 | .4607 ± .0039 | .0191 ± .0003 |
+| R0 | zero | .6822 ± .0121 | .4370 ± .0015 | .0228 ± .0012 |
+| R0 | other episode | .6111 ± .0109 | .4113 ± .0058 | .0282 ± .0007 |
+| R5 | correct | .8198 ± .0022 | .6335 ± .0031 | .0145 ± .0002 |
+| R5 | zero | .7650 ± .0027 | .5938 ± .0124 | .0168 ± .0001 |
+| R5 | other episode | .7085 ± .0015 | .5611 ± .0017 | .0206 ± .0001 |
+| P5 | correct | .6177 ± .0060 | .4320 ± .0105 | .0281 ± .0001 |
+| P5 | zero | .1362 ± .0126 | .0268 ± .0190 | .0745 ± .0008 |
+| P5 | other episode | .1512 ± .0023 | .0415 ± .0114 | .0727 ± .0003 |
+
+R5 remains useful with history zeroed on heldout tasks (recovery .8198 to .7650), although perturbing history to another episode lowers it further. This is the frozen gate input, not an Eval-based retuning.
+
+### Eval gate: 619 windows
+
+MSE6/7 is the sum of six normalized active-axis squared errors divided by seven, matching the existing closed-loop convention. “Saved scale MSE6” is the mean over six axes and time on the stored normalized scale. Bracketed intervals are episode-bootstrap 95% CIs; seed SD is across the three fixed checkpoints. Type metrics are row-wise averages over seeds, reported all/hard.
+
+| Condition | type error all/hard | recovery all/hard | Spearman all/hard | MSE6/7 all (seed mean ± SD; CI) | hard (seed mean ± SD; CI) | saved-scale MSE6 all/hard | hold-last MSE6/7 all/hard |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| R0 | .0144/.0264 | .512/.288 | .200/.058 | .1391 ± .0006 [.1235,.1566] | .2906 ± .0057 [.2392,.3465] | .1623/.3391 | .1140/.2010 |
+| R5 | .0147/.0260 | .486/.292 | .042/-.005 | .1305 ± .0007 [.1157,.1471] | .2715 ± .0048 [.2233,.3232] | .1522/.3167 | .1140/.2010 |
+| state-only | .0148/.0262 | .482/.280 | .040/-.006 | .1382 ± .0100 [.1223,.1557] | .2894 ± .0198 [.2402,.3429] | .1613/.3376 | .1140/.2010 |
+| same-code P5 | .0144/.0266 | .518/.277 | .281/.135 | .1481 ± .0038 [.1335,.1650] | .3012 ± .0019 [.2506,.3565] | .1728/.3514 | .1140/.2010 |
+| normal π0.5 | — | — | — | .1917 [.1778,.2065] | .3074 [.2660,.3538] | .2237/.3587 | — |
+
+R5 minus P5 paired MSE6/7 difference was -.0177 [-.0236,-.0114] all windows and -.0298 [-.0450,-.0139] hard. Thus the offline gate passes. The paired MSE6/7 differences against hold-last (condition minus hold-last; episode-bootstrap 95% CI) were R0 +.0251 [.0127,.0391] all / +.0896 [.0461,.1362] hard; R5 +.0165 [.0049,.0298] / +.0705 [.0297,.1152]; state-only +.0242 [.0112,.0386] / +.0884 [.0460,.1343]; P5 +.0341 [.0236,.0457] / +.1002 [.0594,.1428]. Hold-last on the stored-scale MSE6 convention is .1330 all / .2345 hard (converted from the same six-axis squared errors). However, all three selectors have higher MSE than hold-last; the gate must not be read as absolute retrieval superiority.
+
+### Prefix wrist-token parity
+
+The server reads group id 1 (left wrist camera), 256 final-prefix tokens before decoder projection. Against cached tokens, 8 LIBERO-40 frames had max absolute difference .000244 and RMS 4.25e-6; 8 LIBERO-90 Eval frames had max .000244 and RMS 4.28e-6. Both passed the fixed tolerances (.002 max, .0002 RMS). Images were supplied in the same corrected orientation as the cache, with no extra flip.
+
+### Paired closed loop
+
+The policy replaced only unit selection in the no-denoising `libero90_unit_08` path: Procrustes poses the selected unit to π0.5's predicted trajectory, and π0.5 supplies gripper actions. The candidate pool is the fixed 95-unit `pool_unit_08`; the new R5/state-only selector is fitted on LIBERO-40 with seed 4101 and holdout-task epoch selection. There are 10 selected LIBERO-90 tasks × public initial-state indices 0–9, replan 5, max 520 control steps. Seed base and trial seed logic match `baseline-01`; comparisons below use identical task/init pairs. Each condition has 100/100 complete trials and no terminal technical errors.
+
+| Condition | successes | baseline successes | both success | condition only | baseline only | exact McNemar p | mean distinct units/trial | adjacent same-unit rate |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| mem-R5 | 33/100 | 32/100 | 24 | 9 | 8 | 1.000 | 21.98 | .292 |
+| mem-state (history zero) | 38/100 | 32/100 | 29 | 9 | 3 | .146 | 19.99 | .341 |
+
+| Task id | mem-R5 | mem-state | baseline |
+|---:|---:|---:|---:|
+| 0 | 7/10 | 2/10 | 0/10 |
+| 10 | 9/10 | 9/10 | 10/10 |
+| 13 | 1/10 | 2/10 | 0/10 |
+| 31 | 1/10 | 0/10 | 0/10 |
+| 35 | 0/10 | 1/10 | 1/10 |
+| 43 | 0/10 | 5/10 | 1/10 |
+| 57 | 6/10 | 10/10 | 10/10 |
+| 61 | 9/10 | 9/10 | 10/10 |
+| 84 | 0/10 | 0/10 | 0/10 |
+| 88 | 0/10 | 0/10 | 0/10 |
+
+Paired with the prior unit_08 condition (43/100 on these same initial states), mem-R5 had 6 wins versus 16 losses (p=.0525); mem-state had 7 wins versus 12 losses (p=.359). These results do not show a reliable improvement over either comparator. The selected unit stream and each task's termination reason are stored in `closed_loop_summary.json` and per-condition `rollouts.jsonl`.
+
+The first attempted server run exposed a 3-D/4-D indexing error in Procrustes pose alignment. It was corrected before the final run. Failed attempts remain under each rollout's attempt directory; final paired rollouts use the corrected code and all 100 per condition completed.
+
+Output directory: `.skillnet-state/outputs/memory-pilot/unseen-libero/lib-closed-01/`. Code and test are `skill_moe/skillnet/examples/memory_pilot/unseen_libero/lib_closed.py` and `tests/unseen_libero/test_lib_closed.py`.
+
 ## §13 SEG2: segment-context retrieval
 
 ### 問いと方法
@@ -474,11 +556,11 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 
 | 条件 | 型誤差 all | recovery@1 | Spearman | MSE6/7 all (seed mean±SD) | hard |
 |---|---:|---:|---:|---:|---:|
-| SEG2 selected | .0407±.0018 | .227±.018 | −.249±.046 | .1617±.0147 | .3042±.0217 |
-| π0.5 normal | — | — | — | .1140 | .2499 |
+| SEG2 selected | .0407±.0018 | .227±.018 | +.249±.046 | .1617±.0147 | .3042±.0217 |
+| π0.5 normal (公式Eval出力に訂正) | — | — | — | .1917 | .3074 |
 | hold-last | — | — | — | .1140 | — |
 | prior LIB1 R5 | — | — | — | .1305 | .2662 |
-| prior unit_08 offline proxy (MAG3 O2/A3, converted to MSE6/7) | — | — | — | .1348 | — |
+| unit_08 offline oracle-type proxy (MAG1 A6/T3; MSE6/7) | — | — | — | .1348 | .2921 |
 
 | Ablation | MSE6/7 all | hard |
 |---|---:|---:|
@@ -488,7 +570,7 @@ Step1 ではユーザーの切替指示に従い、63本の広い設定探索を
 | continuity score off | .1903±.0113 | .3400±.0222 |
 | exclude previous segment | .1619±.0150 | .3032±.0221 |
 
-Selected minus normal episode-bootstrap 95% CI, by seed, was positive for all three seeds: all-window [.0477,.0641], [.0243,.0372], [.0483,.0651]; hard [.0389,.0831], [.0168,.0442], [.0562,.0898]. 既存MAG3のunit_08 / π0.5-pose / π0.5-scale行は六軸MSEのfirst5 .145974・continuation .168635で、SEG2と同じ×6/7規則へ換算し平均すると.1348だった。SEG2 selectedもこのオフライン比較値を上回る。Eval was only scored after choices were frozen.
+旧CIは新規生成したnormal_actions_stride10とのseed別対応差であり、公式π0.5予測との差ではない。共通619行・hard134行・各窓（先頭5/続き5–9/全体）のMSEとepisode bootstrap CI、ならびに行ID検算は[SEG2補足表](../../../../.skillnet-state/outputs/memory-pilot/unseen-libero/seg-context-01/supplement-corrected-metrics-01/report.md)を参照。unit_08の.1348はMAG1 A6/T3（oracle型選択、π0.5へのProcrustes）のオフライン代理として同じ10-step行で再構成した値であり、43/100の閉ループ性能を再現しない。Eval was only scored after choices were frozen.
 
 ### サーバー整合性と閉ループ
 
@@ -990,3 +1072,35 @@ AXには実OpenPIモデルadapterを追加した。t=1→0のπ0.5積分と同�
 P0/P5/E-VLM+H top-1 を下書きに用いて再評価した。Dev (task 6,7; 113行) で選び、Expert A は D1 step 2500 / t0=.30、D3 step 2500 / t0=.30 が最良だった。D0 専用学習分岐はなく、D0 評価には事前に定めた代替として D1 の checkpoint を適用した。
 
 オフライン arm6 MSE は学習済み621行で D0/D1/D3 の Expert A が .001855/.001911/.001903、未学習619行では .109740/.106753/.109117。通常 π0.5 は未学習で .114979。閉ループは LIBERO-90 Eval で baseline 32/100 に対し D0/D1/D3 が 32/100, 33/100, 33/100、LIBERO-10 learned で 46/50 に対し 45/50, 46/50, 42/50。McNemar の全比較は p≥.289 で、成功率の改善を示す結果ではない。条件・タスク別表、Wilson 区間、paired offline bootstrap は [production-03 scope-change-01](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/expert-ex1-01/production-03/scope-change-01/report.md) に記録。
+
+## LP：潜在トークンで大きさとグリッパーを読む診断
+
+### 問いと方法
+
+V-JEPA などの潜在トークンから、単位の大きさ（振幅）とグリッパー開閉を読めるかを調べる。LIBERO-40 の SEG2 適合クエリ 30,324 行を対象に、V-JEPA 2（ViT-L、MIT）の 2 フレーム入力から空間平均プーリングした 1024 次元トークンを取り出す。読み出しはグリッパー・型・大きさの3ヘッドで、グリッパーは LIBERO-40 保持、型・大きさは LIBERO-90 密 Dev で選択する。Eval は報告のみ。データ準備（行・保存の一覧、画素一致、スモーク）は `latent_probe_data.py`、読み出しは `latent_probe_readout.py`、閉ループは `noro_closed_loop.py`。
+
+### 主な表（smoke、結論は出さない）
+
+Dev 選択（グリッパー AUC／型 top-1／大きさ log-MAE、かっこ内は固定参照）：
+
+| 条件 | グリッパー | 型 top-1 | 大きさ |
+|---|---|---:|---:|
+| 潜在なし＋prefix あり | .8529 | .04210 | .6096 |
+| V-JEPA＋prefix なし | .8700 | .06228 | .6585 |
+| V-JEPA＋prefix あり | .8957 | .04057 | .6369 |
+| VLM＋prefix なし | .9871 | .04177 | .6459 |
+| VLM＋prefix あり | .9086 | .03607 | .6186 |
+
+閉ループ（noro、メモリ形状→π0.5 姿勢、グリッパー π0.5）：メモリ 19/100、通常 π0.5 32/100。ベースラインを下回る。
+
+### 結論
+
+スモークの範囲では、潜在トークンの有無で型・大きさの改善は確認できず、閉ループもベースラインに届かない。最終の表現品質や 3 seed 性能の結論は出さない。データ準備の画素一致（Eval 行の base・wrist とも resize 後完全一致）と V-JEPA スモーク（2 カメラ 1 行 0.0831 秒、fp16 695 MB）は通っている。全量の画像・特徴抽出は未実施。
+
+出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/latent-probe-01/`（`data/`、`gate/`、`repair-01/smoke-05/`、`lpc1-closed-loop/`）。コード／テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/latent_probe_{data,features,readout}.py`、`noro_{closed_loop,run}.py`、`tests/unseen_libero/test_latent_probe_{data,readout}.py`、`test_noro_closed_loop.py`。
+
+## §14 手先座標で単位を保存する（EEF1）：打ち切り、結果なし
+
+ユーザー判断で打ち切り。D1 診断（型のまとまり）は完了していたが、D2・D3・Dev関門・閉ループは未実施のまま終了し、本番値としての報告はない。小規模スモーク値は設定・データ量が本番と異なるため結果表に転記しない。既存の部分出力は `.skillnet-state/outputs/memory-pilot/unseen-libero/eef-frame-01*/` に保持しているが、参照用であり結論には使わない。
+
+コード：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/eef_frame_units.py`（打ち切り実験として残す）。テスト：`tests/unseen_libero/test_eef_frame_units.py`。

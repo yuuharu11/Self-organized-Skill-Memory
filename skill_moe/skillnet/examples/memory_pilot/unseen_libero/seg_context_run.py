@@ -152,7 +152,9 @@ def evaluate_selector(model,store,bank,mem_inputs,queries,device='cuda',*,same_t
     errors=sc.s_shared_type_error(queries['actions'][:,:,:6],bank['value_actions10'][:,:,:6])
     top=np.argmax(scores,axis=1);row=np.arange(len(top));sel=errors[row,top]
     from scipy.stats import spearmanr
-    rho=np.asarray([spearmanr(scores[i],errors[i]).statistic for i in range(len(top))],np.float64)
+    # Higher retrieval scores should correspond to lower type error. Report a
+    # consistently positive-is-better correlation throughout the pipeline.
+    rho=np.asarray([spearmanr(scores[i],-errors[i]).statistic for i in range(len(top))],np.float64)
     # Action-space score reports selected shape as a reference before pose.
     mse=np.mean((queries['actions'][:,:,:6]-bank['value_actions10'][top,:,:6])**2,axis=(1,2))*6/7
     return {'rows':len(top),'type_error':float(sel.mean()),'spearman':float(np.nanmean(rho)),

@@ -759,7 +759,8 @@ def evaluate_retrieval(scores, type_error, action_error, *, row_episode, hard=No
     ranks=np.argsort(np.argsort(-score,axis=1),axis=1)+1
     def pack(mask):
         if not mask.any():return {"rows":0}
-        rho=[spearmanr(score[i],te[i]).statistic for i in np.flatnonzero(mask)]
+        # Positive means a higher retrieval score ranks a lower type error.
+        rho=[spearmanr(score[i],-te[i]).statistic for i in np.flatnonzero(mask)]
         chosen=ae[rows,ix]
         return {"rows":int(mask.sum()),"top1_type_error":float(chosen_type[mask].mean()),
             "recall_at_1":float(np.mean(positive[rows,ix][mask])),
