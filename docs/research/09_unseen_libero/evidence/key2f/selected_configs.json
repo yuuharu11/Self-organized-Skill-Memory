@@ -1,0 +1,1255 @@
+{
+  "selection": "Dev-only top-k blend MSE; tie-break lower LR, epochs, then teacher tau",
+  "training_teacher_tau_grid": [
+    0.002,
+    0.005,
+    0.01,
+    0.02
+  ],
+  "ranking_reference_tau_fixed": 0.01,
+  "score": "exp(learned logit_scale) * similarity; logit_scale starts 1/.07, max 100",
+  "selected": {
+    "e_vlm": {
+      "mode": "e_vlm",
+      "objective": "soft",
+      "learning_rate": 0.0003,
+      "epochs": 16,
+      "teacher_temperature": 0.02,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm-lr0.0003-ep16-tau0.02/e_vlm_seed1.pt",
+      "dev_mse": 0.10353682284365369,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.10353682284365369
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.6308031191291736,
+          "cross_entropy": 7.35912134887961,
+          "kl_pq": 3.1591772910447746,
+          "recall@1": 0.02304147465437788,
+          "recall@5": 0.04423963133640553,
+          "recall@20": 0.12764976958525348,
+          "ndcg@20": 0.11590790247684962,
+          "mrr": 0.05231698991108607,
+          "top1_arm6_mse": 0.14010885298629785,
+          "top20_arm6_mse": 0.14432651817515355,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.5665945535046969,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.1401088531091794
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.13853928954453104
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1350892945929784
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1320928657029023
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.12629971916334332
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.11938580501889688
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.11261247835773198
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11060273537975207
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.13853923258945763
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.13505940833544738
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1319449918117607
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.12541620122470826
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.11608569684152288
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.10594470475217632
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10353682284365369
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.1401088531091794
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11060273537975207
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10353682284365369
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.10353682284365369
+          }
+        },
+        "training_teacher_tau": 0.02,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 18.87555503845215
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm-lr0.0003-ep16-tau0.02"
+    },
+    "e_vlm_h": {
+      "mode": "e_vlm_h",
+      "objective": "soft",
+      "learning_rate": 0.0001,
+      "epochs": 16,
+      "teacher_temperature": 0.005,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm_h-lr0.0001-ep16-tau0.005/e_vlm_h_seed1.pt",
+      "dev_mse": 0.09512313041417113,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.09512313041417113
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.3991752740001342,
+          "cross_entropy": 8.040181640576096,
+          "kl_pq": 3.8402375827412594,
+          "recall@1": 0.018433179723502304,
+          "recall@5": 0.06267281105990784,
+          "recall@20": 0.15138248847926267,
+          "ndcg@20": 0.15531111342383758,
+          "mrr": 0.05542057074403717,
+          "top1_arm6_mse": 0.12569686589753984,
+          "top20_arm6_mse": 0.1407168172857797,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6239890753244534,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.125696865316989
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12444117751905524
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12185174005093832
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11911718679009133
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11381961522294103
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.10791301672045467
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.1027967314275868
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10160019821471229
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12444117520083274
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12184242712154442
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11902588483327027
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11288902288000138
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.10458203334308545
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.09664214423452605
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09512313041417113
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.125696865316989
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10160019821471229
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09512313041417113
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.09512313041417113
+          }
+        },
+        "training_teacher_tau": 0.005,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 18.71149253845215
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm_h-lr0.0001-ep16-tau0.005"
+    },
+    "e_vj_h": {
+      "mode": "e_vj_h",
+      "objective": "soft",
+      "learning_rate": 0.0001,
+      "epochs": 4,
+      "teacher_temperature": 0.005,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vj_h-lr0.0001-ep4-tau0.005/e_vj_h_seed1.pt",
+      "dev_mse": 0.09209634221279597,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.09209634221279597
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.4655295115564969,
+          "cross_entropy": 7.383455778016247,
+          "kl_pq": 3.18351172018141,
+          "recall@1": 0.03686635944700461,
+          "recall@5": 0.06267281105990784,
+          "recall@20": 0.11705069124423963,
+          "ndcg@20": 0.13408997364668748,
+          "mrr": 0.0749092788808344,
+          "top1_arm6_mse": 0.12688538677612757,
+          "top20_arm6_mse": 0.13729370785759085,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6192558912687619,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12688538642164393
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12379760193789988
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1196275501054988
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1160073895672411
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.10866567891921974
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.10133088535112565
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.09668626647851371
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09600260846582374
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12379630765395541
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.11940330171750112
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11544932579446601
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.10681887814372426
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.09772552369631539
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.09241187808418425
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09209634221279597
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12688538642164393
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09600260846582374
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09209634221279597
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.09209634221279597
+          }
+        },
+        "training_teacher_tau": 0.005,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 14.342109680175781
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vj_h-lr0.0001-ep4-tau0.005"
+    },
+    "e_vj_vlm_h": {
+      "mode": "e_vj_vlm_h",
+      "objective": "soft",
+      "learning_rate": 0.0001,
+      "epochs": 4,
+      "teacher_temperature": 0.01,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vj_vlm_h-lr0.0001-ep4-tau0.01/e_vj_vlm_h_seed1.pt",
+      "dev_mse": 0.07760131619798444,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.07760131619798444
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.5664528804966895,
+          "cross_entropy": 6.913080301979607,
+          "kl_pq": 2.7131362441447684,
+          "recall@1": 0.03225806451612903,
+          "recall@5": 0.10414746543778802,
+          "recall@20": 0.17534562211981566,
+          "ndcg@20": 0.20400291524827155,
+          "mrr": 0.10289775921369301,
+          "top1_arm6_mse": 0.11851762539668498,
+          "top20_arm6_mse": 0.12208418245470228,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6525797944971765,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11851762529915505
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.11712881635130401
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.11249812495805629
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.10790860871922164
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.0997582943235353
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.0904537398763635
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.08290603335069649
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08131608547461125
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.11712870760483522
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.11246436020035228
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.10772086106590056
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.09869102627790835
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.08724927884548367
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.07851780570577015
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.07760131619798444
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11851762529915505
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08131608547461125
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.07760131619798444
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.07760131619798444
+          }
+        },
+        "training_teacher_tau": 0.01,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 14.897324562072754
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vj_vlm_h-lr0.0001-ep4-tau0.01"
+    },
+    "e_h": {
+      "mode": "e_h",
+      "objective": "soft",
+      "learning_rate": 0.0001,
+      "epochs": 16,
+      "teacher_temperature": 0.02,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_h-lr0.0001-ep16-tau0.02/e_h_seed1.pt",
+      "dev_mse": 0.0784730087232853,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.0784730087232853
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.6050347655662222,
+          "cross_entropy": 6.893958214898219,
+          "kl_pq": 2.6940141570633824,
+          "recall@1": 0.05069124423963134,
+          "recall@5": 0.08110599078341015,
+          "recall@20": 0.15460829493087555,
+          "ndcg@20": 0.18575063831630048,
+          "mrr": 0.10140670540875284,
+          "top1_arm6_mse": 0.13530101385482582,
+          "top20_arm6_mse": 0.1301033260981007,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.5857413669342203,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.13530101375271653
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12589341383909947
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1117509824691204
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.10472035508805602
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.09526920886524644
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.08908237000381566
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.08661551852329526
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08638533176838635
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.125742924355406
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.11064809944326133
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.10285579662737432
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.0913585439734232
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.0829084342321455
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.07906162354632705
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.0784730087232853
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.13530101375271653
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08638533176838635
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.0784730087232853
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.0784730087232853
+          }
+        },
+        "training_teacher_tau": 0.02,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 13.830721855163574
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_h-lr0.0001-ep16-tau0.02"
+    },
+    "separate": {
+      "mode": "separate",
+      "objective": "soft",
+      "learning_rate": 0.0003,
+      "epochs": 16,
+      "teacher_temperature": 0.01,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/separate-lr0.0003-ep16-tau0.01/separate_seed1.pt",
+      "dev_mse": 0.10830534550524647,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.10830534550524647
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.5625988745056009,
+          "cross_entropy": 7.955117608501704,
+          "kl_pq": 3.7551735506668664,
+          "recall@1": 0.02304147465437788,
+          "recall@5": 0.08387096774193548,
+          "recall@20": 0.15529953917050693,
+          "ndcg@20": 0.1616696498082983,
+          "mrr": 0.0679857324079775,
+          "top1_arm6_mse": 0.12156549633441982,
+          "top20_arm6_mse": 0.13980403744662823,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6404419058103293,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12156549624123553
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12105170088851695
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12000946553729952
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1187488525364868
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11608261018974765
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.11341728613908077
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.11112082007612739
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11042193918370985
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12105170438899794
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12001187168577498
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11874570204294273
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11590100985416482
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.11230820475930303
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.10873245888508368
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10830534550524647
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12156549624123553
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.11042193918370985
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10830534550524647
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.10830534550524647
+          }
+        },
+        "training_teacher_tau": 0.01,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 23.10413360595703
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/separate-lr0.0003-ep16-tau0.01"
+    },
+    "p0": {
+      "mode": "p0",
+      "objective": "soft",
+      "learning_rate": 0.0003,
+      "epochs": 16,
+      "teacher_temperature": 0.01,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/p0-lr0.0003-ep16-tau0.01/p0_seed1.pt",
+      "dev_mse": 0.09856407248764354,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.09856407248764354
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.5810621536825282,
+          "cross_entropy": 7.902828427741683,
+          "kl_pq": 3.702884369906847,
+          "recall@1": 0.013824884792626729,
+          "recall@5": 0.060829493087557605,
+          "recall@20": 0.13755760368663592,
+          "ndcg@20": 0.1360065567193027,
+          "mrr": 0.0541915641274118,
+          "top1_arm6_mse": 0.13255686472569192,
+          "top20_arm6_mse": 0.14460531718125524,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.5966697091606437,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.13255686437740308
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.13131194146432976
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12874278982443568
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1266011882560277
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.12213157891371511
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.11527591688547123
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.10797229324900691
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10640994594849437
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.13131194148146677
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1287428036009442
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1265848108476337
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.12182025303982053
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.1135615058803871
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.10216139894203774
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09856407248764354
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.13255686437740308
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.10640994594849437
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09856407248764354
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.09856407248764354
+          }
+        },
+        "training_teacher_tau": 0.01,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 27.384790420532227
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/p0-lr0.0003-ep16-tau0.01"
+    },
+    "p5": {
+      "mode": "p5",
+      "objective": "soft",
+      "learning_rate": 0.0001,
+      "epochs": 4,
+      "teacher_temperature": 0.01,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/p5-lr0.0001-ep4-tau0.01/p5_seed1.pt",
+      "dev_mse": 0.08646775253435121,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.08646775253435121
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.5471363521076847,
+          "cross_entropy": 7.04223457901258,
+          "kl_pq": 2.842290521177742,
+          "recall@1": 0.02304147465437788,
+          "recall@5": 0.0543778801843318,
+          "recall@20": 0.13502304147465438,
+          "ndcg@20": 0.14214897042312727,
+          "mrr": 0.06677764292478243,
+          "top1_arm6_mse": 0.12873036908372068,
+          "top20_arm6_mse": 0.1392175341532501,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6119084049951434,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12873036860120007
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12694969784025875
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1216871015876153
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11749344315875683
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11011835722355855
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.10208620870342144
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.0960132506414189
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09486036916500984
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.126949317294673
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12162869336636283
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.1171701671257822
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.10854906032590972
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.09734935905474416
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.08794459155326735
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08646775253435121
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12873036860120007
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09486036916500984
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.08646775253435121
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.08646775253435121
+          }
+        },
+        "training_teacher_tau": 0.01,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 14.33923053741455
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/p5-lr0.0001-ep4-tau0.01"
+    },
+    "e_vlm_h-hard": {
+      "mode": "e_vlm_h",
+      "objective": "hard",
+      "learning_rate": 0.0001,
+      "epochs": 16,
+      "teacher_temperature": 0.005,
+      "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm_h-hard-lr0.0001-ep16/e_vlm_h_seed1.pt",
+      "dev_mse": 0.09032245715710503,
+      "selected_blend": {
+        "k": 20,
+        "temperature": 1.0,
+        "mse_gripper_truth": 0.09032245715710503
+      },
+      "dev": {
+        "rank": {
+          "spearman_positive": 0.42786310881913525,
+          "cross_entropy": 7.714696746176236,
+          "kl_pq": 3.514752688341401,
+          "recall@1": 0.018433179723502304,
+          "recall@5": 0.059907834101382486,
+          "recall@20": 0.15253456221198158,
+          "ndcg@20": 0.1527710527915344,
+          "mrr": 0.0635355289121759,
+          "top1_arm6_mse": 0.1256019483032864,
+          "top20_arm6_mse": 0.1403389544434382,
+          "oracle_top1_arm6_mse": 0.03127906399173876,
+          "random_top1_arm6_mse": 0.28238294345288095,
+          "recovery": 0.6243670766299574,
+          "ranking_reference_tau": 0.01,
+          "score_temperature": 1.0
+        },
+        "blend_selection": {
+          "grid": [
+            {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12560194848744838
+            },
+            {
+              "k": 5,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.1233715210336681
+            },
+            {
+              "k": 5,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.12002138289150929
+            },
+            {
+              "k": 5,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11684491095457435
+            },
+            {
+              "k": 5,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.11077148178321831
+            },
+            {
+              "k": 5,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.10368236625771692
+            },
+            {
+              "k": 5,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.09778444513672023
+            },
+            {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09656092492396386
+            },
+            {
+              "k": 20,
+              "temperature": 0.01,
+              "mse_gripper_truth": 0.12337150338271388
+            },
+            {
+              "k": 20,
+              "temperature": 0.03,
+              "mse_gripper_truth": 0.1200059763315542
+            },
+            {
+              "k": 20,
+              "temperature": 0.05,
+              "mse_gripper_truth": 0.11673633147706364
+            },
+            {
+              "k": 20,
+              "temperature": 0.1,
+              "mse_gripper_truth": 0.10975535385216655
+            },
+            {
+              "k": 20,
+              "temperature": 0.2,
+              "mse_gripper_truth": 0.09976320324185935
+            },
+            {
+              "k": 20,
+              "temperature": 0.5,
+              "mse_gripper_truth": 0.09146492248622022
+            },
+            {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09032245715710503
+            }
+          ],
+          "per_k": {
+            "1": {
+              "k": 1,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.12560194848744838
+            },
+            "5": {
+              "k": 5,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09656092492396386
+            },
+            "20": {
+              "k": 20,
+              "temperature": 1.0,
+              "mse_gripper_truth": 0.09032245715710503
+            }
+          },
+          "selected": {
+            "k": 20,
+            "temperature": 1.0,
+            "mse_gripper_truth": 0.09032245715710503
+          }
+        },
+        "training_teacher_tau": 0.005,
+        "ranking_reference_tau": 0.01,
+        "logit_scale": 17.94876480102539
+      },
+      "tuning_dir": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/attempt-27-production/tuning/e_vlm_h-hard-lr0.0001-ep16"
+    }
+  }
+}
