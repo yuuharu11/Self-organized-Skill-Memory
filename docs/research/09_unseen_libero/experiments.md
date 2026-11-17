@@ -1324,7 +1324,9 @@ EX1 の下書き別学習から切り離し、保存した DCT3 運動単位を�
 
 ### 第1段（seed 1・中間結果）
 
-KEY2-F E と同じ LIBERO-40 メモリ側学習行・soft InfoNCE・候補抽選・同一エピソード除外・履歴破損・logit scale を用い、A（履歴＋状態、続いて VLM を別 softmax で読む）と B（A の VLM attention/FFN 残差に独立な tanh(g) を掛ける）を追加実装した。B の VLM ゲートは0初期化。KEYGRID の E-VLM+H から lr=1e-4、teacher τ=.002 を固定し、4/8/16 epoch を Dev top-1 腕 MSE で選択する。**第1段は実行中で、まとめた時点ではレポートはまだ出ていない**（A は 4/8/16 epoch、B は 4 epoch まで学習済み）。完了後の出力先は `.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/`（Git 管理外）。
+KEY2-F E と同じ LIBERO-40 メモリ側学習行・soft InfoNCE・候補抽選・同一エピソード除外・履歴破損・logit scale を用い、A（履歴＋状態、続いて VLM を別 softmax で読む）と B（A の VLM attention/FFN 残差に独立な tanh(g) を掛ける）を追加実装した。B の VLM ゲートは0初期化。KEYGRID の E-VLM+H から lr=1e-4、teacher τ=.002 を固定し、4/8/16 epoch を Dev top-1 腕 MSE で選択した。レポートは `.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/{report.md,results.json}`（Git 管理外）。
+
+Dev選択は A epoch 4（.13265）、B epoch 8（.13147）。未学習Eval top-1 arm MSE（全体／難しい行）は A .12616/.24113、B .12846/.26330。参照の E-VLM+H .12664/.24976、E-H .13086/.25194、履歴＋状態 MLP .10110/.18239、P5 .11041/.21284に対し、A/B は MLP・P5 を上回らず、B は E-VLM+H よりも悪い。学習済みEvalでは A .05238/.09206、B .05109/.09470で E-VLM+H .03654/.07026を上回る。seed 1の中間結果では改善を示さない。B の選択 gate tanh(g) は attention −.0810、FFN −.0012。
 
 これは各方式 seed 1 本の中間値であり、最終的な安定性・統計差の結論ではない。追加 seed、paired bootstrap、attention 内訳、VLM token 入れ替えは第2段に保留。コードは `key_split_xattn.py`、形状・初期ゲート非依存・既存 E の非変更テストは `tests/unseen_libero/test_key_split_xattn.py`。
 

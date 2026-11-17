@@ -1,0 +1,306 @@
+{
+  "gate": {
+    "n": 10,
+    "successes": 9,
+    "tasks": {
+      "PickPlaceSinkToCounter": {
+        "successes": 9,
+        "trials": 10,
+        "rate": 0.9,
+        "wilson95": [
+          0.5958499732047615,
+          0.9821237869049271
+        ]
+      }
+    },
+    "references": {
+      "pi05": {
+        "n_aligned": 10,
+        "successes": 9,
+        "mcnemar": {
+          "model_only": 1,
+          "reference_only": 1,
+          "p_two_sided": 1.0
+        }
+      },
+      "dist_p5": {
+        "n_aligned": 10,
+        "successes": 10,
+        "mcnemar": {
+          "model_only": 0,
+          "reference_only": 1,
+          "p_two_sided": 1.0
+        }
+      },
+      "dist_e_vlm_h": {
+        "n_aligned": 10,
+        "successes": 9,
+        "mcnemar": {
+          "model_only": 1,
+          "reference_only": 1,
+          "p_two_sided": 1.0
+        }
+      }
+    },
+    "query_diagnostics": {
+      "overall": {
+        "queries": 900,
+        "fallback_count": 40,
+        "fallback_rate": 0.044444444444444446,
+        "mean_t0_all": 0.36573242302550824,
+        "mean_t0_nonfallback": 0.36573242302550824,
+        "mean_server_seconds_per_query": 0.3206656760474046
+      },
+      "by_task": {
+        "PickPlaceSinkToCounter": {
+          "queries": 900,
+          "fallback_count": 40,
+          "fallback_rate": 0.044444444444444446,
+          "mean_t0_all": 0.36573242302550824,
+          "mean_t0_nonfallback": 0.36573242302550824,
+          "mean_server_seconds_per_query": 0.3206656760474046
+        }
+      }
+    }
+  },
+  "unseen2": {
+    "n": 60,
+    "successes": 11,
+    "tasks": {
+      "OpenCabinet": {
+        "successes": 1,
+        "trials": 30,
+        "rate": 0.03333333333333333,
+        "wilson95": [
+          0.005908590381612455,
+          0.16670390991409173
+        ]
+      },
+      "PickPlaceCounterToStove": {
+        "successes": 10,
+        "trials": 30,
+        "rate": 0.3333333333333333,
+        "wilson95": [
+          0.19230498083676134,
+          0.5121994835545616
+        ]
+      }
+    },
+    "references": {
+      "pi05": {
+        "n_aligned": 60,
+        "successes": 24,
+        "mcnemar": {
+          "model_only": 6,
+          "reference_only": 19,
+          "p_two_sided": 0.01463329792022705
+        }
+      },
+      "dist_e_vlm_h": {
+        "n_aligned": 60,
+        "successes": 26,
+        "mcnemar": {
+          "model_only": 5,
+          "reference_only": 20,
+          "p_two_sided": 0.004077315330505371
+        }
+      }
+    },
+    "query_diagnostics": {
+      "overall": {
+        "queries": 9472,
+        "fallback_count": 705,
+        "fallback_rate": 0.07442989864864864,
+        "mean_t0_all": 0.4139394041325451,
+        "mean_t0_nonfallback": 0.4139394041325451,
+        "mean_server_seconds_per_query": 0.2876992306118081
+      },
+      "by_task": {
+        "OpenCabinet": {
+          "queries": 6281,
+          "fallback_count": 427,
+          "fallback_rate": 0.06798280528578252,
+          "mean_t0_all": 0.4161560898058073,
+          "mean_t0_nonfallback": 0.4161560898058073,
+          "mean_server_seconds_per_query": 0.29011919460757735
+        },
+        "PickPlaceCounterToStove": {
+          "queries": 3191,
+          "fallback_count": 278,
+          "fallback_rate": 0.08712002507051081,
+          "mean_t0_all": 0.4094847258176543,
+          "mean_t0_nonfallback": 0.4094847258176543,
+          "mean_server_seconds_per_query": 0.2829358981588382
+        }
+      }
+    }
+  },
+  "six": {
+    "n": 180,
+    "successes": 72,
+    "tasks": {
+      "PickPlaceCounterToCabinet": {
+        "successes": 12,
+        "trials": 30,
+        "rate": 0.4,
+        "wilson95": [
+          0.24590628116801852,
+          0.5767963974667752
+        ]
+      },
+      "PickPlaceSinkToCounter": {
+        "successes": 23,
+        "trials": 30,
+        "rate": 0.7666666666666667,
+        "wilson95": [
+          0.5907167384187784,
+          0.8820761185551049
+        ]
+      },
+      "OpenDrawer": {
+        "successes": 20,
+        "trials": 30,
+        "rate": 0.6666666666666666,
+        "wilson95": [
+          0.4878005164454384,
+          0.8076950191632386
+        ]
+      },
+      "CloseFridge": {
+        "successes": 7,
+        "trials": 30,
+        "rate": 0.23333333333333334,
+        "wilson95": [
+          0.11792388144489496,
+          0.40928326158122164
+        ]
+      },
+      "TurnOnSinkFaucet": {
+        "successes": 9,
+        "trials": 30,
+        "rate": 0.3,
+        "wilson95": [
+          0.16664748268243793,
+          0.47875787458714947
+        ]
+      },
+      "TurnOffStove": {
+        "successes": 1,
+        "trials": 30,
+        "rate": 0.03333333333333333,
+        "wilson95": [
+          0.005908590381612455,
+          0.16670390991409173
+        ]
+      }
+    },
+    "references": {
+      "pi05": {
+        "n_aligned": 180,
+        "successes": 95,
+        "mcnemar": {
+          "model_only": 13,
+          "reference_only": 36,
+          "p_two_sided": 0.001402688503695515
+        }
+      },
+      "dist_e_vlm_h": {
+        "n_aligned": 180,
+        "successes": 93,
+        "mcnemar": {
+          "model_only": 13,
+          "reference_only": 34,
+          "p_two_sided": 0.0030876764615186394
+        }
+      }
+    },
+    "query_diagnostics": {
+      "overall": {
+        "queries": 22421,
+        "fallback_count": 840,
+        "fallback_rate": 0.03746487667811427,
+        "mean_t0_all": 0.291247115879015,
+        "mean_t0_nonfallback": 0.291247115879015,
+        "mean_server_seconds_per_query": 0.28232069314045377
+      },
+      "by_task": {
+        "PickPlaceCounterToCabinet": {
+          "queries": 3713,
+          "fallback_count": 309,
+          "fallback_rate": 0.08322111500134662,
+          "mean_t0_all": 0.3589556722975085,
+          "mean_t0_nonfallback": 0.3589556722975085,
+          "mean_server_seconds_per_query": 0.2851966696929557
+        },
+        "PickPlaceSinkToCounter": {
+          "queries": 3015,
+          "fallback_count": 108,
+          "fallback_rate": 0.03582089552238806,
+          "mean_t0_all": 0.3550712589929306,
+          "mean_t0_nonfallback": 0.3550712589929306,
+          "mean_server_seconds_per_query": 0.2851451069771453
+        },
+        "OpenDrawer": {
+          "queries": 3011,
+          "fallback_count": 97,
+          "fallback_rate": 0.0322152108933909,
+          "mean_t0_all": 0.3352662763451581,
+          "mean_t0_nonfallback": 0.3352662763451581,
+          "mean_server_seconds_per_query": 0.27938307833504294
+        },
+        "CloseFridge": {
+          "queries": 4992,
+          "fallback_count": 296,
+          "fallback_rate": 0.05929487179487179,
+          "mean_t0_all": 0.3021289258687622,
+          "mean_t0_nonfallback": 0.3021289258687622,
+          "mean_server_seconds_per_query": 0.27075025143522696
+        },
+        "TurnOnSinkFaucet": {
+          "queries": 3264,
+          "fallback_count": 10,
+          "fallback_rate": 0.0030637254901960784,
+          "mean_t0_all": 0.202072860023949,
+          "mean_t0_nonfallback": 0.202072860023949,
+          "mean_server_seconds_per_query": 0.28449692348230576
+        },
+        "TurnOffStove": {
+          "queries": 4426,
+          "fallback_count": 20,
+          "fallback_rate": 0.004518752824220515,
+          "mean_t0_all": 0.2219741937640549,
+          "mean_t0_nonfallback": 0.2219741937640549,
+          "mean_server_seconds_per_query": 0.29142766979628637
+        }
+      }
+    },
+    "runtime": {
+      "wall_seconds": 6567.735334,
+      "parallel_workers": 12,
+      "wall_seconds_per_trial_throughput": 36.48741852222222,
+      "created_at_utc": "2026-11-17T08:00:32.735334+00:00"
+    }
+  },
+  "grip_rcx5_eval_transition": {
+    "n": 2151,
+    "sign_accuracy_first10": 0.9730822873082288,
+    "transition_first10": {
+      "true_switches": 88,
+      "pred_switches": 106,
+      "switch_recall_within_2": 0.2954545454545454,
+      "mean_nearest_time_error_steps": 6.170454545454546,
+      "windows_with_switch": 88
+    },
+    "all50": {
+      "sign_accuracy": 0.9569037656903766,
+      "transition": {
+        "true_switches": 465,
+        "pred_switches": 583,
+        "switch_recall_within_2": 0.2709677419354839,
+        "mean_nearest_time_error_steps": 11.264516129032257,
+        "windows_with_switch": 465
+      }
+    },
+    "source": "RCX5 conf-fix/attempt2 fixed MLP checkpoint; Eval labels used only for scoring"
+  }
+}

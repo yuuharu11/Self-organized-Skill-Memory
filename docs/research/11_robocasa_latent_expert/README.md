@@ -93,23 +93,9 @@
 - 行ごと最良の t0（上限）は、同じ seed で選んで測ると .394（E-VLM+H）。別の seed で測ると .444 になる。上限の見かけの余地の約3分の1は、偶然の当たり。
 - MSE は平均の予測を有利に扱う。そのため、オフラインの誤差で t0 や条件を比べるときは、複数回の生成を平均するか、seed をまたいで評価する必要がある。
 
-### 閉ループ（未完了：GPU ドライバーが停止）
+### 最初の閉ループの試み（中止）
 
-11 のキー（E-VLM+H）と Expert で、RoboCasa の6タスク×50試行を回す準備をした。seed は 10 のベースライン（173/300）と同じ。サーバーは `skill_moe/skillnet/examples/robocasa/serve_latent_policy.py`、実行スクリプトは [evidence/run_closed_loop.sh](evidence/run_closed_loop.sh)。
-- 1回の推論は約0.26秒。
-- 手先6軸は Expert の出力を使う。グリッパー、台車、モードは、同じ観測とノイズで生成した通常 π0.5 の出力を使う。
-
-比べる条件は3つ。
-- t0 固定 .1（Dev で選んだ値、ほぼ下書きのまま）。
-- 信頼度で t0 を選ぶ（上の Dev 当てはめ）。
-- t0 固定 .5。
-
-**経過：**
-- 確認用の小さな実行（OpenDrawer×2、シミュレーター2個）は動き、1/2 成功した。
-- 本番では、3条件×24個＝72個のシミュレーターを同時に起動した。描画（EGL）はすべて GPU 0 を使う設定だった。
-- 起動直後に NVIDIA ドライバーの中で処理が止まった。推論は1回も行われず、試行の結果はない。
-- 止まったプロセスは kill できない状態（D state）で残っている。解消には、ホストの再起動か GPU のリセットが必要。
-- 再起動後は、シミュレーターを少しずつ増やし（1条件あたり8〜12個）、描画に使う GPU を分散させて回し直す。
+2026-11-16 に別マシンで3条件×24シミュレーターを同時に起動したところ、描画がすべて GPU 0 に集中して NVIDIA ドライバーが止まり、試行の結果は出なかった。下の「閉ループ」は、このマシンで作り直してシミュレーター数を絞って回したもの。
 
 ### まとめ
 
@@ -130,7 +116,7 @@
 3. Expert が出発点 (1−t0)·下書き＋t0·ε から10ステップで積分する。
 4. 腕6軸は Expert の出力、グリッパー・台車・モードは π0.5 の出力を使う。
 
-seed は `7 + task_index×50 + trial`、replan 5、split pretrain、上限は各タスクの horizon。π0.5 は同じ seed の記録（6タスクは `baseline-01/v6-nosubtask`）と対にし、McNemar（両側 exact）で比べた。サーバー1台では問い合わせ（約 .35 秒）が律速だったため、途中からサーバー2台・各シミュレーター8台で回した。
+seed は `7 + task_index×50 + trial`、replan 5、split pretrain、上限は各タスクの horizon。π0.5 は同じ seed の記録（6タスクは `baseline-01/v6-nosubtask`）と対にし、McNemar（両側 exact）で比べた。サーバー1台では問い合わせ（約 .35 秒）が律速だったため、途中からサーバー2台・各シミュレーター8台で回した（[evidence/run_closed_loop.sh](evidence/run_closed_loop.sh)）。
 
 ### 6タスク（メモリにあるタスク、trial 0–29）
 
@@ -185,7 +171,7 @@ seed は `7 + task_index×50 + trial`、replan 5、split pretrain、上限は各
 - t0 は .1 に張り付かず広がった（Eval で平均 .40、範囲 .10〜.70）。
 - どちらが効いたか（グリッパーか t0 か）は、まだ切り分けていない。
 
-出力：`$OUT/latent-heads/`（`report.md`、`closed_summary.json`、`closed/{gate,unseen2,six}/`）。
+根拠：[evidence/latent_heads_report.md](evidence/latent_heads_report.md)、[evidence/latent_heads_closed_summary.json](evidence/latent_heads_closed_summary.json)、[evidence/latent_heads_selection.json](evidence/latent_heads_selection.json)。π0.5 を使わない信号の分析は [evidence/confidence_signals_report.md](evidence/confidence_signals_report.md)。出力：`$OUT/latent-heads/`（`closed/{gate,unseen2,six}/`）。
 
 ## ノイズの強さ t0 の決め方と、1回の問い合わせで回す回数
 
@@ -197,7 +183,7 @@ seed は `7 + task_index×50 + trial`、replan 5、split pretrain、上限は各
 | LIBERO EX1 | 固定 .3 | .30 | π0.5 10 ＋ Expert 10 |
 | LIBERO EX2 | 信頼度 MLP（π0.5 と下書きの差、キーの点差など）で誤差を予測し clip(c·√誤差, .05, .6) | 平均 .13〜.18（p10–p90 .07〜.24） | π0.5 10 ＋ Expert 10 |
 | RoboCasa 閉ループ（上の表） | π0.5 との距離から、Dev で当てはめた選択器で格子 .1〜.9 から選ぶ | 平均 P0 .61・P5 .49・E-VLM+H .24 | π0.5 10 ＋ Expert 10 |
-| RoboCasa 潜在トークンのヘッド（RCX6） | 潜在トークンで下書き誤差を予測し、Expert 学習時の対応（誤差の分位→[.1, .9]）で t0。閾値を超えたら π0.5 | Eval で中央値 .40、平均 .40、範囲 .10〜.70（π0.5 への切り替え約20%） | Expert 10（切り替え時だけ π0.5 10） |
+| RoboCasa 潜在トークンのヘッド（RCX6） | 潜在トークンで下書き誤差を予測し、Expert 学習時の対応（誤差の分位→[.1, .9]）で t0。閾値を超えたら π0.5 | Eval で中央値 .40、平均 .40、範囲 .10〜.70（π0.5 への切り替えは Dev で20%、閉ループでは3.8〜7.4%） | Expert 10（切り替え時だけ π0.5 10） |
 
 RoboCasa の閉ループでは、VLM 平均の2キーは t0 が .1〜.3 と .7〜.9 に二分された（中間は数%）。TurnOnSinkFaucet はどのキーでも t0 が最も小さく（.14〜.37）、ほぼ下書きのまま実行していたのに、スキル側が負けたタスクだった。
 
@@ -222,6 +208,22 @@ python $M/latent_expert.py eval --split dev  --experts <学習した重み> --so
 python $M/latent_expert.py eval --split eval --experts <学習した重み> --sources e_vlm_h p5
 python $M/latent_expert.py report
 ```
+
+閉ループ（サーバーは `skill_moe/skillnet/examples/robocasa/serve_latent_policy.py`、`--t0-policy` で t0 の決め方を切り替える）：
+
+```bash
+# t0 は π0.5 との距離（6タスク／2タスクの表）。レーン名・サーバーのCPU・クライアントのCPU・ポート・「モード:試行数」
+bash docs/research/11_robocasa_latent_expert/evidence/run_closed_loop.sh A 0-7 8-23 8810 p0:30 p5:30
+OUT=$SKILLNET_STATE_DIR/outputs/robocasa-memory/latent-skill-01/unseen2/dist \
+TASKS="OpenCabinet PickPlaceCounterToStove" INDICES="6 7" \
+bash docs/research/11_robocasa_latent_expert/evidence/run_closed_loop.sh B 24-31 32-47 8820 e_vlm_h:30
+
+# π0.5 を使わない版（RCX6）：ヘッドを学習してから閉ループ
+python $M/latent_heads.py all                       # extract → fit → evaluate → dev_thresholds → report
+bash docs/research/11_robocasa_latent_expert/evidence/run_latent_heads.sh six 8830 "PickPlaceCounterToCabinet PickPlaceSinkToCounter OpenDrawer CloseFridge TurnOnSinkFaucet TurnOffStove" 30 "0 1 2 3 4 5"
+```
+
+`confidence_signal_audit.py` は π0.5 を使わない信号の分析（RCX3-A）。`confidence_closed_loop.py` と `--t0-policy conf` は、信頼度で t0 を決める途中の版（最初はグリッパー等を下書きから取って壊れた版、その後に直したが RCX6 へ切り替えて止めた版）で、閉ループの結果は使っていない。`confidence_gripper.py` は観測からグリッパーの切り替えを当てる小さな MLP（RCX5、`--gripper-checkpoint`）。
 
 ## このマシンでの準備（記録）
 
