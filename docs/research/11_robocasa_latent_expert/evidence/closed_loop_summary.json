@@ -63,6 +63,21 @@
         "only_cond": 19,
         "only_pi05": 21,
         "mcnemar_p": 0.8746293123804207
+      },
+      "e_vlm_h_latent_heads": {
+        "per_task": {
+          "PickPlaceCounterToCabinet": 12,
+          "PickPlaceSinkToCounter": 23,
+          "OpenDrawer": 20,
+          "CloseFridge": 7,
+          "TurnOnSinkFaucet": 9,
+          "TurnOffStove": 1
+        },
+        "total": 72,
+        "only_cond": 13,
+        "only_pi05": 36,
+        "mcnemar_p": 0.0014,
+        "fallback_rate_closed_loop": 0.0375
       }
     }
   },
@@ -109,6 +124,14 @@
         "only_cond": 12,
         "only_pi05": 10,
         "mcnemar_p": 0.8318119049072266
+      },
+      "e_vlm_h_latent_heads": {
+        "per_task": {
+          "OpenCabinet": 1,
+          "PickPlaceCounterToStove": 10
+        },
+        "total": 11,
+        "fallback_rate_closed_loop": 0.0744
       }
     },
     "screened_pi05_10_trials": {
