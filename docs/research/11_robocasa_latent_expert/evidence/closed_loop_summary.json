@@ -1,0 +1,119 @@
+{
+  "six_tasks_trials_0_29": {
+    "seed_rule": "7+task_index*50+trial",
+    "task_index": {
+      "PickPlaceCounterToCabinet": 0,
+      "PickPlaceSinkToCounter": 1,
+      "OpenDrawer": 2,
+      "CloseFridge": 3,
+      "TurnOnSinkFaucet": 4,
+      "TurnOffStove": 5
+    },
+    "trials_per_task": 30,
+    "results": {
+      "pi05": {
+        "per_task": {
+          "PickPlaceCounterToCabinet": 15,
+          "PickPlaceSinkToCounter": 28,
+          "OpenDrawer": 19,
+          "CloseFridge": 11,
+          "TurnOnSinkFaucet": 20,
+          "TurnOffStove": 2
+        },
+        "total": 95
+      },
+      "p0": {
+        "per_task": {
+          "PickPlaceCounterToCabinet": 15,
+          "PickPlaceSinkToCounter": 27,
+          "OpenDrawer": 22,
+          "CloseFridge": 21,
+          "TurnOnSinkFaucet": 9,
+          "TurnOffStove": 1
+        },
+        "total": 95,
+        "only_cond": 27,
+        "only_pi05": 27,
+        "mcnemar_p": 1
+      },
+      "p5": {
+        "per_task": {
+          "PickPlaceCounterToCabinet": 10,
+          "PickPlaceSinkToCounter": 24,
+          "OpenDrawer": 24,
+          "CloseFridge": 23,
+          "TurnOnSinkFaucet": 10,
+          "TurnOffStove": 1
+        },
+        "total": 92,
+        "only_cond": 22,
+        "only_pi05": 25,
+        "mcnemar_p": 0.7708669945730264
+      },
+      "e_vlm_h": {
+        "per_task": {
+          "PickPlaceCounterToCabinet": 14,
+          "PickPlaceSinkToCounter": 26,
+          "OpenDrawer": 23,
+          "CloseFridge": 12,
+          "TurnOnSinkFaucet": 16,
+          "TurnOffStove": 2
+        },
+        "total": 93,
+        "only_cond": 19,
+        "only_pi05": 21,
+        "mcnemar_p": 0.8746293123804207
+      }
+    }
+  },
+  "two_unseen_tasks_trials_0_29": {
+    "task_index": {
+      "OpenCabinet": 6,
+      "PickPlaceCounterToStove": 7
+    },
+    "trials_per_task": 30,
+    "results": {
+      "pi05": {
+        "per_task": {
+          "OpenCabinet": 10,
+          "PickPlaceCounterToStove": 14
+        },
+        "total": 24
+      },
+      "p0": {
+        "per_task": {
+          "OpenCabinet": 14,
+          "PickPlaceCounterToStove": 19
+        },
+        "total": 33,
+        "only_cond": 15,
+        "only_pi05": 6,
+        "mcnemar_p": 0.0783538818359375
+      },
+      "p5": {
+        "per_task": {
+          "OpenCabinet": 16,
+          "PickPlaceCounterToStove": 18
+        },
+        "total": 34,
+        "only_cond": 17,
+        "only_pi05": 7,
+        "mcnemar_p": 0.06391465663909912
+      },
+      "e_vlm_h": {
+        "per_task": {
+          "OpenCabinet": 10,
+          "PickPlaceCounterToStove": 16
+        },
+        "total": 26,
+        "only_cond": 12,
+        "only_pi05": 10,
+        "mcnemar_p": 0.8318119049072266
+      }
+    },
+    "screened_pi05_10_trials": {
+      "TurnOnMicrowave": 2,
+      "CloseToasterOvenDoor": 2
+    }
+  }
+}
