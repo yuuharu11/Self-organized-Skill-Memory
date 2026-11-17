@@ -32,7 +32,8 @@ def test_pi05_control_uses_prefix_mean_and_two_current_gripper_state_values():
     tokens = np.arange(2 * 3 * 4, dtype=np.float16).reshape(2, 3, 4)
     groups = np.array([[0, 1, -1], [0, -1, -1]], np.int8)
     part = {'tokens': tokens, 'groups': groups, 'state': np.arange(16, dtype=np.float32).reshape(2, 8),
-            'actions': np.zeros((2, 10, 7), np.float32), 'task': np.array([1, 2])}
+            'actions': np.zeros((2, 10, 7), np.float32), 'task': np.array([1, 2]),
+            'history': np.zeros((2, 10, 7), np.float32), 'history_mask': np.ones((2, 10), bool)}
     got = gh1.pooled_pi05_features({'train': part})['train']
     np.testing.assert_allclose(got['latent_tokens'][0], tokens[0, :2].astype(np.float32).mean(0))
     np.testing.assert_array_equal(got['gripper_state'], part['state'][:, 6:8])
@@ -131,12 +132,14 @@ def test_key2_saved_prediction_alignment_uses_target_actions_field():
 
 
 def test_l90x_augmentation_concatenates_only_after_manifest_gate():
+    hist = lambda n: {'history_action': np.zeros((n, 10), np.float32), 'history_valid': np.ones((n, 10), bool)}
     train = {'latent_tokens': np.zeros((2, 5, 4), np.float32),
-             'gripper_state': np.zeros((2, 2), np.float32), 'target': -np.ones((2, 10), np.float32)}
+             'gripper_state': np.zeros((2, 2), np.float32), 'target': -np.ones((2, 10), np.float32), **hist(2)}
     extra = {'latent_tokens': np.ones((1, 5, 4), np.float32),
-             'gripper_state': np.ones((1, 2), np.float32), 'target': np.ones((1, 10), np.float32)}
+             'gripper_state': np.ones((1, 2), np.float32), 'target': np.ones((1, 10), np.float32), **hist(1)}
     got = gh1.append_l90x_training_data(train, extra, {'tasks': [1, 2]})
     assert got['latent_tokens'].shape == (3, 5, 4)
+    assert got['history_action'].shape == (3, 10)
     with pytest.raises(AssertionError):
         gh1.append_l90x_training_data(train, extra, {'tasks': [6]})
 

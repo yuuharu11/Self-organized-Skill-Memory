@@ -384,7 +384,7 @@ class ExactFeatureStore:
         # Exact duplicates are checked on demand in get(); the very large cache
         # arrays remain memory-mapped instead of being copied into RAM.
 
-    def get(self, keys, *, domain='libero40'):
+    def get(self, keys, *, domain='libero40', progress_callback=None, progress_name='vlm'):
         out=np.zeros((len(keys),532,2048),np.float16);groups=np.full((len(keys),532),-1,np.int8)
         for oi,key0 in enumerate(keys):
             key=tuple(map(int,key0)); found=[]
@@ -397,6 +397,8 @@ class ExactFeatureStore:
             if any(not np.array_equal(ref_t,t) or not np.array_equal(ref_g,g) for t,g in found[1:]):
                 raise ValueError(f"duplicate exact token caches disagree for {key}")
             n=min(len(ref_t),532);out[oi,:n]=ref_t[:n];groups[oi,:n]=ref_g[:n]
+            if progress_callback is not None and ((oi + 1) % 128 == 0 or oi + 1 == len(keys)):
+                progress_callback('feature_join', source=progress_name, completed=oi + 1, total=len(keys))
         return out,groups
 
     def pooled(self, keys, *, domain='libero40'):
@@ -420,7 +422,7 @@ class ExactVJEPAFeatureStore:
                 raise ValueError(f"bad V-JEPA arrays in {path}")
             self.maps[domain].append((stable_row_map(keys),base,wrist))
 
-    def get(self, keys, *, domain):
+    def get(self, keys, *, domain, progress_callback=None, progress_name='vjepa'):
         if domain not in self.maps:raise ValueError(f"unknown V-JEPA domain {domain}")
         result=np.empty((len(keys),128,1024),np.float16)
         mapping_sets=self.maps[domain]
@@ -434,6 +436,8 @@ class ExactVJEPAFeatureStore:
             if any(not np.array_equal(b,x) or not np.array_equal(w,y) for x,y in found[1:]):
                 raise ValueError(f"overlapping V-JEPA cache rows disagree: {domain}:{key}")
             result[i,:64]=b;result[i,64:]=w
+            if progress_callback is not None and ((i + 1) % 128 == 0 or i + 1 == len(keys)):
+                progress_callback('feature_join', source=progress_name, completed=i + 1, total=len(keys))
         groups=np.tile(np.r_[np.zeros(64,np.int8),np.ones(64,np.int8)],(len(keys),1))
         return result,groups
 
@@ -754,11 +758,18 @@ def _last10(history40, mask40):
     return out,mask
 
 
-def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vjepa_eval_cache):
+def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vjepa_eval_cache,
+                        progress_callback=None):
     """Create memory anchors, fixed learned holdout, fixed unseen and Dev rows."""
+    def progress(stage, **fields):
+        if progress_callback is not None:
+            progress_callback(stage, **fields)
+
     here=Path(__file__).resolve().parent
     sys.path[:0]=[str(here),str(here.parent/'pi05_memory')]
+    progress('key2_load_rows_start')
     rows=_load_key2_rows(run_root)
+    progress('key2_load_rows_complete', rows=int(len(rows['task'])))
     outroot=Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
     selection=json.loads((outroot/'compress-seen-cuts-01/production-control/evaluation-selection.json').read_text())
     ref=np.load(outroot/'pi05-reference-01/selection.npz',allow_pickle=False)
@@ -768,8 +779,36 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
     import gripper_split as grip
     import motion_core_eval as motion
     memory_ids=np.flatnonzero(np.asarray(rows['memory'],bool))
+    progress('variable_pool_start', memory_rows=int(len(memory_ids)))
     pool,meta,raw_pool=grip._variable_pool(rows,memory_ids)
     if len(meta)!=4516: raise AssertionError(f"expected CMP3 pool 4,516, got {len(meta)}")
+    progress('variable_pool_complete', units=int(len(meta)))
+    # These anchors repeatedly ask for history from the same demonstration.
+    # The generic helper scans every row and sorts the matching episode on
+    # every call; pre-index episode traces once so production does not perform
+    # thousands of redundant full-row scans on CPU.
+    progress('episode_trace_index_start')
+    grouped_rows={}
+    for row_id,(task_id,episode_id) in enumerate(zip(rows['task'],rows['episode'],strict=True)):
+        grouped_rows.setdefault((int(task_id),int(episode_id)),[]).append(row_id)
+    episode_traces={}
+    for pair,ids in grouped_rows.items():
+        ids=np.asarray(ids,np.int64)
+        ids=ids[np.argsort(rows['frame'][ids])]
+        trace=np.asarray(rows['actions'][ids,:,:7],np.float32).reshape(-1,7)
+        episode_traces[pair]=(ids,trace,int(rows['frame'][ids[0]]))
+    def episode_history(task_id,episode_id,frame):
+        pair=(int(task_id),int(episode_id))
+        if pair not in episode_traces: raise KeyError(pair)
+        ids,trace,base=episode_traces[pair]
+        f=int(frame)-base
+        if not 0<=f<=len(trace): raise ValueError(f'frame outside episode trace: {pair + (int(frame),)}')
+        hist=np.zeros((10,7),np.float32);mask=np.zeros(10,bool)
+        lo=max(0,f-10);n=f-lo
+        if n: hist[-n:]=trace[lo:f];mask[-n:]=True
+        state=np.asarray(rows['state'][ids[min(max(f//10,0),len(ids)-1)],:8],np.float32)
+        return hist,mask,state,trace[f:f+10]
+    progress('episode_trace_index_complete', episodes=len(episode_traces))
     trace_map=grip._traces(rows,memory_ids);base_frames={}
     for (t,e),ids in trace_map.items():base_frames[(int(t),int(e))]=int(rows['frame'][ids[0]])
     coeff=[];mags=[];lengths=[];source=[];values=[];natural=[];unit_keys=[];starts_local=[];rowids=[];startvel=[]
@@ -789,6 +828,8 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
         epids=trace_map[(int(t),int(e))]
         rowids.append(int(epids[min(len(epids)-1,int(start)//10)]))
         startvel.append(grip._to_physical(np.asarray(raw_pool[i],np.float32)[:1,:6])[0,:3])
+        if (i + 1) % 512 == 0 or i + 1 == len(meta):
+            progress('memory_bank_encode', completed=i + 1, total=len(meta))
     natural_width=max(map(len,natural));natural_actions=np.zeros((len(natural),natural_width,7),np.float32)
     for i,a in enumerate(natural):natural_actions[i,:len(a)]=a
     bank={'coefficients':np.asarray(coeff,np.float32),'magnitude':np.asarray(mags,np.float32),
@@ -800,15 +841,21 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
     keys=unit_keys
     feats=ExactFeatureStore(run_root,missing_root,seen_stride5,unseen_stride5)
     vjepa=ExactVJEPAFeatureStore(Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero/key-shared-01/vjepa'),vjepa_eval_cache)
-    bt,bg=feats.get(keys)
+    progress('memory_vlm_features_start', rows=len(keys))
+    bt,bg=feats.get(keys, progress_callback=progress, progress_name='memory_vlm')
+    progress('memory_vlm_features_complete', rows=len(keys))
     hist=[];hmask=[]
     exact_states=_exact_start_states(keys,rows,run_root,missing_root)
+    progress('memory_state_features_complete', rows=len(keys))
     for task,episode,frame in keys:
-        h,m,_,_=_episode_history(rows,task,episode,frame);hist.append(h);hmask.append(m)
+        h,m,_,_=episode_history(task,episode,frame);hist.append(h);hmask.append(m)
     bank_input={'key':np.asarray(keys,np.int32),'history':np.asarray(hist,np.float32),
                 'history_mask':np.asarray(hmask,bool),'state':exact_states,
                 'tokens':bt,'groups':bg}
-    bank_input['vjepa_tokens'],bank_input['vjepa_groups']=vjepa.get(keys,domain='libero40')
+    progress('memory_vjepa_features_start', rows=len(keys))
+    bank_input['vjepa_tokens'],bank_input['vjepa_groups']=vjepa.get(
+        keys,domain='libero40',progress_callback=progress,progress_name='memory_vjepa')
+    progress('memory_vjepa_features_complete', rows=len(keys))
 
     # Training anchors are memory-demo unit starts, excluding every fixed learned-eval episode.
     train_ids=np.asarray([i for i,(t,e,_,_) in enumerate(bank['source']) if (int(t),int(e)) not in pairs],np.int64)
@@ -816,11 +863,14 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
         raise AssertionError('fixed learned-evaluation episodes leaked into memory-query training')
     train={k:v[train_ids] for k,v in bank_input.items()}
     train_actions=[];train_task=[];train_ep=[]
-    for t,e,s,l in bank['source'][train_ids]:
-        h,m,st,future=_episode_history(rows,int(t),int(e),int(s))
+    progress('memory_train_history_start', rows=int(len(train_ids)))
+    for i,(t,e,s,l) in enumerate(bank['source'][train_ids]):
+        h,m,st,future=episode_history(t,e,s)
         arr=np.zeros((10,7),np.float32);arr[:min(10,len(future))]=future[:10]
         if len(future)<10 and len(future):arr[len(future):]=future[-1]
         train_actions.append(arr);train_task.append(t);train_ep.append(e)
+        if (i + 1) % 512 == 0 or i + 1 == len(train_ids):
+            progress('memory_train_history', completed=i + 1, total=len(train_ids))
     train.update(actions=np.asarray(train_actions),task=np.asarray(train_task),episode=np.asarray(train_ep))
     if len(train_ids)<1000: raise AssertionError('unexpectedly small memory-only fit pool')
     # Fixed learned-evaluation demos are excluded from both training queries
@@ -840,17 +890,21 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
     if len(fixed_rows)!=621 or not np.array_equal(np.sort(learned_ids),np.sort(fixed_rows)):
         raise AssertionError('PI0REF learned rows differ from CMP3 fixed evaluation-selection.json')
     learned_keys=[(int(rows['task'][i]),int(rows['episode'][i]),int(rows['frame'][i])) for i in learned_ids]
+    progress('learned_query_build_start', rows=len(learned_ids))
     learned_hist=[];learned_masks=[];learned_state=[];learned_action=[]
     for i,k in zip(learned_ids,learned_keys,strict=True):
-        h,m,s,future=_episode_history(rows,*k);learned_hist.append(h);learned_masks.append(m);learned_state.append(np.asarray(rows['state'][i,:8],np.float32));learned_action.append(np.asarray(rows['actions'][i,:10,:7],np.float32))
+        h,m,s,future=episode_history(*k);learned_hist.append(h);learned_masks.append(m);learned_state.append(np.asarray(rows['state'][i,:8],np.float32));learned_action.append(np.asarray(rows['actions'][i,:10,:7],np.float32))
     learned={'key':np.asarray(learned_keys,np.int32),'history':np.asarray(learned_hist),
         'history_mask':np.asarray(learned_masks),'state':np.asarray(learned_state),'actions':np.asarray(learned_action),
         'task':np.asarray(ref['learned_task']),'episode':np.asarray(ref['learned_episode']),
         'hard':np.asarray(ref['learned_hard']), 'row':learned_ids}
+    progress('learned_query_build_complete', rows=len(learned_ids))
 
     # Fixed unseen 619 rows and PI0REF ordering are joined by their recorded IDs, never resampled.
     from seg_context_run import build_unseen_queries
+    progress('unseen_query_build_start')
     unseen_store,unseen_all=build_unseen_queries(unseen_stride5,split='eval',official_stride10=True)
+    progress('unseen_query_build_complete', rows=len(unseen_all['key']))
     # Use the selected task/episode/frame arrays in selection.npz as identity keys.
     keys_u=list(zip(ref['unseen_task'].tolist(),ref['unseen_episode'].tolist(),ref['unseen_frame'].tolist()))
     # unseen query keys contain row indexes; the source cache is the same fixed
@@ -879,7 +933,9 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
         'actions':np.asarray(ua['actions'][ix,:10,:7],np.float32),'task':np.asarray(ref['unseen_task']),
         'episode':np.asarray(ref['unseen_episode'],np.int64)+1_000_000,'hard':np.asarray(ref['unseen_hard']),'row':ix}
     # Dev-only setting selection uses the already-tokenized 217 fixed Dev rows, not Eval labels.
+    progress('dev_query_build_start')
     dev_store,dev_all=build_unseen_queries(unseen_stride5,split='dev')
+    progress('dev_query_build_complete', rows=len(dev_all['key']))
     devix=np.flatnonzero(np.asarray(ua['is_dev'],bool));devkeys=[(int(ua['task'][i]),int(ua['episode'][i]),int(ua['frame'][i])) for i in devix]
     dev_by_identity={}
     for j,rowid in enumerate(dev_all['key'][:,0]):
@@ -895,8 +951,15 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
         'task':np.asarray(ua['task'][devix]),'episode':np.asarray(ua['episode'][devix],np.int64)+2_000_000,
         'hard':np.zeros(len(devix),bool),'row':devix}
     for name, split in [('learned',learned),('unseen',unseen),('dev',dev)]:
-        split['tokens'],split['groups']=feats.get(split['key'],domain='libero90' if name!='learned' else 'libero40')
-        split['vjepa_tokens'],split['vjepa_groups']=vjepa.get(split['key'],domain='libero90' if name!='learned' else 'libero40')
+        domain='libero90' if name!='learned' else 'libero40'
+        progress('eval_vlm_features_start', split=name, rows=len(split['key']))
+        split['tokens'],split['groups']=feats.get(split['key'],domain=domain,
+                                                   progress_callback=progress,progress_name=f'{name}_vlm')
+        progress('eval_vlm_features_complete', split=name, rows=len(split['key']))
+        progress('eval_vjepa_features_start', split=name, rows=len(split['key']))
+        split['vjepa_tokens'],split['vjepa_groups']=vjepa.get(split['key'],domain=domain,
+                                                               progress_callback=progress,progress_name=f'{name}_vjepa')
+        progress('eval_vjepa_features_complete', split=name, rows=len(split['key']))
     _assert_eval_candidates_disjoint(learned,bank)
     _assert_eval_candidates_disjoint(unseen,bank)
     _assert_eval_candidates_disjoint(dev,bank)
@@ -908,6 +971,8 @@ def _build_key2_queries(run_root, missing_root, seen_stride5, unseen_stride5, vj
             raise AssertionError(f'{label} fixed target rows do not match PI0REF selection ordering')
         split['pi05']=np.asarray(pred['actions'],np.float32)
         split['hard']=np.asarray(pred['hard'],bool)
+    progress('key2_queries_complete', bank_rows=len(bank['length']), train_rows=len(train['key']),
+             learned_rows=len(learned['key']), unseen_rows=len(unseen['key']), dev_rows=len(dev['key']))
     return bank,bank_input,fit_bank,fit_bank_input,train,learned,unseen,dev
 
 

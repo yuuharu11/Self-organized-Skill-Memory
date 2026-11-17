@@ -229,6 +229,73 @@ R-so3（回転も消す型）を P5 で選ぶと .199 / .317。U でも順位は
 - **τ はテストで選んだ値**（同じ100試行で4条件を比べた最良）。厳密には保留タスクか Dev で τ を決めてから1回だけ評価し直す必要がある。
 - 推論時の入力は画像、指示文、状態、自分の実行行動、π0.5 の出力、LIBERO-40 のメモリだけ。π0.5 の出力を向きと大きさ・グリッパーに使っているので、メモリ単独の方策ではない。
 
+### オフライン MSE（UM1）
+
+保存済みプール別P5履歴クエリとMemorySelector.pose_toを使い、型をπ0.5にProcrustes（回転＋単一スケール）して腕に使う。グリッパーはπ0.5。設定の再選択・再学習は行っていない。学習済みはメモリ外LIBERO-40の621窓（難125）、未学習はLIBERO-90 Evalの619窓（難134）。
+
+以下は10ステップ全体の全体 / 難。active7は二乗誤差和÷70、腕は6軸二乗誤差和÷70。先頭5・続き5〜9の値、対応するπ0.5との差のepisode bootstrap 95%区間は[本番レポート](evidence/um1/report.md)に保存した。
+
+|推論条件|学習済み active7|未学習 active7|学習済み 腕|未学習 腕|既存閉ループ L90/100・L10/50|
+|---|---:|---:|---:|---:|---:|
+|通常π0.5|0.0064 / 0.0092|0.1408 / 0.2880|0.0022 / 0.0037|0.1144 / 0.2510|32・46|
+|π0.5→DCT3|0.0067 / 0.0098|0.1404 / 0.2875|0.0025 / 0.0043|0.1141 / 0.2505|34・47|
+|直前保持|0.1034 / 0.1425|0.1886 / 0.2673|0.0564 / 0.0972|0.1140 / 0.2010|—|
+|窓の断片（1,595）|0.0472 / 0.0911|0.1502 / 0.3188|0.0429 / 0.0856|0.1238 / 0.2818|39・20|
+|まとめない（3,504）|0.0406 / 0.0755|0.1495 / 0.3135|0.0364 / 0.0700|0.1231 / 0.2765|27・19|
+|τ=.04（282）|0.0465 / 0.0818|0.1570 / 0.3214|0.0422 / 0.0763|0.1307 / 0.2844|43・11|
+|τ=.08（95）|0.0508 / 0.0927|0.1507 / 0.3112|0.0465 / 0.0872|0.1244 / 0.2741|43・17|
+|τ=.16（31）|0.0530 / 0.0955|0.1589 / 0.3149|0.0487 / 0.0901|0.1325 / 0.2778|33・14|
+
+|プール|診断条件|学習済み active7|未学習 active7|学習済み 腕|未学習 腕|
+|---|---|---:|---:|---:|---:|
+|窓の断片（1,595）|型だけ正解・姿勢π0.5|0.0228 / 0.0398|0.1462 / 0.2931|0.0186 / 0.0344|0.1199 / 0.2561|
+|窓の断片（1,595）|型・姿勢・大きさ・グリッパー正解|0.0177 / 0.0324|0.0366 / 0.0678|0.0177 / 0.0324|0.0366 / 0.0678|
+|まとめない（3,504）|型だけ正解・姿勢π0.5|0.0191 / 0.0334|0.1335 / 0.2669|0.0149 / 0.0280|0.1071 / 0.2298|
+|まとめない（3,504）|型・姿勢・大きさ・グリッパー正解|0.0142 / 0.0265|0.0253 / 0.0507|0.0142 / 0.0265|0.0253 / 0.0507|
+|τ=.04（282）|型だけ正解・姿勢π0.5|0.0303 / 0.0477|0.1589 / 0.3325|0.0260 / 0.0422|0.1325 / 0.2955|
+|τ=.04（282）|型・姿勢・大きさ・グリッパー正解|0.0249 / 0.0399|0.0387 / 0.0664|0.0249 / 0.0399|0.0387 / 0.0664|
+|τ=.08（95）|型だけ正解・姿勢π0.5|0.0380 / 0.0632|0.1608 / 0.3291|0.0338 / 0.0577|0.1344 / 0.2921|
+|τ=.08（95）|型・姿勢・大きさ・グリッパー正解|0.0330 / 0.0559|0.0486 / 0.0905|0.0330 / 0.0559|0.0486 / 0.0905|
+|τ=.16（31）|型だけ正解・姿勢π0.5|0.0476 / 0.0798|0.1922 / 0.3422|0.0434 / 0.0743|0.1659 / 0.3052|
+|τ=.16（31）|型・姿勢・大きさ・グリッパー正解|0.0434 / 0.0737|0.0753 / 0.1260|0.0434 / 0.0737|0.0753 / 0.1260|
+
+- 旧定義の型ギャップ回収率は、まとめない 54.8%、τ=.08 76.3%。以前の約55% / 76%を再現した。保存済みMAG1 A6/T3は .134832 / .292100 を再現した。旧MAG1の数値タスクIDによる除外と、今回のLIBERO-90サービングの除外なしでは型が5/619行で異なり、主表の型だけ正解は .134414 / .292114。旧規則を再適用すれば保存MAG1値との差は2e-8未満になる。
+- 未学習full10の腕MSEは、推論条件で通常 0.1144 に対し、τ=.08 0.1244。閉ループ成功数43対32の順位とは一致しない。7条件のMSEと成功数のSpearmanは 0.414（参考）。
+- 型だけ正解は回転・大きさを除いた物理距離で型を選び、最終姿勢はπ0.5から決める。姿勢・大きさ・グリッパーも正解にした診断上限とは分ける。各oracleの閉ループは測っていない。
+- オフライン履歴はデモに記録された過去の正解行動、閉ループ履歴は方策が実際に実行した行動である。学習済みオフライン20タスクとLIBERO-10閉ループはタスク分布も異なる。既存成功数との比較は参考にとどめる。
+- 未学習のπ0.5は画像向き修正後のK1キャッシュ（rowノイズキー）を使用。PI0REF主表のglobalノイズキーとは別で、通常active7は約.1408（PI0REF主表は約.1413）。
+- 実行前に、未学習へLIBERO-10用の同一タスク除外を適用していた点と、型oracleに回転固定距離を使っていた点をスナップショット側で修正した。LIBERO-90の除外なしサービングと全619行×5プール、単独50問い合わせで選択が一致した。LIBERO-40オフラインも除外なしで、LIBERO-10オンラインの同一タスク除外とは異なる。
+
+
+### まとめたメモリの上限（UM2）
+
+CMP3と同じ学習済み621窓（難125）、未学習619窓（難134）で、保存時の向き・大きさのまま正解に近い代表の列を当てる上限を測った。自然長でDP再生し、選択予算は10フレームに1回。全体 / 難。active7・腕とも二乗誤差和÷70で、腕は腕6軸だけで候補を選ぶ別条件。
+
+|まとめ方|単位数|学習済み active7|学習済み 腕6軸選択|未学習 active7|未学習 腕6軸選択|
+|---|---:|---:|---:|---:|---:|
+|まとめない|4,516|0.01766 / 0.03366|0.01597 / 0.03050|0.03445 / 0.06845|0.02857 / 0.05504|
+|τ=0.04|793|0.02822 / 0.04593|0.02472 / 0.04042|0.04744 / 0.08529|0.03791 / 0.06477|
+|τ=0.08|238|0.03988 / 0.06542|0.03460 / 0.05568|0.06366 / 0.11281|0.05040 / 0.07962|
+|τ=0.16|64|0.06779 / 0.10023|0.05299 / 0.07633|0.08888 / 0.14813|0.06826 / 0.11534|
+
+- まとめない4,516単位のCMP3値は再現した。τ=.08では単位数が5.3%に減る一方、未学習active7は 0.03445 / 0.06845 から 0.06366 / 0.11281 に増える（全体 / 難）。
+- この4条件では、まとめを強めるほど両評価集合で誤差が増えた。代表を減らす保存量との交換関係であり、検索性能・閉ループ成功率は測っていない。
+- 正解を使うのは候補列の選択と採点だけ。代表の復元は元の向き・大きさを保持する。これは正解選択のオフライン上限で、推論可能な選択器の性能ではない。
+- 旧247単位の .0614/.1069 は、長さ正規化したDCT係数（腕3個・グリッパー1個）の距離でまとめた別条件。今回のcover_unitsはDCT3復元を32位相へ再標本化した平均二乗距離でまとめるため、τ=.08は238単位となった。向き・大きさの合わせ込みはどちらも行わない。旧247単位の値とは区別する。
+
+**スキル（代表）の作り方：** 正解行動は使わない。メモリ側のデモだけで作る。
+
+1. **切る：** LIBERO-40 のメモリ400デモ（行動は q01/q99 で正規化した7次元）を、グリッパーの符号反転と、手先並進速度（物理単位の ‖x,y,z‖ を3フレーム移動平均）の極小点で切る。極小点は深さで足切りしない。前の切れ目から5フレーム未満の極小点は捨て、グリッパー反転は必ず切る。→ 4,516 単位（自然長）。
+2. **形にする：** 各単位の7軸それぞれを DCT して低周波3係数だけ残し、自然長に戻す（なめらかにした軌跡）。
+3. **比べる形をそろえる：** 2 の軌跡を32位相に再標本化して長さをそろえる。向き・大きさは消さない（正規化空間のまま）。
+4. **まとめる：** 単位 i と j の距離＝32位相×7軸の平均二乗差。距離が τ 以下なら「j は i で代われる」とする。代われる単位の数が最も多い単位を代表に選び、それで代われる単位を除く、を全単位がどれかの代表に代われるまで繰り返す（貪欲被覆、`dct_tolerance_merge.greedy_cover`）。
+5. **代表を保存する：** 代表は実在する1単位で、平均ではない。その単位自身の DCT3 復元を、元の向き・大きさ・長さのまま再生する。
+
+この作り方では向きと大きさも距離に入るので、同じ動きでも向きや速さが違えば別の代表になる。スキルの定義（型は向きを含み大きさだけ外す）とは違い、閉ループのプール（`cluster_pools.py`、保留8タスクを除く32タスク、向きと大きさを外した正準形）とも違う。
+
+7軸選択の腕計・グリッパー寄与、CMP3の固定窓生/DCT3と通常π0.5の参考値、各軸の内訳は[本番レポート](evidence/cluster_upper/report.md)と[数値](evidence/cluster_upper/results.json)を参照。
+
+
 出力：`cluster-pools-01/`、`closed-loop-memory-01/`。LIBERO-10 の成功数は `report` では 0/0 と表示されるので、各試行の `result.json` を数える（[再現手順](reproduce.md)）。
 
 ## 7. 場面をまたぐ運動型クエリ
@@ -708,6 +775,29 @@ Output directory: `.skillnet-state/outputs/memory-pilot/unseen-libero/lib-closed
 
 出力：`.skillnet-state/outputs/memory-pilot/unseen-libero/` の `compress-matched-01/production/`（CMP2）、`compress-seen-cuts-01/production/`（CMP3）、`compress-per-axis-01/`（DIM1、`arm_only/attempt-02/` が DIM2、`segmentation/attempt-01/` が DIM3）、`pi05-reference-01/`（PI0REF）、`denoise-oracle-01/review-gripper-fixed-02/`（DEN2）、`denoise-oracle-01/adaptive-t0-01/gripper-fixed-03/`（DEN3）。コード／テスト：`compression_matched.py`、`compression_seen_cuts.py`、`compression_per_axis.py`、`compression_per_axis_arm.py`、`compression_per_axis_segmentation.py`、`pi05_reference.py`、`denoise_oracle_drafts.py`、`denoise_oracle_adaptive.py`、`tests/unseen_libero/test_compression_matched.py`、`test_compression_seen_cuts.py`、`test_denoise_oracle_drafts.py`、`test_denoise_oracle_adaptive.py`。
 
+## AE21：行動だけの21値圧縮をDCT・PCAと比べる
+
+AEは行動だけを入力にし、メモリ400デモでfitした。Dev（LIBERO-90 task6/7）で設定とearly stoppingを選び、3 seedで評価した。値の数は固定窓21、可変長は21＋長さ1。基底/共有モデルの保存量は含めない。学習済み621窓・難125、未学習619窓・難134はCMP3と同じ。
+
+各セルは全体 / 難。AEはseed平均。圧縮誤差は窓そのものの復元、上限7軸は正解7軸で候補選択、上限腕6軸は正解腕で選択して6軸二乗和÷70で採点する。可変長の上限は自然長のDP再生。
+
+|区分|方式|評価集合|圧縮誤差|上限7軸|上限腕6軸|
+|---|---|---|---:|---:|---:|
+|fixed|DCT3（21）|学習済み|0.003463 / 0.005887|0.020246 / 0.045263|0.015116 / 0.033207|
+|fixed|DCT3（21）|未学習|0.006451 / 0.009236|0.037921 / 0.085769|0.027967 / 0.062648|
+|fixed|PCA21|学習済み|0.001860 / 0.003722|0.018190 / 0.042988|0.014986 / 0.032987|
+|fixed|PCA21|未学習|0.004670 / 0.008053|0.034585 / 0.081978|0.027837 / 0.062306|
+|fixed|AE21|学習済み|0.002345 / 0.004552|0.018445 / 0.043141|0.014972 / 0.032929|
+|fixed|AE21|未学習|0.005683 / 0.010087|0.035061 / 0.082743|0.027800 / 0.062218|
+|variable|DCT3＋長さ（22）|学習済み|0.003463 / 0.005887|0.017659 / 0.033661|0.015965 / 0.030498|
+|variable|DCT3＋長さ（22）|未学習|0.006451 / 0.009236|0.034448 / 0.068454|0.028567 / 0.055036|
+|variable|PCA21＋長さ（22）|学習済み|0.012909 / 0.021110|0.017440 / 0.033416|0.015861 / 0.030572|
+|variable|PCA21＋長さ（22）|未学習|0.022476 / 0.027029|0.034429 / 0.068688|0.028573 / 0.055356|
+|variable|AE21＋長さ（22）|学習済み|0.014371 / 0.023714|0.017458 / 0.033257|0.015810 / 0.030515|
+|variable|AE21＋長さ（22）|未学習|0.025316 / 0.032108|0.034348 / 0.068246|0.028520 / 0.055397|
+
+固定DCT3・生・キーフレームと可変長DCT3はCMP3の全16セルを許容差2e-6以内で再現した。PCAはAEに合わせメモリ側だけで基底をfitするため、従来CMP3のPCAと学習行が異なる。AEのseed範囲、腕計/グリッパー・各軸、AE−DCT/PCAのepisode bootstrap 95%区間は[本番レポート](evidence/ae21/report.md)と[数値](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/compress-ae-01/production/results.json)を参照。上限診断であり、検索性能や閉ループ成功率の主張はしない。
+
 <a id="grip1"></a>
 
 ## GRIP1：LIBEROでグリッパーを分ける根拠
@@ -919,6 +1009,8 @@ KEY2-F attempt-27の最終Eval集計は本節作成時に未完了だったた�
 
 ## GH1：共有潜在トークンからグリッパーを出力
 
+> **旧 production-03 のG-a〜G-f数値は無効。** Dev task 6/7 は217窓・2,170 grip target stepsすべてが符号 -1 で、Dev MSEによる選択は定数負予測でも0になった。加えて旧head fitは全件一括で1 epochにつきoptimizer stepが1回（8〜32更新）しかなかった。以下のproduction-03表は履歴記録のみで、性能主張・EX1判断に使用しない。
+
 ### 実装・smoke
 
 KEY2-F の frozen E 潜在トークンと現在のグリッパー proprio 2次元を受け、未来10ステップの開閉logitを出す cross-attention head と pooled-latent MLP head を追加した。KEY2-F checkpointから E-VLM+H / E-VJ+H を凍結実行する関数、同じ有効prefix token平均を使う G-d π0.5 MLP入力、学習率・epoch・head形式をDevグリッパー寄与MSEで比較するgrid、L90XをDev/Eval manifest検証後に連結するAPIを実装した。G-c は KEY2-F の retrieval teacher と候補maskを再利用し、E とheadを L_ret + λ·BCE で同時更新するgrid runnerを実装した。通常headはBCEで学習し、符号出力は ±1 に写像、連続値版も別採点する。切替の有無の窓単位F1、±2ステップ対応イベントF1、切替時刻誤差、真値に切替がない窓での偽切替率を別に集計する。凍結腕へ予測グリッパーを合成するactive7採点もGRIP1関数を再利用する。
@@ -935,9 +1027,75 @@ KEY2-F の frozen E 潜在トークンと現在のグリッパー proprio 2次�
 | G-d π0.5 prefix mean MLP | .28571 | 0 |
 | G-e E-VLM+H + L90X | .55142 | 32 |
 
-G-c smokeのDev腕top-1 MSEはjoint .16031、frozen E .17357（差 -.01325）。このsmokeはG-a〜G-eの入出力、分割、Dev選択を実データで検証したものだが、本番設定・全学習行での成績ではない。固定619/621行、hard subset、GRIP1参照行、5,000回episode bootstrapを含む最終Evalは、本番承認後に一度だけ実行する。runnerは `--production` で実行できる状態にした。
+G-c smokeのDev腕top-1 MSEはjoint .16031、frozen E .17357（差 -.01325）。production-03の学習はLIBERO-40 memoryの可変unit開始4,516行（Eval demoとのepisode重複なし）で、621はlearned Eval行数だった。JP1の学習済みEはG-fとして追加され、LT1は学習済みEがなく対象外。Evalはlearned 621（hard 125）、unseen 619（hard 134）。これらのproduction-03結果は上記のDev選択欠陥により無効。
 
-出力: [実データsmoke report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/review-smoke-20261115-attempt08/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/review-smoke-20261115-attempt08/results.json)。このsmokeは全memory 4,516 eligible unitsから固定先頭64行を使う。コード／テスト: `skill_moe/skillnet/examples/memory_pilot/unseen_libero/gripper_from_latent.py`、`tests/unseen_libero/test_gripper_from_latent.py`。
+| Eval split | Row | Grip MSE all / hard | Active7 P5 arm | Active7 E-VLM+H arm |
+|---|---|---:|---:|---:|
+| learned | G-a | .20749 / .16784 | .24821 | .24247 |
+| learned | G-b | .20712 / .16235 | .24784 | .24210 |
+| learned | G-c | .04675 / .04755 | .08747 | .08173 |
+| learned | G-d | .27018 / .23552 | .31090 | .30516 |
+| learned | G-e | .14811 / .11432 | .18883 | .18309 |
+| learned | G-f (JP1 E) | .20657 / .16189 | .24729 | .24155 |
+| learned | π0.5 grip + frozen arms | .00423 / — | .04495 | .03921 |
+| unseen | G-a | .16115 / .20562 | .26660 | .28611 |
+| unseen | G-b | .16762 / .22482 | .27306 | .29258 |
+| unseen | G-c | .05402 / .07251 | .15946 | .17898 |
+| unseen | G-d | .25424 / .35323 | .35969 | .37921 |
+| unseen | G-e | .12033 / .12584 | .22578 | .24529 |
+| unseen | G-f (JP1 E) | .16808 / .22439 | .27352 | .29304 |
+| unseen | π0.5 grip + frozen arms | .02636 / .03703 | .13181 | .15132 |
+| unseen | π0.5 reference (saved GRIP1 arm) | .02636 / .03703 | .05875 | — |
+
+全ての潜在ヘッドは未学習Evalのπ0.5 grip MSE .02636を下回れなかった。最良G-cでも差は +.02766（episode bootstrap 95% CI [.02032, .03545]）。G-e−G-aは -.04082（CI [-.05408, -.02863]）と改善した一方、π0.5には及ばない。G-cはG-aよりグリッパー誤差が下がったが、未学習検索の腕top-1 MSEはE-VLM+H凍結時の .12496 から .13243 に悪化（差 +.00747）。従って、今回の結果はEX1閉ループ条件へ追加する根拠にならない。切替F1、切替時刻誤差、誤切替率、learned側を含む全対比較CIは結果レポートに記録した。
+
+production-02は進捗ログがなく、残った再開ログはCUDA/XLA初期化メッセージのみだった。L90X特徴キャッシュは生成済みで、前処理を通過した後の処理で停止していた。production-03の段階ログでは前処理が約176秒で終わり、G-cの同時学習グリッドがそこから約5,004秒まで続いた。G-cは `cuda:0` 上でbatch 128、1 epochあたり約45〜60秒だった。旧プロセスには段階計測も実行device記録もなく断定はできないが、CPU負荷の高い長時間処理はこのG-c gridに位置すると判断した。
+
+出力: [production-03 report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-03/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-03/results.json)、[progress.log](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-03/progress.log)。実データsmokeは[attempt08 report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/review-smoke-20261115-attempt08/report.md)を参照。コード／テスト: `skill_moe/skillnet/examples/memory_pilot/unseen_libero/gripper_from_latent.py`、`tests/unseen_libero/test_gripper_from_latent.py`。
+
+### production-04 状態だけの学習ゲート
+
+状態だけのG-gを先にDev選択してEval採点した。全6,583 LIBERO-40 memory窓（400 episode）を学習に使用し、learned Eval episodeとの重複は0。production-03の4,516は可変unit開始行であり、621はEval行数。source state[6:8] は生指位置でなくOpenPI Q01/Q99正規化済み（train平均 [.332, -.357]、標準偏差 [.738, .734]）。Devの符号targetは全2,170 stepが -1、trainの正符号targetは31,253/65,830 step（47.5%）。
+
+| Split | State-only G-g grip MSE | 参照 .051532 以下 |
+|---|---:|---:|
+| Dev | .007110 | pass |
+| learned | .074644 (hard .063554) | fail |
+| unseen | .065563 (hard .078058) | fail |
+| π0.5 unseen reference | .026361 (hard .037033) | — |
+| G1 state-initialized hold unseen | .051532 (hard .061005) | — |
+| G2 previous hold unseen | .074611 (hard .066336) | — |
+
+π0.5は同一PI0REF行・同じgripper contribution式で再計算し、GRIP1との差は1.13e-6。G1/G2の再計算との差はそれぞれ6.2e-10、4.6e-9で参照採点と一致した。state[6] はOpenPI Q01/Q99によりphysical値 .001716〜.040308が概ね[-1,+1]へ正規化済みで、生値ではない。高いstate[6]側は既存G1規則でaction sign -1となる。同じメモリ窓の遷移ではaction sign +1時にstate[6]が平均 .214低下し、sign -1時は平均 .068上昇した（この座標では +1 が閉、-1 が開く方向）。訓練更新をshuffled mini-batch（batch 128）化し、train-only標準化、全メモリ窓使用まで修正してもG-gが基準を超えられず、明示ゲートによりG-a〜G-fの再本番は停止した。
+
+比較基準G1はepisode start以外では直前に実行したactionを保持するため、状態だけのG-gより履歴情報を持つ。したがって .051532 は状態のみのヘッドと同じ入力条件ではない。さらにDevは全て同じ符号で、Dev MSEだけではEval分布に必要な状態分類を選べない。このデータ/入力条件ではゲート通過を確認できず、production-04にG-a〜G-fの新しい性能値はない。
+
+出力: [production-04 attempt-03 report](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-04/attempt-03/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-04/attempt-03/results.json)、[progress.log](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-04/attempt-03/progress.log)。attempt-02はV-JEPA cacheに全memory窓のexact tokenがなく中断。現在のコードは旧full-batch更新をmini-batch化し、状態標準化と全時点データの組み立てに対応。
+
+### production-05：履歴をそろえた heldout Dev で再実行
+
+production-03/04 の潜在ヘッド値は無効のまま。production-03 は1 epoch 1更新の旧学習と単一符号Devを使い、production-04 は入力履歴を欠いた状態だけの比較でG1基準を超えた。これらの誤った選択値を性能評価に使わない。
+
+全モデルに現在の gripper state[6:8]、直前10実行action[6]、各履歴時点の有効フラグを入力した。LIBERO-40 memory は学習済みEval episodeを除外後、episode単位で320 episode・5,266窓をfit、80 episode・1,317窓をDevに保留した。learned Eval 621窓のepisode重複は0。Dev task 6/7は選択に使っていない。L90XはLA2の除外manifestを検証してGPUで全11,030 prefixを抽出し、15タスク1,984行をheldout、残る9,046行をG-e fitに使った。V-JEPAはexact feature cacheの範囲に限定され、G-bはfit 647行・Dev 154行である。
+
+履歴＋状態の学習MLPはDev .048535、G1履歴規則はDev .048258で、Dev選択ではG1規則が残った。選択された学習MLP自体もEval符号MSE .051525で、同じ符号採点に再計算したG1 .051525以下（同値）となりゲートを通過した。continuous action基準G1 .051532との差は、actionを符号化する採点か連続値で採点するかの差である。
+
+| unseen Eval | Grip MSE all / hard | Active7 P5 arm | Active7 E-VLM+H arm |
+|---|---:|---:|---:|
+| history＋state MLP | .051525 / .060993 | .156972 | .176488 |
+| G-a E-VLM+H frozen | .053188 / .061847 | .158634 | .178150 |
+| G-b E-VJ+H frozen | .100103 / .118161 | .205549 | .225066 |
+| G-e + L90X | .042936 / .051181 | .148383 | .167899 |
+| G-f JP1 E | .055958 / .066113 | .161405 | .180921 |
+| G-c joint E | .072951 / .090856 | .178397 | .197913 |
+| π0.5 grip + P5 arm | .026360 / .037033 | .131807 | — |
+| π0.5 grip + E-VLM+H arm | .026360 / .037033 | — | .151323 |
+
+π0.5自体のgripper値はGRIP1 .026362との差1.13e-6。分類器 .049217、G1 continuous .051532、G2 .074611、保存値 .193532を同じ採点列に載せた。G-eはπ0.5を超えないが、潜在ヘッドでは最良となった。
+
+G-c joint retrieval のarm6 top-1 MSEはlearned .034434 対 frozen E .034979（差 -.000545）、unseen .126899 対 .124963（差 +.001936）。未学習側で小幅に悪化した。π0.5との差、G-e−G-a、G-c−G-aの episode bootstrap 95%区間（5,000回）とswitch指標は結果レポートに記録した。現時点ではπ0.5グリッパーを明確に超えていないため、EX1閉ループ条件への追加根拠はない。
+
+詳細表・hard行・入力/Dev選択設定・参照行・対比較：[production-05 report](evidence/gh1/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/results.json)、[progress.log](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/gripper-latent-01/production-05/progress.log)。
 
 ## LA2：連続潜在の学習期間と学習行を増やす
 
@@ -1067,6 +1225,26 @@ AXには実OpenPIモデルadapterを追加した。t=1→0のπ0.5積分と同�
 
 テスト15件成功。特徴抽出部品は実モデルでsmoke済みだが、4,516メモリ開始点と全splitの特徴構築、5条件の学習・Dev top-1選択・Eval、比較・漏洩監査・linear probeの統合実行はまだ行っていない。したがってLT1の性能結論はなく、全体経路は本番前レビュー待ちである。修正smokeの詳細は [`review-fix-01`](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/review-fix-01/review_status.md) を参照。
 
+### LT1 本番：AX / PT 潜在ソース検索
+
+上記の「本番前レビュー待ち」は当時の記録であり、以下の全件本番で置き換える。全特徴キャッシュ（メモリ単位開始点4,516、学習済み621、未学習Eval619、Dev217）を作成し、31候補をDevのtop-1腕MSEで選択した後、各方式の選択済みcheckpointをEvalに1回適用した。1 seed、閉ループなし。
+
+|方式|選択 flow t / action expert層|学習済み top-1 全体 / 難|未学習 top-1 全体 / 難|未学習 top-20 全体 / 難|
+|---|---:|---:|---:|---:|
+|E-AX|1.0 / 17|.02304 / .04396|.11934 / .24834|.10694 / .23419|
+|E-AX+H|1.0 / 17|.02260 / .04276|.11492 / .24236|.10379 / .22974|
+|E-AX+PT+H|1.0 / 17|.02258 / .04400|.11391 / .23430|.10337 / .22812|
+|E-PT|1.0 / 3|.14048 / .22588|.18988 / .32136|.12114 / .24421|
+|E-PT+H|1.0 / 3|.05925 / .10696|.13957 / .27053|.10635 / .22312|
+|P0-AX|1.0 / 17|.02518 / .04832|.11757 / .23981|.10571 / .23061|
+|P0-PT|— / —|.17726 / .23459|.20167 / .32653|.12243 / .24257|
+|KEY2-F P5 (参照)|— / —|.04072 / .07542|.10545 / .18416|.08133 / .16151|
+|KEY2-F E-VLM+H (参照)|— / —|.03498 / .06637|.12496 / .25606|.10530 / .23187|
+
+AX は action expert の残差 hidden state ではなく各層の suffix V-cache を使った（OpenPI の scanned Gemma block は residual hidden state を外部に返さない）。PT は CoTracker3 online の過去16フレームのみを用いた。AX 系では Dev MSE .0957〜.1040、未学習 top-1 は .1139〜.1193。AX+PT+H は E-VLM+H より未学習 top-1 が小さかったが、KEY2-F P5 の .10545 には届かなかった。hard 行では誤差が大きく、検索の汎化改善を示す結果とは言えない。タスクID5-fold正解率は AX .5655、PT .1335、AX+PT .5755、未来並進方向 cosine はそれぞれ .9631、.5220、.9627。1 seed・オフライン指標であり、閉ループ性能は未評価。
+
+特徴キャッシュ、Dev選択、全条件の結果、順位指標・対比較・線形プローブは [`LT1 production report`](evidence/lt1/report.md)、[results.json](../../../.skillnet-state/outputs/memory-pilot/unseen-libero/latent-sources-01/production/results.json)、[dev_selection.json](evidence/lt1/dev_selection.json) を参照。
+
 ### EX1 範囲変更：P0・P5・E-VLM+H
 
 P0/P5/E-VLM+H top-1 を下書きに用いて再評価した。Dev (task 6,7; 113行) で選び、Expert A は D1 step 2500 / t0=.30、D3 step 2500 / t0=.30 が最良だった。D0 専用学習分岐はなく、D0 評価には事前に定めた代替として D1 の checkpoint を適用した。
@@ -1104,3 +1282,119 @@ Dev 選択（グリッパー AUC／型 top-1／大きさ log-MAE、かっこ内�
 ユーザー判断で打ち切り。D1 診断（型のまとまり）は完了していたが、D2・D3・Dev関門・閉ループは未実施のまま終了し、本番値としての報告はない。小規模スモーク値は設定・データ量が本番と異なるため結果表に転記しない。既存の部分出力は `.skillnet-state/outputs/memory-pilot/unseen-libero/eef-frame-01*/` に保持しているが、参照用であり結論には使わない。
 
 コード：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/eef_frame_units.py`（打ち切り実験として残す）。テスト：`tests/unseen_libero/test_eef_frame_units.py`。
+
+## KV1：π0.5 全層 prefix KV の読み出し（未完了）
+
+### 問いと方法
+
+π0.5 VLM の全18層 prefix K/V を読み、潜在クエリ（KV-L）、履歴・状態（KV-H）、両者（KV-LH）で単位を検索する構成を実装した。K/V はRoPE後のキーと値を、base・wrist・promptの有効トークンに詰め、行キー `(domain, task, episode, frame)` で保存する設計。L90X は指定の78タスク外を拒否する。
+
+### 結果と状態
+
+CPUテスト8件と構文検査は成功した。実データ1行では入力画像・prompt・maskが既存行と一致し、state差は `1.34e-8`。直接抽出した最終層特徴は `core.prefix_features` と一致したが、既存 run-01 token cache との比較は最大絶対差 `0.502685546875` で失敗した。キャッシュの生成元コード・重み内容のハッシュが残っておらず原因を確定できていない。このため全量抽出・学習・Dev選択・Evalは実施せず、検索性能の結論はない。
+
+コード・テストは `key_kv_cache.py`、`tests/unseen_libero/test_key_kv_cache.py`。部分的なsmoke出力と停止理由は [`key-kv-01 report`](evidence/kv1/report.md) と [`results.json`](evidence/kv1/results.json) に記録した。次の段階は、既存 token cache の生成元と checkpoint 実体を固定した上でパリティを解決することである。
+
+## EX2：キー非依存 Expert と誤差条件付きデノイズ
+
+EX1 の下書き別学習から切り離し、保存した DCT3 運動単位を行動空間距離で抽出して腕6軸を復元する Expert を学習した。Expert B は LIBERO-40 と L90X 77タスクを使用し、欠損 task 51 は補完せず除外。信頼度器は LIBERO-40 のエピソード holdout、スケジュールと重みは Dev で選んだ。グリッパーは全条件で通常 π0.5 に戻した。
+
+結果表、閉ループのタスク別成功数・Wilson 区間・McNemar、および実行条件は [EX2 production report](evidence/ex2/report.md) と [results.json](evidence/ex2/results.json) を参照。閉ループは LIBERO-90 Eval 10×10 と LIBERO-10 10×5、seed base 7、replan 5、最大520制御stepであり、既知の π0.5 方策上の環境評価である。
+
+### 主な結果
+
+腕6軸 MSE（全体 / 難しい行、未学習 619窓・難 134窓）と閉ループの成功数。下書きは各キーの1位の単位（LIBERO-40 の可変長 DCT3 単位 4,516 個をそのまま再生）。Expert の t0 は信頼度から決める（fallback 込みでも同じ値）。
+
+| 下書きの選び方 | 下書きのまま | ＋Expert（信頼度） | LIBERO-90（100） | LIBERO-10（50） |
+|---|---:|---:|---:|---:|
+| 履歴＋状態の MLP（D5_HS） | .101 / .182 | **.081 / .163** | **36** | 46 |
+| P5（VLM 平均＋履歴＋状態、D1） | .105 / .184 | .094 / .185 | 31 | 45 |
+| 共有 E：VLM＋履歴（D3） | .125 / .256 | .111 / .242 | 33 | 45 |
+| P0（VLM 平均、D0） | .132 / .275 | .114 / .249 | — | — |
+| 通常 π0.5 | .115 / .253 | — | 32 | 46 |
+| 直前保持 | .114 / .201 | — | — | — |
+| 正解の下書き＋Expert（上限） | — | .058 / .158 | — | — |
+
+- オフラインでは、D5_HS＋Expert が π0.5 を −.034［−.043, −.027］、難しい行で −.090 下回る。直前保持も全体では下回る。
+- 閉ループは π0.5 との対で D5_HS が 7勝3敗（McNemar p=.34）、D1 は2勝3敗、D3 は3勝2敗。どれも unit_08 の 43/100 に届かない。
+- 信頼度と下書きの本当の誤差の順位相関は、学習済みで .95〜.96、未学習で .39〜.50。未学習では t0 の決め方が当たりにくい。
+- Expert B の学習行には LIBERO-90 の他77タスク（Eval 10タスクと Dev 6・7 は除く）が入る。場面が Eval と重なるので、新しい場面への汎化の根拠にはならない。
+
+## KEY4：入力ごとに分けたクロスアテンションと VLM ゲート
+
+### 第1段（seed 1・中間結果）
+
+KEY2-F E と同じ LIBERO-40 メモリ側学習行・soft InfoNCE・候補抽選・同一エピソード除外・履歴破損・logit scale を用い、A（履歴＋状態、続いて VLM を別 softmax で読む）と B（A の VLM attention/FFN 残差に独立な tanh(g) を掛ける）を追加実装した。B の VLM ゲートは0初期化。KEYGRID の E-VLM+H から lr=1e-4、teacher τ=.002 を固定し、4/8/16 epoch を Dev top-1 腕 MSE で選択する。**第1段は実行中で、まとめた時点ではレポートはまだ出ていない**（A は 4/8/16 epoch、B は 4 epoch まで学習済み）。完了後の出力先は `.skillnet-state/outputs/memory-pilot/unseen-libero/key-split-xattn-01/`（Git 管理外）。
+
+これは各方式 seed 1 本の中間値であり、最終的な安定性・統計差の結論ではない。追加 seed、paired bootstrap、attention 内訳、VLM token 入れ替えは第2段に保留。コードは `key_split_xattn.py`、形状・初期ゲート非依存・既存 E の非変更テストは `tests/unseen_libero/test_key_split_xattn.py`。
+
+
+## ATTN1：潜在トークンの注意の配分（学習なし）
+
+### 問いと方法
+
+KEY2-F の共有 E が多数の視覚トークンに引っ張られているかを、学習をやり直さず、既存の selected checkpoint のクロスアテンションを推論時に観測して調べた。対象は E-VLM+H、E-V-JEPA+VLM+H、E-H、および KEYGRID の top-1 Dev 選択 checkpoint。入力行はメモリ単位開始 4,516、学習済み 621、未学習 Eval 619、Dev 217。クエリとキーの双方で潜在・注意を測り、入力除去はクエリ側だけをゼロ化または同じ split 内の別行へ置換した。スコア計算時のキー側は固定した。
+
+モデルの forward は変更せず、既存クロスアテンションの Q/K 射影から注意重みを並行して算出した。元の forward の再計算最大差は全条件で 0。潜在の有効ランクは、5トークン×256次元の特異値エントロピーから算出。キーのタスク近傍は leave-one-out 5-NN と、cosine silhouette（固定 seed の2,500行サンプル）で評価した。
+
+### 主表
+
+腕6軸の top-1 MSE（分母 10×7）。hard は各既定評価集合内の hard subset。KEYGRID 行は同方式の既存 E checkpoint を top-1 Dev 基準で再選択したもの。
+
+| 条件 | 学習済み 全体 / hard | 未学習 Eval 全体 / hard |
+|---|---:|---:|
+| E-VLM+H | .03498 / .06637 | .12496 / .25606 |
+| E-V-JEPA+VLM+H | .04054 / .07794 | .11914 / .22467 |
+| E-H | .05523 / .08915 | .14549 / .27110 |
+| KEYGRID E-VLM+H | .03654 / .07026 | .12664 / .24976 |
+| KEYGRID E-V-JEPA+VLM+H | .03156 / .05750 | .12029 / .24738 |
+| KEYGRID E-H | .06043 / .10232 | .13086 / .25194 |
+
+各 cross-attention は1層。次は学習済み / 未学習 Eval での、head・潜在トークン平均の注意質量（画像は base+wrist、言語は prompt/state 言語群）。
+
+| 条件 | 分割 | 画像 | 言語 | V-JEPA | 履歴 | 状態 | 潜在 token cosine / 有効ランク |
+|---|---|---:|---:|---:|---:|---:|---:|
+| E-VLM+H | 学習済み | .842 | .099 | .000 | .034 | .026 | .858 / 3.11 |
+| E-VLM+H | 未学習 | .849 | .090 | .000 | .031 | .029 | .838 / 3.22 |
+| E-V-JEPA+VLM+H | 学習済み | .712 | .062 | .189 | .031 | .006 | .799 / 3.61 |
+| E-V-JEPA+VLM+H | 未学習 | .719 | .052 | .195 | .027 | .006 | .736 / 3.79 |
+| E-H | 学習済み | .000 | .000 | .000 | .655 | .345 | .973 / 2.07 |
+| E-H | 未学習 | .000 | .000 | .000 | .604 | .396 | .972 / 2.00 |
+
+視覚を含む条件では、画像トークン群が総注意質量の .71〜.85 を受けた。一方、画像トークンは512個であり、1トークンあたりの平均注意質量は E-VLM+H Eval で約 .000003、言語群（平均10.6トークン）は約 .000014。総量だけから画像の1トークンが特別に強いとは言えない。E-H の5潜在トークンは平均 cosine .97、有効ランク約2で、潜在間の類似が最も高い。
+
+| 条件 | キー側 5-NN task accuracy | cosine silhouette |
+|---|---:|---:|
+| E-VLM+H | .362 | −.177 |
+| E-V-JEPA+VLM+H | .430 | −.205 |
+| E-H | .528 | −.203 |
+
+入力除去の例（top-1 一致率 / top-1 腕 MSE）：未学習 Eval の E-VLM+H は VLM をゼロ化すると .016 / .184（基準 .125）、別行へ置換すると .005 / .219。E-V-JEPA+VLM+H も VLM ゼロ化で .024 / .135、V-JEPA ゼロ化で .052 / .148（基準 .119）。視覚入力は検索順位に強く影響するが、その依存が未学習での改善に結び付いてはいない。詳細な全条件・全モダリティ・ゼロ／置換結果は出力 JSON に保存した。
+
+### 分かったこと
+
+- E-VLM+H は視覚画像群に大きな総注意質量を配る。ただし画像トークン数が多く、トークンあたりでは言語群の方が高い。総質量のみを「過剰な注意」と解釈しない。
+- 視覚入力を変更すると未学習 Eval の top-1 単位はほぼ全行で変わり、top-1 MSE も悪化した。視覚情報は実際に検索を動かしているが、既存 checkpoint では未学習タスクに有用な方向へ使えていない。
+- E-H も未学習 Eval で弱く、さらに潜在トークンが相互に似て低ランクだった。したがって視覚だけが性能差の原因とは結論できない。
+- KEYGRID の top-1 選択 checkpoint 3件も別々に診断した。訓練し直しはしていない。結果は attention 依存と未学習性能の単純な対応を示さなかった。
+
+コード・テスト：`skill_moe/skillnet/examples/memory_pilot/unseen_libero/key_attn_diag.py`、`tests/unseen_libero/test_key_attn_diag.py`（3件）。結果と head×latent token ごとの注意・各入力 ablation は [ATTN1 report](evidence/attn1/report.md) と `results.json`、`arrays.npz` を参照。共通ゲート文書 `/work/docs/memory_pilot_gates.md` はこの checkout には存在しなかった。
+
+## VIS1：型のまとまりを空間で見る（図）
+
+**問い：** メモリの型は本当に動きでまとまっていて、場面（タスク・suite）をまたいで共有されているか。
+
+**やり方：** UM2 と同じ 4,516 単位（DCT3 を32位相へ再標本化）を `cover_units` で τ=.08 の238型にまとめ、代表以外の単位を最も近い代表に割り当てた。腕6軸だけで PCA を取った（グリッパーは単位の中で ±1 の一定値なので、入れると PC1 が開閉の2つの塊になる）。比較の基準は、型ラベルをシャッフルしたもの（20回）と、型をタスクごとに分けたもの。評価データは使っていない。
+
+| 指標（5単位以上の型） | 型 | シャッフル | タスクごとに分割 |
+|---|---:|---:|---:|
+| 型の数 | 143 | — | 274 |
+| 型の中のばらつき ÷ 全体のばらつき | .10 | .95 | .05 |
+| 型あたりのタスク数（中央値） | 8 | 13 | 1 |
+| 2つ以上の suite から集める型の割合 | 82% | 100% | 0% |
+
+- 型はタスク・suite をまたいで共有されている。ただしシャッフルほどは混ざらず、タスクに依存する部分も残る。
+- 型の中のばらつきが小さいのは、しきい値で型を作る構成上そうなる値で、それだけではまとまりの証拠にならない。
+- 大きく動く型（+y へ運ぶ、下げながら −x、−y へ引く）は PCA 空間で分かれる。最大の型は動きの小さい単位で、中央で重なる。PCA 2軸の説明率は 28% + 20%。
+
+図と数値：[evidence/unit_clusters/](evidence/unit_clusters/)（`unit_space.png`、`type_members.png`、`type_stats.png`、`unit_clusters.json`）。コード：`plot_unit_clusters.py`（CPU、約10秒）。
