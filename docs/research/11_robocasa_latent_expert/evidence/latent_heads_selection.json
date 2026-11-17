@@ -1,0 +1,60 @@
+{
+  "selection_uses": "Dev only",
+  "gripper_candidates": [
+    {
+      "hidden": 64,
+      "lr": 0.001,
+      "epochs": 8,
+      "dev_balanced_accuracy50": 0.9254560421895718,
+      "true_switches": 156,
+      "pred_switches": 262,
+      "switch_recall_within_2": 0.16025641025641024,
+      "mean_nearest_time_error_steps": 19.82051282051282,
+      "windows_with_switch": 156
+    },
+    {
+      "hidden": 128,
+      "lr": 0.001,
+      "epochs": 10,
+      "dev_balanced_accuracy50": 0.9247836310836748,
+      "true_switches": 156,
+      "pred_switches": 219,
+      "switch_recall_within_2": 0.1858974358974359,
+      "mean_nearest_time_error_steps": 20.621794871794872,
+      "windows_with_switch": 156
+    }
+  ],
+  "gripper_selected": {
+    "hidden": 128,
+    "lr": 0.001,
+    "epochs": 10,
+    "dev_balanced_accuracy50": 0.9247836310836748,
+    "true_switches": 156,
+    "pred_switches": 219,
+    "switch_recall_within_2": 0.1858974358974359,
+    "mean_nearest_time_error_steps": 20.621794871794872,
+    "windows_with_switch": 156
+  },
+  "error_candidates": {
+    "latent": {
+      "dev_spearman_log_error": 0.77839194542273,
+      "dev_log_rmse": 0.8536550998687744,
+      "features_dim": 5120
+    },
+    "latent_plus_7": {
+      "dev_spearman_log_error": 0.7845821748502981,
+      "dev_log_rmse": 0.8174973726272583,
+      "features_dim": 5127
+    }
+  },
+  "error_selected": "latent_plus_7",
+  "error_target": "log retrieval-draft arm6 squared-error sum / 70 over first 10 steps",
+  "fallback_thresholds_dev": {
+    "0": 6.149242877960205,
+    "10": 1.1507824659347534,
+    "20": 0.7128974199295044,
+    "30": 0.5123124122619629
+  },
+  "default_fallback_rate": 20,
+  "t0_map": "Expert training config t0_map_quantiles, empirical CDF mapped to [0.1,0.9]"
+}

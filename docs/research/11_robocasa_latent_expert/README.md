@@ -4,7 +4,15 @@
 
 **位置づけ：** [実験計画](../experiment_plan.md)（`exp/key2-expert-plan` ブランチ）の実験6 を、オフラインの MSE までに絞って進める。前の RoboCasa の結果は [10](../10_robocasa365/README.md)。キーの設計は 09 の KEY2-F、Expert の学び方は 09 の EX1 に合わせる。
 
-**現在地：** R1〜R3 のオフライン評価まで完了（2026-11-15）。結果は下の「結果」。キーはどれも直前保持に届かず、Expert はキーの下書きを π0.5 よりはっきり良くはしなかった。
+**現在地：** R1〜R3 のオフライン評価（2026-11-15）に続き、閉ループを回した（2026-11-17）。メモリにある6タスクでは、どのキーも π0.5 と同じ程度だった。メモリに無い2タスクでは、VLM 平均を使う2つのキー（P0・P5）が π0.5 を約10回上回った（p = .06〜.08、60試行）。潜在トークン（E-VLM+H）は、オフラインの誤差は最良だが閉ループでは伸びない。π0.5 を切り替え時だけ使い、グリッパーと t0 を潜在トークンのヘッドから出す版は、6タスク 72/180・2タスク 11/60 と悪化した。詳しくは下の「閉ループ」。
+
+| 閉ループ（成功数、π0.5 と同じ seed） | 6タスク（メモリあり、各30試行） | 2タスク（メモリなし、各30試行） |
+|---|---:|---:|
+| 通常 π0.5 | 95/180 | 24/60 |
+| P0（VLM 平均）＋Expert | 95/180（p 1.0） | **33/60（p .078）** |
+| P5（VLM 平均＋履歴＋状態）＋Expert | 92/180（p .77） | **34/60（p .064）** |
+| E-VLM+H（潜在トークン）＋Expert | 93/180（p .87） | 26/60（p .83） |
+| E-VLM+H＋ヘッド（π0.5 は切り替え時だけ） | 72/180（p .0014） | 11/60 |
 
 ## 設計
 
@@ -85,23 +93,9 @@
 - 行ごと最良の t0（上限）は、同じ seed で選んで測ると .394（E-VLM+H）。別の seed で測ると .444 になる。上限の見かけの余地の約3分の1は、偶然の当たり。
 - MSE は平均の予測を有利に扱う。そのため、オフラインの誤差で t0 や条件を比べるときは、複数回の生成を平均するか、seed をまたいで評価する必要がある。
 
-### 閉ループ（未完了：GPU ドライバーが停止）
+### 最初の閉ループの試み（中止）
 
-11 のキー（E-VLM+H）と Expert で、RoboCasa の6タスク×50試行を回す準備をした。seed は 10 のベースライン（173/300）と同じ。サーバーは `skill_moe/skillnet/examples/robocasa/serve_latent_policy.py`、実行スクリプトは [evidence/run_closed_loop.sh](evidence/run_closed_loop.sh)。
-- 1回の推論は約0.26秒。
-- 手先6軸は Expert の出力を使う。グリッパー、台車、モードは、同じ観測とノイズで生成した通常 π0.5 の出力を使う。
-
-比べる条件は3つ。
-- t0 固定 .1（Dev で選んだ値、ほぼ下書きのまま）。
-- 信頼度で t0 を選ぶ（上の Dev 当てはめ）。
-- t0 固定 .5。
-
-**経過：**
-- 確認用の小さな実行（OpenDrawer×2、シミュレーター2個）は動き、1/2 成功した。
-- 本番では、3条件×24個＝72個のシミュレーターを同時に起動した。描画（EGL）はすべて GPU 0 を使う設定だった。
-- 起動直後に NVIDIA ドライバーの中で処理が止まった。推論は1回も行われず、試行の結果はない。
-- 止まったプロセスは kill できない状態（D state）で残っている。解消には、ホストの再起動か GPU のリセットが必要。
-- 再起動後は、シミュレーターを少しずつ増やし（1条件あたり8〜12個）、描画に使う GPU を分散させて回し直す。
+2026-11-16 に別マシンで3条件×24シミュレーターを同時に起動したところ、描画がすべて GPU 0 に集中して NVIDIA ドライバーが止まり、試行の結果は出なかった。下の「閉ループ」は、このマシンで作り直してシミュレーター数を絞って回したもの。
 
 ### まとめ
 
@@ -110,6 +104,88 @@
 3. 10 の §11 と同じく、通常 π0.5 は直前保持より悪い（.637 対 .475）。オフラインの10ステップ誤差は閉ループの良し悪しを表さない可能性がある。
 
 小さな根拠は [evidence/](evidence/)（キーの Eval 結果、選んだ設定、Expert の report と学習設定）。出力：`$OUT/key/eval/results.json`、`$OUT/expert/report.md`、`$OUT/expert/{dev,eval}/per_row.npz`。
+
+## 閉ループ（2026-11-17、H200 1枚で作り直し）
+
+別マシンの重みが使えなくなったため、同じ手順・同じ分割 seed でメモリ・トークン・キー・Expert をこのマシンで作り直した。単位 9,897、Dev 741、Eval 2,151 は一致し、キーの Eval 1位は P0 .883・P5 .689・E-VLM+H .561（上の表と同程度）。
+
+### 閉ループでの動かし方
+
+1. 5ステップごとに、その時点の観測（VLM トークン・直前10ステップの実行行動・状態）でキーを引き、1位の単位を自然長でつないで50ステップの下書きを作る。
+2. 通常 π0.5 も1回生成し、下書きとの距離から t0 を選ぶ（Dev で当てはめた選択器、`evidence/selector_*.json` と同じ形）。
+3. Expert が出発点 (1−t0)·下書き＋t0·ε から10ステップで積分する。
+4. 腕6軸は Expert の出力、グリッパー・台車・モードは π0.5 の出力を使う。
+
+seed は `7 + task_index×50 + trial`、replan 5、split pretrain、上限は各タスクの horizon。π0.5 は同じ seed の記録（6タスクは `baseline-01/v6-nosubtask`）と対にし、McNemar（両側 exact）で比べた。サーバー1台では問い合わせ（約 .35 秒）が律速だったため、途中からサーバー2台・各シミュレーター8台で回した（[evidence/run_closed_loop.sh](evidence/run_closed_loop.sh)）。
+
+### 6タスク（メモリにあるタスク、trial 0–29）
+
+| 条件 | Cab | Sink | Drawer | Fridge | Faucet | Stove | 合計 | 条件だけ成功 / π0.5 だけ成功 | p |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 通常 π0.5 | 15 | 28 | 19 | 11 | 20 | 2 | 95/180 | — | — |
+| P0＋Expert | 15 | 27 | 22 | **21** | **9** | 1 | 95/180 | 27 / 27 | 1.0 |
+| P5＋Expert | 10 | 24 | 24 | **23** | **10** | 1 | 92/180 | 22 / 25 | .77 |
+| E-VLM+H＋Expert | 14 | 26 | 23 | 12 | 16 | 2 | 93/180 | 19 / 21 | .87 |
+
+（Cab = PickPlaceCounterToCabinet、Sink = PickPlaceSinkToCounter、Drawer = OpenDrawer、Fridge = CloseFridge、Faucet = TurnOnSinkFaucet、Stove = TurnOffStove）
+
+- 合計はどれも π0.5 と同じ程度。VLM 平均の2キーは CloseFridge で π0.5 の約2倍、TurnOnSinkFaucet で約半分になり、打ち消し合っている。
+- E-VLM+H は trial 0–49 まで回すと 157/300 対 173/300（p .072）。
+- 試行ごとにスキルと π0.5 の良い方を選べた場合の上限は P5 117/180、E-VLM+H 114/180。切り替えの判断に余地がある。
+
+### メモリに無い2タスク（trial 0–29、task_index 6・7）
+
+メモリ・キー・Expert・選択器は6タスクだけで作ったものをそのまま使い、何も当てはめ直していない。π0.5 はこの2タスクも学習済み。候補の TurnOnMicrowave と CloseToasterOvenDoor は π0.5 が 2/10 ずつで低すぎたので使っていない。
+
+| 条件 | OpenCabinet | PickPlaceCounterToStove | 合計 | 条件だけ成功 / π0.5 だけ成功 | p |
+|---|---:|---:|---:|---:|---:|
+| 通常 π0.5 | 10 | 14 | 24/60 | — | — |
+| P0＋Expert | 14 | 19 | **33/60** | 15 / 6 | .078 |
+| P5＋Expert | 16 | 18 | **34/60** | 17 / 7 | .064 |
+| E-VLM+H＋Expert | 10 | 16 | 26/60 | 12 / 10 | .83 |
+
+- VLM 平均の2キーは両タスクで π0.5 を上回った。60試行なので確定ではない。
+- E-VLM+H はオフラインの誤差が最良（.561）なのに、閉ループでは6タスク・2タスクとも伸びない。オフラインの10ステップ誤差と閉ループの順位が合っていない。
+
+集計は [evidence/closed_loop_summary.json](evidence/closed_loop_summary.json)。出力：`$OUT/closed/{p0,p5,e_vlm_h}/`（6タスク）、`$OUT/unseen2/{pi05,dist/*}/`（2タスク）。
+
+### π0.5 を使わない版
+
+閉ループでは t0 とグリッパーを π0.5 に頼っている。π0.5 を普段は使わず、困ったときだけ切り替える版を試している。
+
+- π0.5 を使わない信号（キーのスコア、上位10単位の動きの散らばり、直前の行動から下書きへの跳びなど7つ）の組み合わせは、下書き誤差との Spearman が Eval で .83〜.85 で、π0.5 との距離（.77〜.78）より高かった。キーのスコアだけでは弱い（.24〜.52）。
+- 最初の実装は、グリッパー・台車・モードを下書き（保存値と0埋め）から取り、t0 も .1 に張り付いて壊れた（Sink 0/6）。この結果は使わない。
+- 次に、潜在トークン（E-VLM+H、固定）の上にヘッドを足し、グリッパーと下書き誤差を出す版（RCX6）を回した。t0 は予測誤差を Expert 学習時の対応（誤差の分位→[.1, .9]）に通して決め、Dev で20%になる閾値を超えたら π0.5 に切り替える。腕は Expert、グリッパーはヘッド、台車・モードは学習デモの代表値。π0.5 は切り替え時だけ使う。
+
+| | 6タスク（trial 0–29） | メモリに無い2タスク（trial 0–29） |
+|---|---:|---:|
+| 通常 π0.5 | 95/180 | 24/60 |
+| E-VLM+H＋Expert（t0 は π0.5 との距離、グリッパーは π0.5） | 93/180 | 26/60 |
+| **E-VLM+H＋ヘッド（π0.5 は切り替え時だけ）** | **72/180**（π0.5 比 p .0014） | **11/60**（OpenCabinet 1/30） |
+
+6タスクのタスク別（Cab / Sink / Drawer / Fridge / Faucet / Stove）は `12/23/20/7/9/1`。
+
+- **悪化した。** 関門（Sink trial 0–9）は 9/10 で通ったが、6タスク・2タスクとも π0.5 と距離版をはっきり下回った。
+- **グリッパー**：ヘッドは開閉の符号一致率 .958 だが、切り替えを ±2 ステップ以内に当てる割合は .136（π0.5 .261、観測から当てる小さな MLP .295）。つかむ・放す時刻がずれる。
+- **切り替えが少ない**：π0.5 への切り替えは、閉ループで新2タスク 7.4%、6タスク 3.8%。Dev で決めた20%より少なく、知らないタスクで「自信がない」と出ていない。
+- t0 は .1 に張り付かず広がった（Eval で平均 .40、範囲 .10〜.70）。
+- どちらが効いたか（グリッパーか t0 か）は、まだ切り分けていない。
+
+根拠：[evidence/latent_heads_report.md](evidence/latent_heads_report.md)、[evidence/latent_heads_closed_summary.json](evidence/latent_heads_closed_summary.json)、[evidence/latent_heads_selection.json](evidence/latent_heads_selection.json)。π0.5 を使わない信号の分析は [evidence/confidence_signals_report.md](evidence/confidence_signals_report.md)。出力：`$OUT/latent-heads/`（`closed/{gate,unseen2,six}/`）。
+
+## ノイズの強さ t0 の決め方と、1回の問い合わせで回す回数
+
+どの版も、Expert は出発点 (1−t0)·下書き＋t0·ε（ε は等方ガウス）から時刻 0 まで **10ステップ**で積分する（刻みは t0/10）。t0 = 1 なら π0.5 と同じくノイズから作り直す。違うのは t0 の決め方だけ。
+
+| 版 | t0 の決め方 | t0 の実際（閉ループ） | 1回の問い合わせのネットワーク評価 |
+|---|---|---|---|
+| 通常 π0.5 | （ノイズから） | 1 | 10 |
+| LIBERO EX1 | 固定 .3 | .30 | π0.5 10 ＋ Expert 10 |
+| LIBERO EX2 | 信頼度 MLP（π0.5 と下書きの差、キーの点差など）で誤差を予測し clip(c·√誤差, .05, .6) | 平均 .13〜.18（p10–p90 .07〜.24） | π0.5 10 ＋ Expert 10 |
+| RoboCasa 閉ループ（上の表） | π0.5 との距離から、Dev で当てはめた選択器で格子 .1〜.9 から選ぶ | 平均 P0 .61・P5 .49・E-VLM+H .24 | π0.5 10 ＋ Expert 10 |
+| RoboCasa 潜在トークンのヘッド（RCX6） | 潜在トークンで下書き誤差を予測し、Expert 学習時の対応（誤差の分位→[.1, .9]）で t0。閾値を超えたら π0.5 | Eval で中央値 .40、平均 .40、範囲 .10〜.70（π0.5 への切り替えは Dev で20%、閉ループでは3.8〜7.4%） | Expert 10（切り替え時だけ π0.5 10） |
+
+RoboCasa の閉ループでは、VLM 平均の2キーは t0 が .1〜.3 と .7〜.9 に二分された（中間は数%）。TurnOnSinkFaucet はどのキーでも t0 が最も小さく（.14〜.37）、ほぼ下書きのまま実行していたのに、スキル側が負けたタスクだった。
 
 ## 実行
 
@@ -132,6 +208,22 @@ python $M/latent_expert.py eval --split dev  --experts <学習した重み> --so
 python $M/latent_expert.py eval --split eval --experts <学習した重み> --sources e_vlm_h p5
 python $M/latent_expert.py report
 ```
+
+閉ループ（サーバーは `skill_moe/skillnet/examples/robocasa/serve_latent_policy.py`、`--t0-policy` で t0 の決め方を切り替える）：
+
+```bash
+# t0 は π0.5 との距離（6タスク／2タスクの表）。レーン名・サーバーのCPU・クライアントのCPU・ポート・「モード:試行数」
+bash docs/research/11_robocasa_latent_expert/evidence/run_closed_loop.sh A 0-7 8-23 8810 p0:30 p5:30
+OUT=$SKILLNET_STATE_DIR/outputs/robocasa-memory/latent-skill-01/unseen2/dist \
+TASKS="OpenCabinet PickPlaceCounterToStove" INDICES="6 7" \
+bash docs/research/11_robocasa_latent_expert/evidence/run_closed_loop.sh B 24-31 32-47 8820 e_vlm_h:30
+
+# π0.5 を使わない版（RCX6）：ヘッドを学習してから閉ループ
+python $M/latent_heads.py all                       # extract → fit → evaluate → dev_thresholds → report
+bash docs/research/11_robocasa_latent_expert/evidence/run_latent_heads.sh six 8830 "PickPlaceCounterToCabinet PickPlaceSinkToCounter OpenDrawer CloseFridge TurnOnSinkFaucet TurnOffStove" 30 "0 1 2 3 4 5"
+```
+
+`confidence_signal_audit.py` は π0.5 を使わない信号の分析（RCX3-A）。`confidence_closed_loop.py` と `--t0-policy conf` は、信頼度で t0 を決める途中の版（最初はグリッパー等を下書きから取って壊れた版、その後に直したが RCX6 へ切り替えて止めた版）で、閉ループの結果は使っていない。`confidence_gripper.py` は観測からグリッパーの切り替えを当てる小さな MLP（RCX5、`--gripper-checkpoint`）。
 
 ## このマシンでの準備（記録）
 
