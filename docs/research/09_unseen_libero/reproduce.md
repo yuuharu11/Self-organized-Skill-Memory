@@ -12,6 +12,9 @@
 > **保存済みの重み：** 段階 2 の Expert（`oracle-01/experts/`）と段階 3 のデノイズ Expert（`compressed-denoise-01/*/experts/`）の重みは、容量のため削除しました。下書き、行、特徴量、試行の記録、`results.json` は残っています。段階 7（`expert_refine.py`）や `MEM_EXPERT` を使う閉ループを回すときは、段階 2・3 の学習からやり直してください。
 > 別環境に何をコピーすれば途中の段から始められるかは、[再現ガイド 7 節](../../reproduction.md#7-成果物の置き場所と別環境への持ち出し) にあります。
 
+> **評価行の刻み（10 Hz ずれ）：** 未学習 619 行（`unseen-rows-02/`、`key-motion-01/final/data/unseen__*`）と旧 Dev 217 行は、HDF5 を1つおき（10 Hz）に取っています。メモリと学習済み行は 20 Hz（no-op 除去後の LeRobot フレーム）なので、10 ステップ窓の長さが2倍ずれています。
+> 以後のオフライン評価は、段階 21 で作る `unseen20`／`dev20` と Dev v2 20 Hz（`dev-v2-01/data20/`）を使ってください。段階 14〜20 の 10 Hz 行で測った未学習の値は「旧（10 Hz ずれあり）」として扱います。閉ループは実際の 20 Hz 制御なので影響を受けません。
+
 ## 全体の流れ
 
 `$U` は `$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero` です。
@@ -32,6 +35,17 @@
 | 11 | 単位メモリとクエリ | `cluster_pools.py` | `cluster-pools-01/` | [実験一覧 6](experiments.md#6-単位メモリの閉ループ) |
 | 12 | 閉ループ | `memory_closed_loop.py` | `closed-loop-memory-01/` | 同上 |
 | 13 | 向きを直した画像での取り直しと S1 の再採点 | `orientation_fix.py`、`scale_only_query.py refresh` | `orientation-fix-01/`、`scale-only-02/` | [画像の向きの修正](image_orientation_fix.md) |
+| 14 | 運動キー MK1b | `key_motion.py`（`MK1B_ARCH_RUN=1`） | `key-motion-01/arch/` | [実験一覧 MK1b](experiments.md#mk1bキーの構造と目的) |
+| 15 | クエリ MK1c・CT1 | `key_motion.py`（`MK1C_QUERY_RUN=1`）、`key_contrastive.py` | `key-motion-01/query/`、`key-contrastive-01/production/` | [MK1c](experiments.md#mk1cクエリ付き検索)、[CT1](experiments.md#ct1固定運動キーでの対照学習impl-3-の報告から転記) |
+| 16 | KQ-final | `key_final.py`、`key_final_report.py` | `key-motion-01/final/` | [KQ-final](experiments.md#kq-finalmk1c-と-ct1-の食い違いの解消と最終設定) |
+| 17 | CL1 閉ループ | `run_cl1_closed_loop.py`、`serve_expert_ex2.py`、`report_cl1.py` | `closed-loop-kq-01/` | [CL1](experiments.md#cl1運動キーexpert-の閉ループ) |
+| 18 | EKQ | `expert_kq_runtime.py`、`run_ekq_closed_loop.py` | `expert-kq-01/` | [EKQ](experiments.md#ekqπ05-を使わない信頼度とグリッパー) |
+| 19 | EX3 | `expert_ex3.py`、`serve_expert_ex3.py` | `expert-ex3-01/` | [EX3](experiments.md#ex3検索の外れ方に合わせて-expert-を学習し直すグリッパー込みπ05-なし) |
+| 20 | DP1・TR1（分析） | `delta_probe.py`、`transfer_analysis.py` | `delta-probe-01/`、`transfer-analysis-01/` | [DP1](experiments.md#dp1記録時との差分から補正量が読めるか)、[TR1](experiments.md#tr1atomic-タスクで単位は別タスクから転用されているか既存ログの分析) |
+| 21 | 20 Hz の評価行と Dev v2 | `vq_geometry.py rate20`、`dev_v2.py` | `vq-c-01/unseen20/`、`vq-c-01/dev20/`、`dev-v2-01/`（20 Hz は `data20/`） | [VQ-C](experiments.md#vq-c運動の選択に要る幾何の上限) |
+| 22 | VQ-B | `vq_sources.py` | `vq-b-01/` | [VQ-B](experiments.md#vq-b画像と言語を分けて-film-で入れる) |
+| 23 | VQ-C | `vq_geometry.py` | `vq-c-01/` | [VQ-C](experiments.md#vq-c運動の選択に要る幾何の上限) |
+| 24 | VQ-A | `vq_film.py`、`vq_film_report.py` | `vq-a-01/` | 未記載（実行中） |
 
 スクリプトは、特に書かない限り `skill_moe/skillnet/examples/memory_pilot/unseen_libero/` にあります。
 
@@ -228,6 +242,157 @@ python $UL/scale_only_query.py report --out "$O"
 
 `orientation_fix.py` は、旧い行で K1 の π0.5 予測（差 5e-4 以内、float16 の丸め）と θ 回帰の VLM 平均（差 0）を再現できることを確かめてから、直した行で計算します。
 `refresh` は scale-only-01 の LIBERO-40 側（プール、学習入力、教師、学習済みモデル、選択）をそのまま写し、Dev/Eval の VLM 平均と π0.5 の入力だけを差し替えます。
+
+## 段階 14 以降の共通事項
+
+段階 14〜24 のコマンドは、出力に残った `progress.log`・`plan*.json`・`*.sh` から整理したものです。通し直した記録はありません。
+これらの段は、この表にない既存の出力も読みます：`key-shared-01/`（KEY2）、`key-grid-01/production-04/`（KEYGRID）、`seg-context-01/`（stride-5 キャッシュ）、`expert-ex1-01/`・`expert-ex2-01/production-05/`（EX1・EX2 の Expert）。これらの作り方はこの文書にまだ書いていません。
+保存済みの `results.json` や `rows/*.json` には、重みの絶対パス（`/work/.skillnet-state/...`）が入っています。別の場所に出力をコピーして途中の段から始めるときは、その場所へのシンボリックリンクを置くか、作り直してください。
+
+重い成果物はすべて `$SKILLNET_STATE_DIR` の下で、Git 管理外です。容量の目安：`key-motion-01/` 14 GB（`final/data/` 13 GB）、`key-contrastive-01/` 20 GB、`expert-ex2-01/production-05/` 42 GB、`expert-ex3-01/` 90 GB（`train-G1`・`train-G2` 各 45 GB）、`vq-a-01/` 27 GB、`vq-b-01/` 8.6 GB、`dev-v2-01/` 2.8 GB、`vq-c-01/` 263 MB（`hdf5_states/` 235 MB）、`expert-kq-01/` 97 MB、`closed-loop-kq-01/` 31 MB。
+
+## 段階 14：運動キー MK1b
+
+```bash
+MK1B_ARCH_RUN=1 python $UL/key_motion.py --output "$U/key-motion-01/arch"
+```
+
+X1/X1s/X5 と位置・目的の総当たり（seed 1、4 epoch）。後の段は `arch/x1_absolute_dist_tau0.01.pt` を固定キーとして読みます。`--output` は新しいフォルダでないと止まります。
+MK1 本体（`key-motion-01/m1.pt`）は `python $UL/key_motion.py --output "$U/key-motion-01"` と `--stage2` で作りました（報告は `key-motion-01/report.md`）。
+
+## 段階 15：クエリ MK1c・CT1
+
+```bash
+MK1C_QUERY_RUN=1 python $UL/key_motion.py --output "$U/key-motion-01/query"
+python $UL/key_contrastive.py --output "$U/key-contrastive-01" --smoke            # data/ のキャッシュを作る
+python $UL/key_contrastive.py --output "$U/key-contrastive-01/production" --data-cache "$U/key-contrastive-01/data"
+```
+
+CT1 は段階 14 の X1 キーを読みます。`--smoke` の結果（`key-contrastive-01/results.json`）は本番ではありません。
+
+## 段階 16：KQ-final
+
+```bash
+O="$U/key-motion-01/final"
+python $UL/key_final.py prep
+for p in A B D H S; do python $UL/key_final.py rows --plan "$O/plan_$p.json"; done
+python $UL/key_final.py keygrid --plan "$O/plan_KG.json"
+python $UL/key_final_report.py
+```
+
+`plan_*.json` は出力に残してあります（[evidence/kq_final/](evidence/kq_final/) にはありません。保存済みの出力からコピーしてください）。本番は各 plan を `--names` で分けて複数の GPU プロセスで回しました。
+`best/` は選ばれた行の `rows/<名前>.pt` をそのままコピーしたもの、`export/` は `key_final.export_row(path, ctx, dest, name)` を Python から呼んで書いたものです（CLI にはありません。**コマンドは未確認**）。
+
+## 段階 17：CL1 閉ループ
+
+```bash
+E="$U/expert-ex2-01/production-05"; O="$U/closed-loop-kq-01"; mkdir -p "$O/expert-select"
+for f in dev-selection.npz retrieval train-A train-B; do ln -s "$E/$f" "$O/expert-select/$f"; done
+python -c "import sys,json,pathlib;sys.path.insert(0,'$UL');import expert_ex2 as e;print(json.dumps(e.repair_dev_checkpoint_selection(pathlib.Path('$O/expert-select'))['selected_by_condition'],indent=1))"
+python $UL/run_cl1_closed_loop.py parity
+python $UL/run_cl1_closed_loop.py smoke
+python $UL/run_cl1_closed_loop.py run --conditions C1a,C1b,C3,C2 --workers 10 --parallel --fraction .22
+python $UL/run_cl1_closed_loop.py summarize
+python $UL/report_cl1.py
+```
+
+LIBERO-90 Eval 10タスク×10試行。段階 16 の `best/`・`export/` と EX2 production-05 を読みます。本番では `SKILLNET_SUBTASK_GENERATE=0`、`OMP_NUM_THREADS=1` にしました（`closed-loop-kq-01/launch.sh`）。
+
+## 段階 18：EKQ
+
+```bash
+for q in C1a C1b; do for f in 0 1 2 3 4; do
+  python $UL/expert_kq_runtime.py crossfit --query $q --folds $f &
+done; done; wait
+for c in retrieve fit fit-gripper dev-grid select bundle eval report; do python $UL/expert_kq_runtime.py $c; done
+python $UL/run_ekq_closed_loop.py smoke
+python $UL/run_ekq_closed_loop.py run --conditions E1a,E1b --workers 10
+python $UL/run_ekq_closed_loop.py run --conditions E1a_pg --workers 10
+python $UL/run_ekq_closed_loop.py summarize
+```
+
+段階 17 の `closed-loop-kq-01/expert-select/retrieval` を読みます。
+
+## 段階 19：EX3
+
+```bash
+python $UL/expert_ex3.py measure
+python $UL/expert_ex3.py prepare
+XLA_PYTHON_CLIENT_MEM_FRACTION=.45 python $UL/expert_ex3.py train --name G1 --rank-scale 1.0 --grip-weight 1.0 --microbatch 8
+XLA_PYTHON_CLIENT_MEM_FRACTION=.42 python $UL/expert_ex3.py train --name G2 --rank-scale 5.0 --grip-weight 1.0 --microbatch 8
+for c in select devgrid offline; do python $UL/expert_ex3.py $c; done
+python $UL/expert_ex3.py closed --conditions X3a,X3b --workers 10 --fraction .15
+python $UL/expert_ex3.py report
+```
+
+段階 18 の `expert-kq-01/heads/`・`retrieval/` を `ekq-frozen/` に写して使います。`train` は1本 45 GB の checkpoint を書きます。
+
+## 段階 20：DP1・TR1（分析）
+
+```bash
+python $UL/delta_probe.py --device cuda      # 本番のデバイス指定は未確認（既定は cpu）
+python $UL/transfer_analysis.py
+```
+
+DP1 は KEY2（`key-shared-01/attempt-27-production/final/p5/`）を読みます。最初の版は不具合で差し替え、旧出力は `delta-probe-01/superseded-keybug/` にあります。
+TR1 は学習しません。単位メモリ 43/100、EX1、EX2、RoboCasa（`robocasa-memory/latent-skill-01/`）の既存の試行ログを読みます。
+
+## 段階 21：20 Hz の評価行と Dev v2
+
+```bash
+python $UL/vq_geometry.py rate20 --split unseen dev     # vq-c-01/unseen20/、dev20/
+python $UL/dev_v2.py build                              # dev-v2-01/data/（10 Hz、VLM トークン込み）
+python $UL/dev_v2.py finalize
+python $UL/dev_v2.py build20                            # dev-v2-01/data20/（20 Hz。主に使うのはこちら）
+python $UL/vq_film.py validate                          # dev-v2-01/validation20.json（Dev v2 と unseen20 の順位一致）
+```
+
+`rate20` は LIBERO-90 の HDF5 から、開始＝2×frame 以上で最初の非 no-op ステップ、履歴＝直前 10 の非 no-op ステップ、目標＝次の 10 ステップで行を作り直します。読み込みは `vq_geometry.load_rate_matched('unseen20' | 'dev20')`、`dev_v2.load_dev_v2_20()`。
+10 Hz 版の `dev-v2-01/validation.json` を作ったコマンドは**未確認**です（いまの CLI にはありません）。
+
+## 段階 22：VQ-B
+
+```bash
+python $UL/vq_sources.py extract --splits learned unseen dev eh dev2 unseen20 dev20 dev2_20
+python $UL/vq_sources.py extract --splits eh learned --res128          # I1r（LIBERO-40 を 128px に縮めて抽出）
+python $UL/vq_sources.py train --tag sweep20 --seeds 4101               # 全条件、Dev v2 20Hz で選択
+python $UL/vq_sources.py train --tag final20 --seeds 4102 4103 --rows none L1b L1b+I1r I1r I2
+python $UL/vq_sources.py ablate --tag final20 --rows L1b L1c I1r L1b+I1r I2 L1a
+python $UL/vq_sources.py analyze
+python $UL/vq_sources.py report
+```
+
+seed 4101 の `final20/` は `sweep20/` からのコピーです。`ablate` の行と `--tag` の指定は progress.log からの推定で、**未確認**です。`sweep_10hz_dev/`・`final_10hz_dev_aborted/` は 10 Hz の Dev で選んだ旧版です。
+
+## 段階 23：VQ-C
+
+LIBERO-40 の sim 状態は LeRobot 版にないので、HF の公式 HDF5（`yifengzhu-hf/LIBERO-datasets`）から `actions`・`states`・`obs/ee_pos` だけを HTTP の範囲読み出しで取ります（画像は読みません、約 235 MB）。リダイレクト先の CDN URL を一度解決し、`fsspec` の https ファイルを `h5py` で開きます（要ネットワーク）。
+
+```bash
+python $UL/vq_geometry.py fetch40          # vq-c-01/hdf5_states/task*.npz（40タスク）
+python $UL/vq_geometry.py align40          # LeRobot と HDF5 を no-op 除去後の行動の完全一致で対応づけ（440/440）
+python $UL/vq_geometry.py geometry --split unseen dev learned eh
+python $UL/vq_geometry.py geo_devv2        # Dev v2 20Hz の幾何
+O="$U/vq-c-01"
+python $UL/vq_geometry.py rows --plan "$O/plan_v2.json" --dev-split devv2   # 主表（Dev v2 20Hz で選択）
+python $UL/vq_geometry.py compare
+python $UL/vq_geometry.py ablate --names G_film_full_v2_s1 G_film_focus_v2_s1
+python $UL/vq_geometry.py final
+```
+
+`plan_step1.json`（旧 Dev）と `plan_d20.json`（dev20）は途中の版です。`rows` の `--dev-split` の値と `eval20` の呼び方は**未確認**です（plan の `dev` 欄でも指定されます）。
+
+## 段階 24：VQ-A
+
+```bash
+O="$U/vq-a-01"
+python $UL/vq_film.py prep                                   # C1b 学習行の π0.5 トークン（data/、約 26 GB）
+for p in grid extra c1b final; do python $UL/vq_film.py rows --plan "$O/plan_$p.json"; done
+python $UL/vq_film.py rescore --names <KQ-final の行名>      # rescore_kq.json（行名は未確認）
+python $UL/vq_film_report.py
+```
+
+`rows` は `rows20/` に書き、`.lock` で複数プロセスに分けられます（本番は4並列）。`rows/` は 10 Hz の Dev で選んだ最初の格子で、使いません。**この段は実行中で、結果と報告はまだありません。**
 
 ## デノイズ前の比較（実験一覧 2）
 

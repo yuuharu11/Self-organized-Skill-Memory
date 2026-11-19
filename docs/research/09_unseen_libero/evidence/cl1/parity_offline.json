@@ -1,0 +1,29 @@
+{
+  "C1a:unseen": {
+    "rows": 619,
+    "top1_agree": 1.0,
+    "max_abs_top1_score_diff": 0.0,
+    "export_top1_arm6_mse_mean": 0.09364979714155197
+  },
+  "C1a:dev": {
+    "rows": 217,
+    "top1_agree": 1.0,
+    "max_abs_top1_score_diff": 0.0,
+    "export_top1_arm6_mse_mean": 0.08616892993450165
+  },
+  "C1b:unseen": {
+    "rows": 619,
+    "top1_agree": 1.0,
+    "max_abs_top1_score_diff": 0.0,
+    "export_top1_arm6_mse_mean": 0.08357050269842148
+  },
+  "C1b:dev": {
+    "rows": 217,
+    "top1_agree": 1.0,
+    "max_abs_top1_score_diff": 0.0,
+    "export_top1_arm6_mse_mean": 0.08837930858135223
+  },
+  "bank_source_order_equal": true,
+  "bank_window_max_abs_diff": 0.0003991127014160156,
+  "start_hs_vs_ex2_candidate_history_state_max_abs_diff": 0.0
+}

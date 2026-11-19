@@ -1,0 +1,4 @@
+hs             learned 0.0385 | unseen20 0.0636
+geo_focus      learned 0.0622 | unseen20 0.1314
+geo_full       learned 0.0430 | unseen20 0.1328
+hs+geo_focus   learned 0.0346 | unseen20 0.0656
