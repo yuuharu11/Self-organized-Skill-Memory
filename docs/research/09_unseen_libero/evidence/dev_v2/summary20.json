@@ -1,0 +1,12 @@
+{
+  "rows": 667,
+  "dropped": 0,
+  "subsets": {
+    "first_unit": 96,
+    "post_switch": 54,
+    "dir_change": 20,
+    "switch_or_dir": 64
+  },
+  "start_shift_steps_nonzero": 6,
+  "start_shift_max": 11
+}

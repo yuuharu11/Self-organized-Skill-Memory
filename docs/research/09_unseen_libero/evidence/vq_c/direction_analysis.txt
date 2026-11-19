@@ -1,0 +1,3 @@
+eh: rows 12096  cos(future, focus) mean 0.560 [before grasp 0.572, holding 0.545] frac>.7 0.51 | rows 11394 cos(future, last-5 history) mean 0.730 frac>.7 0.75; same rows cos(future,focus) 0.575
+learned: rows 589  cos(future, focus) mean 0.567 [before grasp 0.540, holding 0.603] frac>.7 0.48 | rows 540 cos(future, last-5 history) mean 0.735 frac>.7 0.76; same rows cos(future,focus) 0.576
+unseen: rows 592  cos(future, focus) mean 0.655 [before grasp 0.608, holding 0.742] frac>.7 0.67 | rows 491 cos(future, last-5 history) mean 0.459 frac>.7 0.45; same rows cos(future,focus) 0.665

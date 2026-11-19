@@ -1,0 +1,109 @@
+{
+  "all": {
+    "dev_old10_vs_unseen20": {
+      "n": 66,
+      "spearman": 0.7641533066132266,
+      "kendall": 0.5671641791044776
+    },
+    "dev_old20_vs_unseen20": {
+      "n": 66,
+      "spearman": 0.8719104876419507,
+      "kendall": 0.7005597014925373
+    },
+    "dev2_20_vs_unseen20": {
+      "n": 66,
+      "spearman": 0.9557030728122915,
+      "kendall": 0.8255597014925373
+    },
+    "dev2_20_frame_le80": {
+      "n": 66,
+      "spearman": 0.9589595858383435,
+      "kendall": 0.8348880597014925
+    }
+  },
+  "no_aug": {
+    "dev_old10_vs_unseen20": {
+      "n": 58,
+      "spearman": 0.6867329047340737,
+      "kendall": 0.48820326678765874
+    },
+    "dev_old20_vs_unseen20": {
+      "n": 58,
+      "spearman": 0.8151281183672215,
+      "kendall": 0.6285541439806411
+    },
+    "dev2_20_vs_unseen20": {
+      "n": 58,
+      "spearman": 0.9384170537389648,
+      "kendall": 0.7955232909860858
+    },
+    "dev2_20_frame_le80": {
+      "n": 58,
+      "spearman": 0.9432157248761882,
+      "kendall": 0.807622504537205
+    }
+  },
+  "B_mk1c_orig": {
+    "dev_old10_vs_unseen20": {
+      "n": 7,
+      "spearman": -0.23636363636363636,
+      "kendall": -0.19999999999999998
+    },
+    "dev_old20_vs_unseen20": {
+      "n": 7,
+      "spearman": 0.16363636363636364,
+      "kendall": 0.09999999999999999
+    },
+    "dev2_20_vs_unseen20": {
+      "n": 7,
+      "spearman": -0.7454545454545455,
+      "kendall": -0.6
+    },
+    "dev2_20_frame_le80": {
+      "n": 7,
+      "spearman": -0.7454545454545455,
+      "kendall": -0.6
+    }
+  },
+  "H_mlp": {
+    "dev_old10_vs_unseen20": {
+      "n": 30,
+      "spearman": 0.9092324805339266,
+      "kendall": 0.7609195402298851
+    },
+    "dev_old20_vs_unseen20": {
+      "n": 30,
+      "spearman": 0.8838709677419355,
+      "kendall": 0.7195402298850575
+    },
+    "dev2_20_vs_unseen20": {
+      "n": 30,
+      "spearman": 0.9799777530589545,
+      "kendall": 0.8988505747126437
+    },
+    "dev2_20_frame_le80": {
+      "n": 30,
+      "spearman": 0.9822024471635149,
+      "kendall": 0.903448275862069
+    }
+  },
+  "dev2_leave_one_task_out_spearman": {
+    "min": 0.9487307949231799,
+    "max": 0.9606295925183702
+  },
+  "pairwise_agreement": {
+    "dev_old10": {
+      "pairs": 1916,
+      "agree": 0.8115866388308977
+    },
+    "dev_old20": {
+      "pairs": 1916,
+      "agree": 0.8856993736951984
+    },
+    "dev2_20": {
+      "pairs": 1916,
+      "agree": 0.9519832985386222
+    }
+  },
+  "unseen10_vs_unseen20_spearman": 0.919046426185705
+}

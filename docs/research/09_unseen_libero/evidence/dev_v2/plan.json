@@ -1,0 +1,140 @@
+{
+  "tasks": [
+    3,
+    4,
+    9,
+    22,
+    23,
+    25,
+    52,
+    58,
+    71,
+    79,
+    83,
+    85
+  ],
+  "names": {
+    "3": "KITCHEN_SCENE10_put_the_butter_at_the_back_in_the_top_drawer_of_the_cabinet_and_close_it",
+    "4": "KITCHEN_SCENE10_put_the_butter_at_the_front_in_the_top_drawer_of_the_cabinet_and_close_it",
+    "9": "KITCHEN_SCENE1_put_the_black_bowl_on_the_plate",
+    "22": "KITCHEN_SCENE4_close_the_bottom_drawer_of_the_cabinet",
+    "23": "KITCHEN_SCENE4_close_the_bottom_drawer_of_the_cabinet_and_open_the_top_drawer",
+    "25": "KITCHEN_SCENE4_put_the_black_bowl_on_top_of_the_cabinet",
+    "52": "LIVING_ROOM_SCENE2_pick_up_the_milk_and_put_it_in_the_basket",
+    "58": "LIVING_ROOM_SCENE3_pick_up_the_ketchup_and_put_it_in_the_tray",
+    "71": "LIVING_ROOM_SCENE6_put_the_red_mug_on_the_plate",
+    "79": "STUDY_SCENE2_pick_up_the_book_and_place_it_in_the_left_compartment_of_the_caddy",
+    "83": "STUDY_SCENE3_pick_up_the_book_and_place_it_in_the_right_compartment_of_the_caddy",
+    "85": "STUDY_SCENE3_pick_up_the_white_mug_and_place_it_to_the_right_of_the_caddy"
+  },
+  "demos": 8,
+  "rows": 667,
+  "parity_keys": [
+    [
+      6,
+      0,
+      0
+    ],
+    [
+      6,
+      0,
+      10
+    ],
+    [
+      7,
+      3,
+      20
+    ]
+  ],
+  "seed": 4101,
+  "strata": {
+    "articulated": [
+      11,
+      22,
+      23,
+      28,
+      33,
+      39
+    ],
+    "kitchen_place": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      24,
+      25,
+      26,
+      27,
+      29,
+      30,
+      32,
+      34,
+      36,
+      37,
+      38,
+      40,
+      41,
+      42,
+      45
+    ],
+    "living_room": [
+      46,
+      47,
+      48,
+      49,
+      50,
+      52,
+      53,
+      54,
+      55,
+      56,
+      58,
+      59,
+      60,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72
+    ],
+    "study": [
+      73,
+      74,
+      75,
+      76,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      85,
+      86,
+      87,
+      89
+    ]
+  },
+  "per_stratum": {
+    "articulated": 2,
+    "kitchen_place": 4,
+    "living_room": 3,
+    "study": 3
+  }
+}

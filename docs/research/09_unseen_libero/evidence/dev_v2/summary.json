@@ -1,0 +1,86 @@
+{
+  "rows": 667,
+  "tasks": [
+    3,
+    4,
+    9,
+    22,
+    23,
+    25,
+    52,
+    58,
+    71,
+    79,
+    83,
+    85
+  ],
+  "episodes": 96,
+  "frame_max": 130,
+  "subsets": {
+    "first_unit": 96,
+    "post_switch": 95,
+    "dir_change": 66,
+    "switch_or_dir": 116
+  },
+  "rows_per_task": {
+    "3": 74,
+    "4": 66,
+    "9": 54,
+    "22": 44,
+    "23": 85,
+    "25": 57,
+    "52": 42,
+    "58": 61,
+    "71": 51,
+    "79": 45,
+    "83": 50,
+    "85": 38
+  },
+  "parity_vs_old_dev": [
+    {
+      "key": [
+        6,
+        0,
+        0
+      ],
+      "valid_tokens": 520,
+      "old_valid_tokens": 520,
+      "token_max_abs_diff": 0.0,
+      "token_rel_err": 0.0,
+      "state_max_abs_diff": 2.7952227643623928e-08,
+      "actions_max_abs_diff": 2.936339948966804e-08,
+      "history_max_abs_diff": 0.0,
+      "history_mask_equal": true
+    },
+    {
+      "key": [
+        6,
+        0,
+        10
+      ],
+      "valid_tokens": 520,
+      "old_valid_tokens": 520,
+      "token_max_abs_diff": 0.297607421875,
+      "token_rel_err": 0.04092146083712578,
+      "state_max_abs_diff": 2.9240926568974146e-08,
+      "actions_max_abs_diff": 5.622836574126211e-08,
+      "history_max_abs_diff": 0.0,
+      "history_mask_equal": true
+    },
+    {
+      "key": [
+        7,
+        3,
+        20
+      ],
+      "valid_tokens": 520,
+      "old_valid_tokens": 520,
+      "token_max_abs_diff": 0.345703125,
+      "token_rel_err": 0.04460539668798447,
+      "state_max_abs_diff": 1.7407507213462736e-08,
+      "actions_max_abs_diff": 2.7428096349702002e-08,
+      "history_max_abs_diff": 0.0,
+      "history_mask_equal": true
+    }
+  ]
+}

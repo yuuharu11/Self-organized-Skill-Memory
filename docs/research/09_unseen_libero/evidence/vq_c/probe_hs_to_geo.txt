@@ -1,0 +1,10 @@
+/tmp/skillnet-validation/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py:781: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (60) reached and the optimization hasn't converged yet.
+  warnings.warn(
+/tmp/skillnet-validation/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py:781: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (60) reached and the optimization hasn't converged yet.
+  warnings.warn(
+focus_xyz MLP R2 learned 0.722 unseen 0.351
+focus_dist MLP R2 learned 0.675 unseen -0.101
+grasp AUC learned 0.995
+grasp AUC unseen 0.989
+grasp AUC from finger width only learned 0.960
+grasp AUC from finger width only unseen 0.969

@@ -1,0 +1,25 @@
+{
+  "status": "complete",
+  "expert": {
+    "condition": "A",
+    "step": 2500,
+    "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/expert-ex2-01/production-05/train-A/checkpoints/002500",
+    "dev_mse6_by_scale": {
+      "0.5": 0.09389794894627163,
+      "1.0": 0.0858248165675572,
+      "1.5": 0.08943283898489816,
+      "2.0": 0.09128812381199428,
+      "3.0": 0.09215388298034669
+    },
+    "selection": "EX2 repaired Dev re-scoring (live NNX state) of production-05 train-A checkpoints, D1 P5 Dev draft; Eval unused"
+  },
+  "schedule": {
+    "scale_c": 1.0,
+    "fallback_error_threshold": null,
+    "clip": [
+      0.05,
+      0.6
+    ],
+    "rule": "t0 = clip(sqrt(predicted arm6 error), .05, .6); no \u03c00.5 fallback"
+  }
+}
