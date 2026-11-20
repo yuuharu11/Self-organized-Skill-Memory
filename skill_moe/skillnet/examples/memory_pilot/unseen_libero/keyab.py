@@ -25,9 +25,10 @@ import key_motion as km  # noqa: E402
 import kq2_run as kq  # noqa: E402
 from keyab_core import KeyABEncoder  # noqa: E402
 
-ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/unseen-libero')
+from unseen_paths import STATE_DIR
+ROOT=STATE_DIR / 'outputs/memory-pilot/unseen-libero'
 OUT=ROOT/'keyab-01'
-RUN_ROOT=Path('/work/.skillnet-state/outputs/memory-pilot/pi05-memory40-20261104/run-01')
+RUN_ROOT=STATE_DIR / 'outputs/memory-pilot/pi05-memory40-20261104/run-01'
 CONFIGS=[]
 for source in ('raw','dct3'):
     for position in ('absolute','none'):
