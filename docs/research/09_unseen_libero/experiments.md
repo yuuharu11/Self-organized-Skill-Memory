@@ -1750,7 +1750,32 @@ Dev で ê を +.1 上回る条件を満たさなかったので、閉ループ�
 - グリッパーを替えるだけで 68→89 になり、π0.5 との差の大半はグリッパーで説明できる。t0 を深くしても変わらない。タスク別では task 6（3→10）、9（3→8）、8（0→4）で差が大きい。task 8（モカポット2つ）はグリッパーを替えても 4/10 で、腕側にも問題が残る。
 - 次の候補は、π0.5 を使わずにグリッパーを改善すること（Expert にグリッパーも出させる、デコーダに画像を直接入れる）。
 
-証拠：[T1 全試行](evidence/t0x/trials_t1.csv)、[T3 全試行](evidence/t0x/trials_t3.csv)、[T2 Spearman](evidence/t0x/t2_displacement.json)、[report](evidence/t0x/report.md)、[results](evidence/t0x/results.json)、[条件](evidence/t0x/conditions-libero90.json)。コード：`unseen_libero/t0x_*.py`、テスト：`tests/unseen_libero/test_t0x.py`。
+### T4：Expert の修正量を使う
+
+T2 のオフライン相関だけでは閉ループの有用性を判断できないため、Dev v2 で ê のフォールバック率に合わせて m の尺度を校正した。m は t_probe=.30 の Expert 出力と下書きの腕6軸距離。しきい値 m_b は 1.84366、b=.06849、p_b=.204。A-exp は m から作る t0、A-max は ê と m の写像の大きい方を使う。学習や Eval を使った校正はない。
+
+| 条件 | LIBERO-90 | LIBERO-10 | 対 π0.5 p（L90/L10） | 対 A-add p（L90/L10） |
+|---|---:|---:|---|---|
+| A-exp | 34/100 | 68/100 | .625 / 1.49e-8 | 1 / .167 |
+| A-max | 37/100 | 72/100 | .125 / 1.55e-6 | .625 / .607 |
+
+A-max は T1 A-add をどちらの分割でも有意に上回らず、学習済み LIBERO-10 では π0.5 の95/100にも届かない。修正量を信頼度に使う追加の根拠は得られなかった。
+
+### T5：学習なしの上位候補不一致と Expert グリッパー
+
+上位10候補の検索 logit を softmax した重みで、top-1 単位との腕6軸 MSE を平均して D とした。Dev v2 667窓だけで、ê のフォールバック率 p_b=.204 に一致する D_b=.0374474 を決めた。D と正解 top-1 腕誤差の Spearman は .419、ê は .482。信頼度として D は ê より良くなかった。学習はせず T1 の K-x1/(iii)/K1:500 を利用した。
+
+| 条件 | グリッパーの下書き／出力 | LIBERO-90 | LIBERO-10 | 対 π0.5 p（L90/L10） |
+|---|---|---:|---:|---|
+| Aadd-Gexp | T1 ê 写像／Expert | 30/100 | 1/100 | .688 / 1.01e-28 |
+| Atopk-Gexp | D 写像／Expert | 14/100 | 4/100 | 4.01e-5 / 8.08e-28 |
+| Atopk-Gdec | Context デコーダ／Expert | 34/100 | 81/100 | .688 / .00131 |
+
+G-exp は hold-last を下書きに入れ、G-dec はデコーダの10ステップを下書きに入れる。どちらも Expert が出したグリッパーをそのまま使う。G-dec は学習済み側で Aadd-Gexp の1/100から81/100へ改善したが、未学習側では34/100に留まる。成功・失敗別のグリッパー切替数とタスク別集計は evidence に記録した。
+
+試行は各スイート100件、同じ task/trial の seed・初期状態で対応づけ、wait=10、replan=5、制御上限520。スモークは Aadd-Gexp 2/2、Atopk-Gexp 0/2、Atopk-Gdec 2/2。全条件完了、OOM なし。
+
+証拠：[T1 全試行](evidence/t0x/trials_t1.csv)、[T3 全試行](evidence/t0x/trials_t3.csv)、[T2 Spearman](evidence/t0x/t2_displacement.json)、[T4 report](evidence/t0x/t4/report.md)、[T4 trials](evidence/t0x/t4/trials_t4.csv)、[T4 calibration](evidence/t0x/t4/calibration.json)、[T4 results](evidence/t0x/t4/results.json)、[T5 report](evidence/t0x/t5/report.md)、[T5 trials](evidence/t0x/t5/trials_t5.csv)、[T5 calibration](evidence/t0x/t5/calibration.json)、[T5 results](evidence/t0x/t5/results.json)、[T0X 全体 report](evidence/t0x/report.md)。T4/T5 の条件 JSON も各フォルダーに収録した。JSON 内の元実行パスは実験機の絶対パスを含む。コード：`unseen_libero/t0x_*.py`、テスト：`tests/unseen_libero/test_t0x*.py`。
 
 ## KEYAB：キーの入力・位置埋め込み・セルフアテンション
 

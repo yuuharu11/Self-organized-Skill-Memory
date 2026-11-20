@@ -44,6 +44,84 @@ def t0_add(ehat, b: float):
     return np.clip(np.sqrt(.15**2 + c * e), .15, .35)
 
 
+def calibrate_m_radius(ehat, m, b: float) -> dict:
+    """Dev-only threshold calibration for the T4 Expert-displacement radius."""
+    e = np.asarray(ehat, dtype=np.float64).reshape(-1)
+    displacement = np.asarray(m, dtype=np.float64).reshape(-1)
+    if e.shape != displacement.shape or not len(e):
+        raise ValueError(f"Dev ehat/m shape mismatch or empty: {e.shape} vs {displacement.shape}")
+    if not np.isfinite(e).all() or not np.isfinite(displacement).all() or np.any(displacement < 0):
+        raise ValueError("Dev ehat and m must be finite; displacement must be nonnegative")
+    if not np.isfinite(b) or b <= 0:
+        raise ValueError(f"fallback threshold b must be finite and positive, got {b}")
+    p_b = float(np.mean(e > b))
+    quantile = 1.0 - p_b
+    m_b = float(np.quantile(displacement, quantile))
+    if not np.isfinite(m_b) or m_b <= 0:
+        raise ValueError(f"invalid Dev m_b quantile {m_b}; cannot calibrate radius")
+    return {"b": float(b), "p_b": p_b, "m_b": m_b, "m_quantile": quantile,
+            "dev_rows": int(len(e)), "probe_t0": 0.30,
+            "definition": "p_b=mean(dev_ehat>b); m_b=quantile(dev_m,1-p_b); m_prime=b*(m/m_b)^2"}
+
+
+def t0_from_m(m, calibration: dict):
+    """Map a single-seed Expert displacement to [.15,.35] using the Dev m_b anchor."""
+    b = float(calibration["b"])
+    m_b = float(calibration["m_b"])
+    if not np.isfinite(m_b) or m_b <= 0:
+        raise ValueError(f"m_b must be finite and positive, got {m_b}")
+    m_arr = np.maximum(np.asarray(m, dtype=np.float64), 0.0)
+    m_prime = b * np.square(m_arr / m_b)
+    c_m = (.35**2 - .15**2) / b
+    return np.clip(np.sqrt(.15**2 + c_m * m_prime), .15, .35)
+
+
+def t0_from_disagreement(disagreement, calibration: dict):
+    """Map top-k motion disagreement to [.15,.35] using only the Dev D_b anchor."""
+    b, d_b = float(calibration["b"]), float(calibration["D_b"])
+    if not np.isfinite(b) or b <= 0 or not np.isfinite(d_b) or d_b <= 0:
+        raise ValueError("invalid disagreement calibration")
+    d = np.maximum(np.asarray(disagreement, dtype=np.float64), 0.)
+    d_prime = b * d / d_b
+    c = (.35**2 - .15**2) / b
+    return np.clip(np.sqrt(.15**2 + c * d_prime), .15, .35)
+
+
+def topk_disagreement(candidate_actions, scores, k: int = 10) -> tuple[np.ndarray, np.ndarray]:
+    """Softmax-weighted arm6 MSE to the top-1 stored action, within selected top-k."""
+    a = np.asarray(candidate_actions, dtype=np.float64)
+    s = np.asarray(scores, dtype=np.float64)
+    if a.ndim != 4 or a.shape[-1] < 6 or s.ndim != 2 or a.shape[:2] != s.shape:
+        raise ValueError(f"candidate action/score shape mismatch: {a.shape} vs {s.shape}")
+    if not len(a) or not a.shape[1] or not np.isfinite(a[..., :6]).all() or not np.isfinite(s).all():
+        raise ValueError("candidate actions and scores must be finite and nonempty")
+    k = min(int(k), s.shape[1])
+    if k < 1:
+        raise ValueError("k must be positive")
+    a, s = a[:, :k, :, :6], s[:, :k]
+    p = np.exp(s - s.max(axis=1, keepdims=True))
+    p /= p.sum(axis=1, keepdims=True)
+    err = np.square(a - a[:, :1]).mean(axis=(2, 3))
+    return np.sum(p * err, axis=1), p
+
+
+def calibrate_disagreement(disagreement, ehat, b: float) -> dict:
+    """Choose Dev D_b for the same strict upper-tail fallback mass as ehat>b."""
+    d = np.asarray(disagreement, dtype=np.float64).reshape(-1)
+    e = np.asarray(ehat, dtype=np.float64).reshape(-1)
+    if d.shape != e.shape or not len(d) or not np.isfinite(d).all() or not np.isfinite(e).all():
+        raise ValueError(f"invalid Dev disagreement/ehat arrays: {d.shape}, {e.shape}")
+    if not np.isfinite(b) or b <= 0 or np.any(d < 0):
+        raise ValueError("b must be positive and disagreement must be nonnegative")
+    p_b = float(np.mean(e > b))
+    q = 1. - p_b
+    d_b = float(np.quantile(d, q, method="inverted_cdf"))
+    if not np.isfinite(d_b) or d_b <= 0:
+        raise ValueError(f"invalid Dev disagreement threshold D_b={d_b}")
+    return {"b": float(b), "p_b": p_b, "D_b": d_b, "quantile": q, "dev_rows": int(len(d)),
+            "formula": "D'=b*D/D_b; t0=clip(sqrt(.15^2+((.35^2-.15^2)/b)*D'),.15,.35); fallback iff D>D_b"}
+
+
 def quantile_map(value, reference_x, reference_y):
     """Map an online scalar through the Dev empirical CDF of x into Dev values of y."""
     x = np.sort(np.asarray(reference_x, np.float64).reshape(-1))

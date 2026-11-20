@@ -467,6 +467,30 @@ KQ2-CL の原実験は π0.5 基準の実行計画を変更し、保存済み ba
 閉ループの成功数は `rollouts.jsonl` の `success` を数えたものです（LIBERO-10 の `summary.json` は 0/0 と出るため使いません。段階 11〜12 の注意を参照）。
 学習の乱数とGPUの違いで小数第3位は揺れます。結論（どれが基準より良いか、どれが差の何割を埋めるか）が変わるかで判断してください。
 
+## T0X T4 / T5：Expert 修正量と上位候補不一致
+
+この段は KQ2-CL の検索・Expert・heads・closed-loop キャッシュに加えて T0X T1〜T3 の比較試行を参照します。チェックポイントを再学習せず、T4/T5 は各条件を順番に実行します。T4 は Dev v2 の t_probe=.30 から校正、T5 は Dev v2 のみで D_b を校正します。評価は LIBERO-90/10 各10タスク×各10試行、各タスク内で試行 i の seed は `7+i`、初期状態 index も i（T1 と同じ）、wait=10、replan=5、最大520制御 step。通常 π0.5 と比較試行は保存済み結果を使います。
+
+```bash
+cd /work && source env/activate.sh
+export SKILLNET_STATE_DIR="${SKILLNET_STATE_DIR:-$PWD/.skillnet-state}"
+export XLA_PYTHON_CLIENT_PREALLOCATE=false SKILLNET_SUBTASK_GENERATE=0
+export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
+U="$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero"
+P=skill_moe/skillnet/examples/memory_pilot/unseen_libero
+PY="$SKILLNET_STATE_DIR/envs/skillnet/bin/python"
+
+# T4: Dev 校正、各条件2試行 smoke、続いて各スイートで本番。
+XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 24-31 \
+  "$PY" "$P/t0x_t4.py" all --workers 6 --fraction .20 --cpus 24-31,32-39 --batch 1
+
+# T5: top-10 disagreement 校正、条件ごとに smoke 後、順番に6条件を実行。
+XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 24-31 \
+  "$PY" "$P/t0x_t5.py" all --workers 6 --fraction .20 --server-cpus 24-39
+```
+
+完了ファイルは `$U/t0x-01/t4/DONE` と `$U/t0x-01/t5/DONE`。出力の元 JSON には実験機の絶対パスが残る場合があります。重みと大きな特徴キャッシュは Git evidence に含みません。
+
 ## テスト
 
 データや重みなしで、合成入力で確かめるテストです。

@@ -1,0 +1,33 @@
+{
+  "b": 0.06849413737654686,
+  "p_b": 0.20389805097451275,
+  "D_b": 0.037447425515635596,
+  "quantile": 0.7961019490254873,
+  "dev_rows": 667,
+  "formula": "D'=b*D/D_b; t0=clip(sqrt(.15^2+((.35^2-.15^2)/b)*D'),.15,.35); fallback iff D>D_b",
+  "source": "KQ2-CL iii Dev-v2 retrieval top-10 and fixed confidence head",
+  "k": 10,
+  "score_softmax": "softmax(top10_logits), renormalized within top10",
+  "arm_mse": "mean over 10 time steps x 6 arm dimensions, stored actions unchanged",
+  "ehat_fallback_rate": 0.20389805097451275,
+  "realized_D_fallback_rate_strict_gt": 0.20389805097451275,
+  "D_spearman_vs_top1_true_arm_error": 0.4188311249780515,
+  "ehat_spearman_vs_top1_true_arm_error": 0.4818841995089201,
+  "D_quantiles_p05_p25_p50_p75_p95": [
+    0.009077120254880444,
+    0.015307540509780965,
+    0.023049403250449234,
+    0.03389265228207773,
+    0.08435616278771034
+  ],
+  "ehat_quantiles_p05_p25_p50_p75_p95": [
+    0.014538814127445222,
+    0.025734515860676765,
+    0.03953684866428375,
+    0.06046070344746113,
+    0.11525906547904008
+  ],
+  "fallback_b": 0.06849413737654686,
+  "retrieval_cache": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/retrieval/iii__dev2.npz",
+  "confidence_cache": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/pred_iii.npz"
+}
