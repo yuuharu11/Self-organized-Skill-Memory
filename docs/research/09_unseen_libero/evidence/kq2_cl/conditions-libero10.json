@@ -1,0 +1,42 @@
+{
+  "A": {
+    "mode": "memory",
+    "query": "iii",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_iii.pt",
+    "tpol": {
+      "c": 0.5,
+      "lo": 0.05,
+      "hi": 0.2,
+      "b": 0.06849413737654686
+    }
+  },
+  "B": {
+    "mode": "memory",
+    "query": "i",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_i.pt",
+    "tpol": {
+      "c": 0.5,
+      "lo": 0.05,
+      "hi": 0.2,
+      "b": 0.06991592049598694
+    }
+  },
+  "Aconst": {
+    "mode": "memory",
+    "query": "iii",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_iii.pt",
+    "tpol": {
+      "const": 0.15,
+      "b": 0.06849413737654686
+    }
+  },
+  "pi05": {
+    "mode": "pi05"
+  },
+  "pi05_parity": {
+    "mode": "pi05"
+  }
+}

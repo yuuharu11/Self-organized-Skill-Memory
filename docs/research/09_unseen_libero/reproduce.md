@@ -408,6 +408,49 @@ done
 python $UL/segment_demo.py     # 切り出しの動画（segmentation_demo/）
 ```
 
+
+## KQ2 / KQ2-CL
+
+以下は保存済みの重み・特徴・単位キャッシュがある環境での再実行例です。大きな重みや特徴キャッシュは Git evidence に含めていません。KQ2-CL は LIBERO-90/10 の環境依存があるため、初めに smoke と parity を実行してください。すべての出力は `$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero/` 以下に置きます。
+
+```bash
+source env/activate.sh
+export SKILLNET_STATE_DIR="${SKILLNET_STATE_DIR:-$PWD/.skillnet-state}"
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8
+U="$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero"
+P=skill_moe/skillnet/examples/memory_pilot/unseen_libero
+PY="$SKILLNET_STATE_DIR/envs/skillnet/bin/python"
+
+# KQ2: per-step streams/VLM cache, key+query comparisons, report
+nice -n 10 taskset -c 8-15 $PY $P/kq2_data.py build
+nice -n 10 taskset -c 8-15 $PY $P/kq2_data.py state_check
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py baselines
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py keys --plan "$U/kq2-01/plan_keys.json"
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py keyq --plan "$U/kq2-01/plan_keyq.json"
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py query --plan "$U/kq2-01/plan_pre.json"
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py query --plan "$U/kq2-01/plan_query.json"
+nice -n 10 taskset -c 8-15 $PY $P/kq2_run.py ablate --plan "$U/kq2-01/plan_query.json"
+nice -n 10 taskset -c 8-15 $PY $P/kq2_report.py
+
+# KQ2-CL: retrieve -> observations/pi0.5 -> Expert -> heads -> closed-loop/report
+for stage in folds retrieve measure; do nice -n 10 taskset -c 8-15 $PY $P/kq2cl_retrieve.py $stage; done
+for stage in build pi05; do nice -n 10 taskset -c 8-15 $PY $P/kq2cl_obs.py $stage; done
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_expert.py prepare --w-mem .3 --w-dev .7
+XLA_PYTHON_CLIENT_MEM_FRACTION=.40 nice -n 10 taskset -c 8-15 $PY $P/kq2cl_expert.py train --name K
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_heads.py train
+XLA_PYTHON_CLIENT_MEM_FRACTION=.30 nice -n 10 taskset -c 8-15 $PY $P/kq2cl_expert.py select
+XLA_PYTHON_CLIENT_MEM_FRACTION=.35 nice -n 10 taskset -c 8-15 $PY $P/kq2cl_expert.py curves --tags K
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_heads.py policy
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_heads.py offline
+SKILLNET_SUBTASK_GENERATE=0 XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 8-15 $PY $P/kq2cl_closed.py run --suite libero90 --conditions A,B,Aconst,Bconst --fraction .20
+SKILLNET_SUBTASK_GENERATE=0 XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 8-15 $PY $P/kq2cl_closed.py run --suite libero10 --conditions A,B,Aconst --fraction .20
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_closed.py summarize
+nice -n 10 taskset -c 8-15 $PY $P/kq2cl_report.py
+```
+
+KQ2-CL の原実験は π0.5 基準の実行計画を変更し、保存済み baseline を再利用した。Libero-90 は10試行/タスク、LIBERO-10 も今回10試行/タスク。π0.5 の途中評価93試行は `closed-loop-pi05-aborted/` に残し、主比較には使っていない。結果 JSON 内の元環境パスは evidence では書き換えていない。再現確認では `$SKILLNET_STATE_DIR` 内の入力キャッシュとチェックポイントの存在を確認すること。
+
 ## 確認のしかた
 
 各段の結果は、出力の `report.md`（または `summary.json`）に書かれます。研究ノートの表と比べてください。
@@ -419,6 +462,7 @@ python $UL/segment_demo.py     # 切り出しの動画（segmentation_demo/）
 | `offline_mse_queries.json` | 主な結果 2 の直前保持、π0.5、π0-FAST、random、VLM 平均、π0.5 最近傍、「正解で選び大きさも正解」 | `fast-query-01/production/results.json` |
 | `offline_mse_scale_only.json` | 主な結果 2 の P5、大きさを π0.5 から、正解で選ぶ、型・向き・大きさを正解、R-so3 | `scale-only-02/production/results.json` |
 | `draft_reconstruction/*.json` | 主な結果 3（圧縮、借りる単位、可変長、τ でまとめる、デノイズ） | `draft-reconstruction-01/` |
+| `evidence/kq2/`、`evidence/kq2_cl/` | KQ2 検索比較・KQ2-CL 閉ループ | `kq2-01/`、`kq2-cl-01/` |
 
 閉ループの成功数は `rollouts.jsonl` の `success` を数えたものです（LIBERO-10 の `summary.json` は 0/0 と出るため使いません。段階 11〜12 の注意を参照）。
 学習の乱数とGPUの違いで小数第3位は揺れます。結論（どれが基準より良いか、どれが差の何割を埋めるか）が変わるかで判断してください。
