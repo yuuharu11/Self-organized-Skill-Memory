@@ -1,0 +1,936 @@
+{
+  "created_jst": "2026-11-20T12:50:51+09:00",
+  "status": {
+    "t1_libero90": {
+      "Aadd": 100,
+      "Badd": 100
+    },
+    "t1_libero10": {
+      "Aadd": 100,
+      "Badd": 100
+    },
+    "Aexp_gate": false
+  },
+  "t1": {
+    "libero90": {
+      "Aadd": {
+        "completed": 100,
+        "successes": 35,
+        "wilson95": [
+          0.26364248243097527,
+          0.44745556703112027
+        ],
+        "tasks": {
+          "0": {
+            "name": "KITCHEN_SCENE10_close_the_top_drawer_of_the_cabinet",
+            "successes": 2,
+            "completed": 10
+          },
+          "10": {
+            "name": "KITCHEN_SCENE1_put_the_black_bowl_on_top_of_the_cabinet",
+            "successes": 10,
+            "completed": 10
+          },
+          "13": {
+            "name": "KITCHEN_SCENE2_put_the_black_bowl_at_the_front_on_the_plate",
+            "successes": 0,
+            "completed": 10
+          },
+          "31": {
+            "name": "KITCHEN_SCENE5_put_the_black_bowl_on_top_of_the_cabinet",
+            "successes": 1,
+            "completed": 10
+          },
+          "35": {
+            "name": "KITCHEN_SCENE7_open_the_microwave",
+            "successes": 1,
+            "completed": 10
+          },
+          "43": {
+            "name": "KITCHEN_SCENE9_put_the_white_bowl_on_top_of_the_cabinet",
+            "successes": 1,
+            "completed": 10
+          },
+          "57": {
+            "name": "LIVING_ROOM_SCENE3_pick_up_the_cream_cheese_and_put_it_in_the_tray",
+            "successes": 10,
+            "completed": 10
+          },
+          "61": {
+            "name": "LIVING_ROOM_SCENE4_pick_up_the_chocolate_pudding_and_put_it_in_the_tray",
+            "successes": 10,
+            "completed": 10
+          },
+          "84": {
+            "name": "STUDY_SCENE3_pick_up_the_red_mug_and_place_it_to_the_right_of_the_caddy",
+            "successes": 0,
+            "completed": 10
+          },
+          "88": {
+            "name": "STUDY_SCENE4_pick_up_the_book_on_the_right_and_place_it_on_the_cabinet_shelf",
+            "successes": 0,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 7895,
+          "fallback_rate": 0.28587713742875237,
+          "t0_all": {
+            "p05": 0.23308701555398692,
+            "median": 0.31338050713317456,
+            "p95": 0.35,
+            "mean": 0.306845693380759
+          },
+          "t0_non_fallback": {
+            "p05": 0.22697911873967602,
+            "median": 0.2924009830432638,
+            "p95": 0.34254189734050516,
+            "mean": 0.28957019319636257
+          },
+          "ehat": {
+            "p05": 0.021801381185650826,
+            "median": 0.051855091005563736,
+            "p95": 0.12435072511434554,
+            "mean": 0.05948955141417234
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 4,
+          "reference_only": 1,
+          "p_exact": 0.375
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 3,
+          "reference_only": 3,
+          "p_exact": 1.0
+        },
+        "median_success_steps": 147.0
+      },
+      "Badd": {
+        "completed": 100,
+        "successes": 35,
+        "wilson95": [
+          0.26364248243097527,
+          0.44745556703112027
+        ],
+        "tasks": {
+          "0": {
+            "name": "KITCHEN_SCENE10_close_the_top_drawer_of_the_cabinet",
+            "successes": 0,
+            "completed": 10
+          },
+          "10": {
+            "name": "KITCHEN_SCENE1_put_the_black_bowl_on_top_of_the_cabinet",
+            "successes": 10,
+            "completed": 10
+          },
+          "13": {
+            "name": "KITCHEN_SCENE2_put_the_black_bowl_at_the_front_on_the_plate",
+            "successes": 0,
+            "completed": 10
+          },
+          "31": {
+            "name": "KITCHEN_SCENE5_put_the_black_bowl_on_top_of_the_cabinet",
+            "successes": 2,
+            "completed": 10
+          },
+          "35": {
+            "name": "KITCHEN_SCENE7_open_the_microwave",
+            "successes": 2,
+            "completed": 10
+          },
+          "43": {
+            "name": "KITCHEN_SCENE9_put_the_white_bowl_on_top_of_the_cabinet",
+            "successes": 1,
+            "completed": 10
+          },
+          "57": {
+            "name": "LIVING_ROOM_SCENE3_pick_up_the_cream_cheese_and_put_it_in_the_tray",
+            "successes": 10,
+            "completed": 10
+          },
+          "61": {
+            "name": "LIVING_ROOM_SCENE4_pick_up_the_chocolate_pudding_and_put_it_in_the_tray",
+            "successes": 10,
+            "completed": 10
+          },
+          "84": {
+            "name": "STUDY_SCENE3_pick_up_the_red_mug_and_place_it_to_the_right_of_the_caddy",
+            "successes": 0,
+            "completed": 10
+          },
+          "88": {
+            "name": "STUDY_SCENE4_pick_up_the_book_on_the_right_and_place_it_on_the_cabinet_shelf",
+            "successes": 0,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 8252,
+          "fallback_rate": 0.022539990305380515,
+          "t0_all": {
+            "p05": 0.17854531606563798,
+            "median": 0.22982341969667835,
+            "p95": 0.31937147175398456,
+            "mean": 0.23446133145079898
+          },
+          "t0_non_fallback": {
+            "p05": 0.1784369379979936,
+            "median": 0.22859608714625584,
+            "p95": 0.3053506356939216,
+            "mean": 0.23179703782940655
+          },
+          "ehat": {
+            "p05": 0.006557015678845346,
+            "median": 0.021197671070694923,
+            "p95": 0.055581856705248345,
+            "mean": 0.024150387571373628
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 5,
+          "reference_only": 2,
+          "p_exact": 0.453125
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 4,
+          "reference_only": 4,
+          "p_exact": 1.0
+        },
+        "median_success_steps": 167.0
+      }
+    },
+    "libero10": {
+      "Aadd": {
+        "completed": 100,
+        "successes": 75,
+        "wilson95": [
+          0.656955364519384,
+          0.8245478863771232
+        ],
+        "tasks": {
+          "0": {
+            "name": "put both the alphabet soup and the tomato sauce in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "1": {
+            "name": "put both the cream cheese box and the butter in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "2": {
+            "name": "turn on the stove and put the moka pot on it",
+            "successes": 6,
+            "completed": 10
+          },
+          "3": {
+            "name": "put the black bowl in the bottom drawer of the cabinet and close it",
+            "successes": 9,
+            "completed": 10
+          },
+          "4": {
+            "name": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+            "successes": 9,
+            "completed": 10
+          },
+          "5": {
+            "name": "pick up the book and place it in the back compartment of the caddy",
+            "successes": 10,
+            "completed": 10
+          },
+          "6": {
+            "name": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+            "successes": 8,
+            "completed": 10
+          },
+          "7": {
+            "name": "put both the alphabet soup and the cream cheese box in the basket",
+            "successes": 9,
+            "completed": 10
+          },
+          "8": {
+            "name": "put both moka pots on the stove",
+            "successes": 2,
+            "completed": 10
+          },
+          "9": {
+            "name": "put the yellow and white mug in the microwave and close it",
+            "successes": 2,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 6640,
+          "fallback_rate": 0.03629518072289157,
+          "t0_all": {
+            "p05": 0.1909019159630852,
+            "median": 0.23292267792595384,
+            "p95": 0.3360497747518742,
+            "mean": 0.2425161318401109
+          },
+          "t0_non_fallback": {
+            "p05": 0.19069710388440597,
+            "median": 0.23114907096882528,
+            "p95": 0.3107515105394672,
+            "mean": 0.2384680599184773
+          },
+          "ehat": {
+            "p05": 0.009550508530810476,
+            "median": 0.021748925559222698,
+            "p95": 0.06193887274712321,
+            "mean": 0.027058942159301186
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 2,
+          "reference_only": 22,
+          "p_exact": 3.5881996154785156e-05
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 14,
+          "reference_only": 7,
+          "p_exact": 0.18924713134765625
+        },
+        "median_success_steps": 256.0
+      },
+      "Badd": {
+        "completed": 100,
+        "successes": 57,
+        "wilson95": [
+          0.47215389549212305,
+          0.6626670147588988
+        ],
+        "tasks": {
+          "0": {
+            "name": "put both the alphabet soup and the tomato sauce in the basket",
+            "successes": 9,
+            "completed": 10
+          },
+          "1": {
+            "name": "put both the cream cheese box and the butter in the basket",
+            "successes": 3,
+            "completed": 10
+          },
+          "2": {
+            "name": "turn on the stove and put the moka pot on it",
+            "successes": 6,
+            "completed": 10
+          },
+          "3": {
+            "name": "put the black bowl in the bottom drawer of the cabinet and close it",
+            "successes": 7,
+            "completed": 10
+          },
+          "4": {
+            "name": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+            "successes": 3,
+            "completed": 10
+          },
+          "5": {
+            "name": "pick up the book and place it in the back compartment of the caddy",
+            "successes": 9,
+            "completed": 10
+          },
+          "6": {
+            "name": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+            "successes": 2,
+            "completed": 10
+          },
+          "7": {
+            "name": "put both the alphabet soup and the cream cheese box in the basket",
+            "successes": 9,
+            "completed": 10
+          },
+          "8": {
+            "name": "put both moka pots on the stove",
+            "successes": 2,
+            "completed": 10
+          },
+          "9": {
+            "name": "put the yellow and white mug in the microwave and close it",
+            "successes": 7,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 7862,
+          "fallback_rate": 0.015772068176036633,
+          "t0_all": {
+            "p05": 0.1789151847073528,
+            "median": 0.21711870040416595,
+            "p95": 0.3073378560943492,
+            "mean": 0.22595817669477067
+          },
+          "t0_non_fallback": {
+            "p05": 0.17880916204255537,
+            "median": 0.2161781871011419,
+            "p95": 0.29946440910054195,
+            "mean": 0.22397042972011982
+          },
+          "ehat": {
+            "p05": 0.006649453821592033,
+            "median": 0.017227653414011,
+            "p95": 0.050309089757502076,
+            "mean": 0.021536909219937048
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 0,
+          "reference_only": 38,
+          "p_exact": 7.275957614183426e-12
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 11,
+          "reference_only": 22,
+          "p_exact": 0.08014331245794892
+        },
+        "median_success_steps": 284.0
+      }
+    }
+  },
+  "t3": {
+    "libero10": {
+      "AconstPG": {
+        "completed": 100,
+        "successes": 89,
+        "wilson95": [
+          0.8136870349691969,
+          0.9374580364293543
+        ],
+        "tasks": {
+          "0": {
+            "name": "put both the alphabet soup and the tomato sauce in the basket",
+            "successes": 8,
+            "completed": 10
+          },
+          "1": {
+            "name": "put both the cream cheese box and the butter in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "2": {
+            "name": "turn on the stove and put the moka pot on it",
+            "successes": 9,
+            "completed": 10
+          },
+          "3": {
+            "name": "put the black bowl in the bottom drawer of the cabinet and close it",
+            "successes": 10,
+            "completed": 10
+          },
+          "4": {
+            "name": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+            "successes": 10,
+            "completed": 10
+          },
+          "5": {
+            "name": "pick up the book and place it in the back compartment of the caddy",
+            "successes": 10,
+            "completed": 10
+          },
+          "6": {
+            "name": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+            "successes": 10,
+            "completed": 10
+          },
+          "7": {
+            "name": "put both the alphabet soup and the cream cheese box in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "8": {
+            "name": "put both moka pots on the stove",
+            "successes": 4,
+            "completed": 10
+          },
+          "9": {
+            "name": "put the yellow and white mug in the microwave and close it",
+            "successes": 8,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 5829,
+          "fallback_rate": 0.05627037227654829,
+          "t0_all": {
+            "p05": 0.15,
+            "median": 0.15,
+            "p95": 0.15,
+            "mean": 0.14999999999999997
+          },
+          "t0_non_fallback": {
+            "p05": 0.15,
+            "median": 0.15,
+            "p95": 0.15,
+            "mean": 0.14999999999999997
+          },
+          "ehat": {
+            "p05": 0.010631099902093412,
+            "median": 0.025961926206946373,
+            "p95": 0.07106824219226833,
+            "mean": 0.03176195727473358
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 2,
+          "reference_only": 8,
+          "p_exact": 0.109375
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 24,
+          "reference_only": 3,
+          "p_exact": 4.9233436584472656e-05
+        },
+        "median_success_steps": 252.0
+      },
+      "AconstT25": {
+        "completed": 100,
+        "successes": 73,
+        "wilson95": [
+          0.6356788323205499,
+          0.8073041585042365
+        ],
+        "tasks": {
+          "0": {
+            "name": "put both the alphabet soup and the tomato sauce in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "1": {
+            "name": "put both the cream cheese box and the butter in the basket",
+            "successes": 10,
+            "completed": 10
+          },
+          "2": {
+            "name": "turn on the stove and put the moka pot on it",
+            "successes": 7,
+            "completed": 10
+          },
+          "3": {
+            "name": "put the black bowl in the bottom drawer of the cabinet and close it",
+            "successes": 9,
+            "completed": 10
+          },
+          "4": {
+            "name": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+            "successes": 9,
+            "completed": 10
+          },
+          "5": {
+            "name": "pick up the book and place it in the back compartment of the caddy",
+            "successes": 10,
+            "completed": 10
+          },
+          "6": {
+            "name": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+            "successes": 9,
+            "completed": 10
+          },
+          "7": {
+            "name": "put both the alphabet soup and the cream cheese box in the basket",
+            "successes": 8,
+            "completed": 10
+          },
+          "8": {
+            "name": "put both moka pots on the stove",
+            "successes": 0,
+            "completed": 10
+          },
+          "9": {
+            "name": "put the yellow and white mug in the microwave and close it",
+            "successes": 1,
+            "completed": 10
+          }
+        },
+        "query_diagnostics": {
+          "query_count": 6517,
+          "fallback_rate": 0.0475678993401872,
+          "t0_all": {
+            "p05": 0.25,
+            "median": 0.25,
+            "p95": 0.25,
+            "mean": 0.25
+          },
+          "t0_non_fallback": {
+            "p05": 0.25,
+            "median": 0.25,
+            "p95": 0.25,
+            "mean": 0.25
+          },
+          "ehat": {
+            "p05": 0.009790372289717197,
+            "median": 0.023596003651618958,
+            "p95": 0.0669919967651367,
+            "mean": 0.02938814812724404
+          }
+        },
+        "mcnemar_vs_pi05": {
+          "pairs": 100,
+          "test_only": 1,
+          "reference_only": 23,
+          "p_exact": 2.9802322387695312e-06
+        },
+        "mcnemar_vs_Aconst": {
+          "pairs": 100,
+          "test_only": 11,
+          "reference_only": 6,
+          "p_exact": 0.332305908203125
+        },
+        "median_success_steps": 248.0
+      }
+    },
+    "Aconst_L10_failures": {
+      "source": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/closed-loop/libero10/Aconst/trials.jsonl",
+      "failed_trials": 32,
+      "termination_reasons": {
+        "control_budget": 32
+      },
+      "env_steps": {
+        "p05": 520.0,
+        "median": 520.0,
+        "p95": 520.0,
+        "mean": 520.0
+      },
+      "queries_per_trial": {
+        "p05": 104.0,
+        "median": 104.0,
+        "p95": 104.0,
+        "mean": 104.0
+      },
+      "fallback_rate": 0.021334134615384616,
+      "fallback_rate_per_trial": {
+        "p05": 0.0,
+        "median": 0.009615384615384616,
+        "p95": 0.08461538461538459,
+        "mean": 0.021334134615384616
+      },
+      "gripper_switches_per_trial": {
+        "p05": 0.0,
+        "median": 1.0,
+        "p95": 4.0,
+        "mean": 1.3125
+      },
+      "unit_task_same_instruction_rate": 0.13010817307692307,
+      "unit_task_comparable_selections": 3328,
+      "unit_task_unmapped_selections": 0,
+      "stage_progress_note": "Trial records do not encode semantic subtask stages. All failures can be located by termination reason and control-step/query count; manual video stage labels are unavailable in these records."
+    }
+  },
+  "t2": {
+    "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "selection": "KQ2-CL Dev selection K1:500",
+    "splits": {
+      "dev2": {
+        "iii": {
+          "n": 667,
+          "truth_arm6_median": 0.05512655110881404,
+          "ehat_spearman": 0.4818841995089201,
+          "t0.15": {
+            "m_spearman": 0.14345966683271086,
+            "m_draw_spearman": [
+              0.14575209563044988,
+              0.13348565238338914
+            ],
+            "m_median": 0.9270157814025879,
+            "m_quantiles": [
+              0.5867376565933228,
+              0.7714070081710815,
+              0.9270157814025879,
+              1.088394284248352,
+              1.3484507799148557
+            ],
+            "noise_pair_correlation": 0.8272941535382172
+          },
+          "t0.30": {
+            "m_spearman": 0.3994621478708777,
+            "m_draw_spearman": [
+              0.4014142386647751,
+              0.3801859791903692
+            ],
+            "m_median": 1.4196085929870605,
+            "m_quantiles": [
+              0.7765057444572449,
+              1.123027503490448,
+              1.4196085929870605,
+              1.759106159210205,
+              2.3478342533111554
+            ],
+            "noise_pair_correlation": 0.934602329843332
+          }
+        },
+        "i": {
+          "n": 667,
+          "truth_arm6_median": 0.037716574971901104,
+          "ehat_spearman": 0.5786873515823412,
+          "t0.15": {
+            "m_spearman": 0.09176213802792728,
+            "m_draw_spearman": [
+              0.09938981795718098,
+              0.08531965608068275
+            ],
+            "m_median": 0.9766299724578857,
+            "m_quantiles": [
+              0.6313249468803406,
+              0.8196356892585754,
+              0.9766299724578857,
+              1.184977948665619,
+              1.5234245419502257
+            ],
+            "noise_pair_correlation": 0.8356584371675629
+          },
+          "t0.30": {
+            "m_spearman": 0.33093357836375553,
+            "m_draw_spearman": [
+              0.32950161915320053,
+              0.32139974680081873
+            ],
+            "m_median": 1.7040754556655884,
+            "m_quantiles": [
+              0.9176199078559876,
+              1.3041240572929382,
+              1.7040754556655884,
+              2.094158411026001,
+              3.102099466323851
+            ],
+            "noise_pair_correlation": 0.9364054418817457
+          }
+        }
+      },
+      "unseen20": {
+        "iii": {
+          "n": 619,
+          "truth_arm6_median": 0.0520787513090942,
+          "ehat_spearman": 0.4667598801295443,
+          "t0.15": {
+            "m_spearman": 0.0824567776745071,
+            "m_draw_spearman": [
+              0.06017201400276352,
+              0.10606364791317033
+            ],
+            "m_median": 0.9417288899421692,
+            "m_quantiles": [
+              0.63521648645401,
+              0.7902739942073822,
+              0.9417288899421692,
+              1.1252104043960571,
+              1.4012224674224854
+            ],
+            "noise_pair_correlation": 0.826585619694131
+          },
+          "t0.30": {
+            "m_spearman": 0.3057741414351973,
+            "m_draw_spearman": [
+              0.28959840968758904,
+              0.3090281294855923
+            ],
+            "m_median": 1.4146077632904053,
+            "m_quantiles": [
+              0.8287246346473693,
+              1.1223317980766296,
+              1.4146077632904053,
+              1.7293511629104614,
+              2.2937929868698124
+            ],
+            "noise_pair_correlation": 0.9187899418507876
+          }
+        },
+        "i": {
+          "n": 619,
+          "truth_arm6_median": 0.038032898910176485,
+          "ehat_spearman": 0.601829375344997,
+          "t0.15": {
+            "m_spearman": 0.12441199372415529,
+            "m_draw_spearman": [
+              0.09023044654932262,
+              0.1454609158665437
+            ],
+            "m_median": 0.953771710395813,
+            "m_quantiles": [
+              0.6518853187561036,
+              0.8168572783470154,
+              0.953771710395813,
+              1.1397819519042969,
+              1.4379921078681945
+            ],
+            "noise_pair_correlation": 0.7898387375048509
+          },
+          "t0.30": {
+            "m_spearman": 0.3126882462494947,
+            "m_draw_spearman": [
+              0.3015794850103746,
+              0.31818062229220123
+            ],
+            "m_median": 1.5640830993652344,
+            "m_quantiles": [
+              0.8880326390266419,
+              1.2181135416030884,
+              1.5640830993652344,
+              2.0437400341033936,
+              3.102390742301941
+            ],
+            "noise_pair_correlation": 0.9444266461317088
+          }
+        }
+      },
+      "learned": {
+        "iii": {
+          "n": 621,
+          "truth_arm6_median": 0.033438703463004565,
+          "ehat_spearman": 0.7180783860394944,
+          "t0.15": {
+            "m_spearman": 0.8357032941538427,
+            "m_draw_spearman": [
+              0.8226350625123079,
+              0.8128101751426954
+            ],
+            "m_median": 1.0509512424468994,
+            "m_quantiles": [
+              0.6337414383888245,
+              0.8722184896469116,
+              1.0509512424468994,
+              1.226149082183838,
+              1.544452428817749
+            ],
+            "noise_pair_correlation": 0.9114203780452546
+          },
+          "t0.30": {
+            "m_spearman": 0.9764067210940393,
+            "m_draw_spearman": [
+              0.9712254977859756,
+              0.9712308092401264
+            ],
+            "m_median": 1.3913862705230713,
+            "m_quantiles": [
+              0.7630248069763184,
+              1.0849177837371826,
+              1.3913862705230713,
+              1.762529730796814,
+              2.347179889678955
+            ],
+            "noise_pair_correlation": 0.9794485808646345
+          }
+        },
+        "i": {
+          "n": 621,
+          "truth_arm6_median": 0.029218023460043263,
+          "ehat_spearman": 0.6078800433134054,
+          "t0.15": {
+            "m_spearman": 0.8550951627184021,
+            "m_draw_spearman": [
+              0.8502714102963039,
+              0.8269467606894269
+            ],
+            "m_median": 0.9898132085800171,
+            "m_quantiles": [
+              0.5439928770065308,
+              0.7946192026138306,
+              0.9898132085800171,
+              1.1806857585906982,
+              1.4746248722076416
+            ],
+            "noise_pair_correlation": 0.9206353501325609
+          },
+          "t0.30": {
+            "m_spearman": 0.9689845151068279,
+            "m_draw_spearman": [
+              0.9633802294648409,
+              0.9644859138732678
+            ],
+            "m_median": 1.317054271697998,
+            "m_quantiles": [
+              0.6466131210327148,
+              1.0005643367767334,
+              1.317054271697998,
+              1.6833999156951904,
+              2.326672077178955
+            ],
+            "noise_pair_correlation": 0.9798751006545616
+          }
+        }
+      }
+    },
+    "rule": "m = Frobenius norm of (Expert bridge output - draft) over [10,6], averaged over two deterministic noise draws; Spearman vs cached true draft arm6 MSE.",
+    "dev_gain_vs_ehat": {
+      "t0.15": -0.3384245326762092,
+      "t0.30": -0.08242205163804239
+    },
+    "Aexp_gate_pass": false,
+    "selected_probe_for_Aexp": null
+  },
+  "smoke": {
+    "Aadd_libero90_task10": {
+      "completed": 2,
+      "successes": 2,
+      "query_diagnostics": {
+        "query_count": 57,
+        "fallback_rate": 0.2631578947368421,
+        "t0_all": {
+          "p05": 0.24642648701751907,
+          "median": 0.3128701637641206,
+          "p95": 0.35,
+          "mean": 0.30766795155806786
+        },
+        "t0_non_fallback": {
+          "p05": 0.2435906622991326,
+          "median": 0.28869189210637125,
+          "p95": 0.3392175472566272,
+          "mean": 0.2925493628288064
+        },
+        "ehat": {
+          "p05": 0.026184144988656045,
+          "median": 0.05163618177175522,
+          "p95": 0.1308444172143935,
+          "mean": 0.06276076587668636
+        }
+      }
+    },
+    "AconstPG_libero10_task0": {
+      "completed": 2,
+      "successes": 2,
+      "query_diagnostics": {
+        "query_count": 115,
+        "fallback_rate": 0.0,
+        "t0_all": {
+          "p05": 0.15,
+          "median": 0.15,
+          "p95": 0.15,
+          "mean": 0.14999999999999994
+        },
+        "t0_non_fallback": {
+          "p05": 0.15,
+          "median": 0.15,
+          "p95": 0.15,
+          "mean": 0.14999999999999994
+        },
+        "ehat": {
+          "p05": 0.008444936480373144,
+          "median": 0.018683888018131256,
+          "p95": 0.04444784559309482,
+          "mean": 0.02139737797577096
+        }
+      }
+    }
+  },
+  "prior_kq2cl": {
+    "libero90_A": 28,
+    "libero90_Aconst": 35,
+    "libero90_B": 7,
+    "libero90_Bconst": 32,
+    "libero90_pi05": 32,
+    "libero10_A": 25,
+    "libero10_Aconst": 68,
+    "libero10_B": 3,
+    "libero10_pi05": 95
+  }
+}
