@@ -74,7 +74,9 @@ def query_stats(rows):
     return {'query_count': len(qs), 'fallback_rate': float(np.mean(fallback)) if fallback else None,
             't0_all': qsummary([q.get('t0') for q in qs]),
             't0_non_fallback': qsummary([q.get('t0') for q in qs if not q.get('fallback_pi05')]),
-            'ehat': qsummary([q.get('confidence_error') for q in qs])}
+            'ehat': qsummary([q.get('confidence_error') for q in qs]),
+            'expert_displacement': qsummary([q.get('expert_displacement') for q in qs]),
+            'inference_seconds': qsummary([q.get('seconds') for q in qs])}
 
 
 def switches(row):
@@ -96,6 +98,8 @@ def summarize_pair(stage, suite, condition, refs):
     score['mcnemar_vs_pi05'] = mcnemar(rows, baseline)
     if 'Aconst' in refs:
         score['mcnemar_vs_Aconst'] = mcnemar(rows, refs['Aconst'])
+    if 'Aadd' in refs:
+        score['mcnemar_vs_Aadd'] = mcnemar(rows, refs['Aadd'])
     score['median_success_steps'] = float(np.median([r['env_steps'] for r in rows.values() if r['success']])) if any(r['success'] for r in rows.values()) else None
     return score
 
@@ -128,7 +132,7 @@ def t3_failure_diagnostic():
 
 
 def build():
-    result = {'created_jst': timestamp(), 'status': {}, 't1': {}, 't3': {}, 't2': {},
+    result = {'created_jst': timestamp(), 'status': {}, 't1': {}, 't3': {}, 't2': {}, 't4': {},
               'smoke': {}, 'prior_kq2cl': {'libero90_A': 28, 'libero90_Aconst': 35, 'libero90_B': 7,
                                               'libero90_Bconst': 32, 'libero90_pi05': 32,
                                               'libero10_A': 25, 'libero10_Aconst': 68,
@@ -170,6 +174,27 @@ def build():
         result['t2']['Aexp_gate_pass'] = bool(best_key and gains[best_key] >= .10)
         result['t2']['selected_probe_for_Aexp'] = best_key if result['t2']['Aexp_gate_pass'] else None
     result['status']['Aexp_gate'] = result['t2'].get('Aexp_gate_pass',False)
+    t4_cal = OUT / 't4' / 'calibration.json'
+    if t4_cal.exists():
+        result['t4']['calibration'] = json.loads(t4_cal.read_text())
+        for suite in ('libero90', 'libero10'):
+            refs = {
+                'Aconst': by_trial(read_jsonl(ROOT / 'kq2-cl-01/closed-loop' / suite / 'Aconst/trials.jsonl')),
+                'Aadd': by_trial(read_jsonl(OUT / 't1/closed-loop' / suite / 'Aadd/trials.jsonl')),
+            }
+            result['t4'][suite] = {}
+            for cond in ('Aexp', 'Amax'):
+                result['t4'][suite][cond] = summarize_pair('t4', suite, cond, refs)
+            result['status'][f't4_{suite}'] = {c: v['completed'] for c, v in result['t4'][suite].items()}
+        result['t4']['oom_log_matches'] = {}
+        for suite in ('libero90', 'libero10'):
+            log_dir = OUT / 't4/closed-loop' / suite / 'servers'
+            oom = 0
+            for log_path in log_dir.glob('*.log') if log_dir.exists() else []:
+                content = log_path.read_text(errors='replace').lower()
+                oom += content.count('out of memory') + content.count('resource_exhausted') + content.count('cuda_error_out_of_memory')
+            result['t4']['oom_log_matches'][suite] = oom
+        result['status']['t4_done_marker'] = (OUT / 't4' / 'DONE').exists()
     return result
 
 
@@ -181,7 +206,7 @@ def md_report(r):
     l10a = l10.get('Aadd', {}).get('successes')
     l10b = l10.get('Badd', {}).get('successes')
     deviii = r.get('t2', {}).get('splits', {}).get('dev2', {}).get('iii', {})
-    t2_sentence = ('T2 の Dev 修正量 m は ê を +0.1 上回らず、A-exp は実施しない。'
+    t2_sentence = ('T2 の Dev Spearman ゲートは不通過だったため、その規則からは A-exp を選ばなかった。今回の T4 ではユーザー指示に基づき m を使う写像を閉ループで直接評価した。'
                    if not r.get('t2', {}).get('Aexp_gate_pass') else
                    'T2 の Dev 基準を満たしたため A-exp も評価した。')
     t3vals = r.get('t3', {}).get('libero10', {})
@@ -196,23 +221,58 @@ def md_report(r):
                    f"m@.15={deviii.get('t0.15', {}).get('m_spearman', float('nan')):.3f}, "
                    f"m@.30={deviii.get('t0.30', {}).get('m_spearman', float('nan')):.3f}; " if deviii else '') +
                   t2_sentence + ' ' + t3_sentence)
+    t4 = r.get('t4', {})
+    if all(t4.get(s, {}).get(c, {}).get('completed') == 100
+           for s in ('libero90', 'libero10') for c in ('Aexp', 'Amax')):
+        conclusion += (f" T4 は A-exp L90/L10={t4['libero90']['Aexp']['successes']}/100、"
+                       f"{t4['libero10']['Aexp']['successes']}/100、A-max="
+                       f"{t4['libero90']['Amax']['successes']}/100、{t4['libero10']['Amax']['successes']}/100。")
+    t4_cal = t4.get('calibration', {})
+    t4_lines = ['## T4：Expert 修正量による閉ループ t0（A-exp / A-max）', '',
+                'Dev v2 だけで校正し、Eval の正解は使っていない。probe は t0=.30、固定ノイズ seed 1本。'
+                ' p_b=Pr(ê>b)、m_b=Q_(1-p_b)(m) とし、m\'=b·(m/m_b)^2、'
+                't0_m=clip(√(.15²+((.35²−.15²)/b)m\'), .15, .35)。'
+                'A-exp は t0_m、A-max は max(t0_ê,t0_m)。ê>b の場合は両条件とも π0.5 fallback。', '',
+                '| Suite | Condition | 成功/完了 | Wilson 95% | π0.5のみ / 条件のみ (p) | A-constのみ / 条件のみ (p) | A-addのみ / 条件のみ (p) | fallback | m P05/50/95 | t0 P05/50/95 | ê P05/50/95 | 問合せ秒 P05/50/95 | T1 A-add 比の中央値差 (秒) |',
+                '|---|---|---:|---|---|---|---|---:|---|---|---|---|---:|']
+    if t4_cal:
+        t4_lines += ['', f"Dev 校正：{t4_cal.get('dev_rows','—')} 行、b={t4_cal.get('b',float('nan')):.5f}, "
+                     f"p_b={t4_cal.get('p_b',float('nan')):.3f}, m_b={t4_cal.get('m_b',float('nan')):.6g}, "
+                     f"m 分位点={t4_cal.get('m_quantile',float('nan')):.3f}。", '']
+        for suite in ('libero90', 'libero10'):
+            for cond, x in t4.get(suite, {}).items():
+                d=x['query_diagnostics']; mp=x['mcnemar_vs_pi05']; mc=x.get('mcnemar_vs_Aconst',{}); ma=x.get('mcnemar_vs_Aadd',{})
+                t1sec = r.get('t1', {}).get(suite, {}).get('Aadd', {}).get('query_diagnostics', {}).get('inference_seconds', {}).get('median')
+                t4sec = d.get('inference_seconds', {}).get('median')
+                delta = '—' if t1sec is None or t4sec is None else f'{t4sec-t1sec:+.4f}'
+                t4_lines.append(f"| {suite} | {cond} | {x['successes']}/{x['completed']} | {fmt_ci(x['wilson95'])} | {mp['reference_only']} / {mp['test_only']} (p={mp['p_exact']:.3g}) | {mc.get('reference_only','—')} / {mc.get('test_only','—')} (p={mc.get('p_exact',float('nan')):.3g}) | {ma.get('reference_only','—')} / {ma.get('test_only','—')} (p={ma.get('p_exact',float('nan')):.3g}) | {fmt_pct(d['fallback_rate'])} | {fmt_triplet(d['expert_displacement'])} | {fmt_triplet(d['t0_all'])} | {fmt_triplet(d['ehat'])} | {fmt_triplet(d['inference_seconds'])} | {delta} |")
+        t4_lines += ['', '**T4 タスク別成功数**', '', '| Suite | Condition | Task | 成功/完了 |', '|---|---|---|---:|']
+        for suite in ('libero90', 'libero10'):
+            for cond, x in t4.get(suite, {}).items():
+                for tid, task in x['tasks'].items():
+                    t4_lines.append(f"| {suite} | {cond} | {task['name']} (`{tid}`) | {task['successes']}/{task['completed']} |")
+        t4_lines += ['', f"OOM 文字列検出数（再試行ログを含む）: `{t4.get('oom_log_matches', {})}`。各 condition の試行は最大3回まで再開・再試行し、完了記録のみ集計した。", '']
+    else:
+        t4_lines += ['', 'T4 は未実行または Dev 校正が未完了。', '']
     lines = ['# T0X：信頼度を分けた t0 の閉ループ検証', '',
              f'更新時刻: {r["created_jst"]} (JST)', '',
              '## 結論と主表', '',
              conclusion, '',
-             'T1 は `t0=clip(sqrt(.15²+c·ê), .15, .35)`、ê>b では π0.5 fallback。T2 は Expert の修正量 m と ê を比較し、Dev Spearman が ê より0.1以上良い場合のみ A-exp を許可する。T3 は L10 の失敗診断と、グリッパーπ0.5差し替え／t0=.25の記述的比較。', '',
+             '学習は行わず、既存の KQ2-CL キー・ヘッド・Expert を使った診断。T1 は `t0=clip(sqrt(.15²+c·ê), .15, .35)`、ê>b では π0.5 fallback。T2 は Expert の修正量 m と ê を比較し、Dev Spearman が ê より0.1以上良い場合のみ A-exp を許可する。T3 は L10 の失敗診断と、グリッパーπ0.5差し替え／t0=.25の記述的比較。', '',
              '| Suite | Condition | 成功 | 完了 | Wilson 95% | π0.5のみ / 条件のみ (p; n paired) | A-constのみ / 条件のみ (p; n paired) | fallback | t0 P05/50/95 (非fallback) | ê P05/50/95 |',
              '|---|---|---:|---:|---|---|---|---:|---|---|']
     for suite, conds in r['t1'].items():
         for cond, x in conds.items():
             d=x['query_diagnostics']; mp=x['mcnemar_vs_pi05']; ma=x.get('mcnemar_vs_Aconst',{})
             lines.append(f"| {suite} | {cond} | {x['successes']} | {x['completed']} | {fmt_ci(x['wilson95'])} | {mp['reference_only']} / {mp['test_only']} (p={mp['p_exact']:.3g}; n={mp['pairs']}) | {ma.get('reference_only','—')} / {ma.get('test_only','—')} (p={ma.get('p_exact',float('nan')):.3g}; n={ma.get('pairs','—')}) | {fmt_pct(d['fallback_rate'])} | {fmt_triplet(d['t0_non_fallback'])} | {fmt_triplet(d['ehat'])} |")
+    lines.extend([''] + t4_lines)
     lines += ['', '**タスク別成功数**', '', '| Suite | Condition | Task | 成功/試行 |', '|---|---|---|---:|']
     for suite, conds in r['t1'].items():
         for cond, x in conds.items():
             for tid, task in x['tasks'].items():
                 lines.append(f"| {suite} | {cond} | {task['name']} (`{tid}`) | {task['successes']}/{task['completed']} |")
     lines += ['', '条件の対比較は KQ2-CL と同じ初期状態・seed（trial i: env seed 7+i）、wait=10、replan=5、最大520制御step。A-add は query (iii)、B-add は query (i)。各100試行。T1の状態は `results.json` に保存する。', '', '## T2：Expert 修正量による信頼度', '']
+    lines += ['m は probe t0=.15/.30 で Expert が下書きを直した腕6軸の差分ノルム `‖x̂0−draft‖₂`（[10,6] 全体）で、独立ノイズ2 seed の平均。真の下書き誤差との Spearman を比較した。dev2 は667窓、unseen20 は619窓、learned は621窓。', '']
     if r.get('t2',{}).get('splits'):
         lines += ['| split | query | ê Spearman | m@.15 Spearman (gain) | m@.30 Spearman (gain) |', '|---|---|---:|---:|---:|']
         for split, qs in r['t2']['splits'].items():
@@ -244,6 +304,7 @@ def md_report(r):
               'OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 nice -n 10 taskset -c 16-23 python skill_moe/skillnet/examples/memory_pilot/unseen_libero/t0x_run.py t1 --workers 6 --fraction .20 --cpus 24-31,32-39',
               'OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 nice -n 10 taskset -c 16-23 python skill_moe/skillnet/examples/memory_pilot/unseen_libero/t0x_run.py t3 --workers 6 --fraction .20 --cpus 24-31,32-39',
               'OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 XLA_PYTHON_CLIENT_MEM_FRACTION=.40 nice -n 10 taskset -c 8-15 python skill_moe/skillnet/examples/memory_pilot/unseen_libero/t0x_run.py t2 --batch 1 --fraction .40',
+              'OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 8-23 python skill_moe/skillnet/examples/memory_pilot/unseen_libero/t0x_t4.py all --workers 6 --fraction .20 --cpus 24-31,32-39 --batch 1',
               '```', '']
     return '\n'.join(lines)
 

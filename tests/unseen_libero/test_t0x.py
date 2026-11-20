@@ -4,9 +4,11 @@ import numpy as np
 
 from skill_moe.skillnet.examples.memory_pilot.unseen_libero.t0x_common import (
     REPO_ROOT,
+    calibrate_m_radius,
     mcnemar_exact,
     quantile_map,
     t0_add,
+    t0_from_m,
 )
 
 
@@ -44,4 +46,22 @@ def test_mcnemar_requires_paired_shapes():
 def test_quantile_map_uses_calibration_cdf():
     got = quantile_map([0., 1., 2.], [0., 1., 2.], [10., 20., 30.])
     np.testing.assert_allclose(got, [10., 20., 30.])
+
+
+def test_t4_m_calibration_quantile_and_radius_anchors():
+    calibration = calibrate_m_radius([0.01, 0.03, 0.07, 0.09], [1., 2., 3., 4.], .08)
+    assert calibration["p_b"] == .25
+    assert calibration["m_quantile"] == .75
+    assert calibration["m_b"] == 3.25
+    got = t0_from_m(np.asarray([0., calibration["m_b"], 100.]), calibration)
+    np.testing.assert_allclose(got, [.15, .35, .35], atol=1e-7)
+
+
+def test_t4_max_radius_never_below_ehat_radius():
+    calibration = {"b": .06849, "m_b": 2.0}
+    ehat = np.linspace(0, .2, 101)
+    m = np.linspace(0, 3, 101)
+    e_radius = t0_add(ehat, calibration["b"])
+    combined = np.maximum(e_radius, t0_from_m(m, calibration))
+    assert np.all(combined >= e_radius)
 

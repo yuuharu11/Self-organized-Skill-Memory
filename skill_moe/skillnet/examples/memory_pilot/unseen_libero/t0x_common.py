@@ -88,7 +88,11 @@ def t0_from_disagreement(disagreement, calibration: dict):
 
 
 def topk_disagreement(candidate_actions, scores, k: int = 10) -> tuple[np.ndarray, np.ndarray]:
-    """Softmax-weighted arm6 MSE to the top-1 stored action, within selected top-k."""
+    """Softmax-weighted arm6 MSE to the top-1 stored action, within the selected top-k.
+
+    Inputs are [query,candidate,time,dim] and [query,candidate]. This matches the T5
+    confidence definition and deliberately excludes gripper and all score candidates below k.
+    """
     a = np.asarray(candidate_actions, dtype=np.float64)
     s = np.asarray(scores, dtype=np.float64)
     if a.ndim != 4 or a.shape[-1] < 6 or s.ndim != 2 or a.shape[:2] != s.shape:
@@ -106,7 +110,7 @@ def topk_disagreement(candidate_actions, scores, k: int = 10) -> tuple[np.ndarra
 
 
 def calibrate_disagreement(disagreement, ehat, b: float) -> dict:
-    """Choose Dev D_b for the same strict upper-tail fallback mass as ehat>b."""
+    """Use only Dev values; choose D_b for the same upper-tail fallback rate as ehat>b."""
     d = np.asarray(disagreement, dtype=np.float64).reshape(-1)
     e = np.asarray(ehat, dtype=np.float64).reshape(-1)
     if d.shape != e.shape or not len(d) or not np.isfinite(d).all() or not np.isfinite(e).all():
@@ -115,6 +119,8 @@ def calibrate_disagreement(disagreement, ehat, b: float) -> dict:
         raise ValueError("b must be positive and disagreement must be nonnegative")
     p_b = float(np.mean(e > b))
     q = 1. - p_b
+    # Inverted empirical CDF makes the strict `D > D_b` rule realize the requested
+    # upper-tail mass as closely as ties allow (linear interpolation would not).
     d_b = float(np.quantile(d, q, method="inverted_cdf"))
     if not np.isfinite(d_b) or d_b <= 0:
         raise ValueError(f"invalid Dev disagreement threshold D_b={d_b}")
