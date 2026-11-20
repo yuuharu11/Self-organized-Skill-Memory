@@ -1,0 +1,17 @@
+{
+  "KC2-dot-Gdec": {
+    "mode": "memory",
+    "query": "i",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc2-01/models/seed3/qi_distance_tau0.03_lam1_s3.pt",
+    "calibration": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc2-01/calibration.json",
+    "score_mode": "distance",
+    "lambda": 1.0,
+    "tpol": {
+      "confidence_mode": "topk_disagreement",
+      "gripper_mode": "decoder",
+      "calibration": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc2-01/calibration.json",
+      "condition": "KC2-dot-Gdec"
+    }
+  }
+}

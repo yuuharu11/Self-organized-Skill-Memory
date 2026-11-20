@@ -1,0 +1,16 @@
+{
+  "b": 0.06849413737654686,
+  "p_b": 0.20389805097451275,
+  "D_b": 0.025086080205051715,
+  "quantile": 0.7961019490254873,
+  "dev_rows": 667,
+  "formula": "D'=b*D/D_b; t0=clip(sqrt(.15^2+((.35^2-.15^2)/b)*D'),.15,.35); fallback iff D>D_b",
+  "selected_query": "i",
+  "dev_coeff_error_spearman": -0.1220201923637631,
+  "dev_D_quantiles_p05_p50_p95": [
+    2.767363768839511e-10,
+    0.006754295695794956,
+    0.05782330244763542
+  ],
+  "reference_rule": "T5 Dev v2 ehat>b fallback proportion; D_b uses inverted empirical CDF; T5 t0 radius formula"
+}

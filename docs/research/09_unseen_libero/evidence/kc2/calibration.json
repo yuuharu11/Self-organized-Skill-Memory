@@ -1,0 +1,16 @@
+{
+  "b": 0.06849413737654686,
+  "p_b": 0.20389805097451275,
+  "D_b": 0.02605122814143706,
+  "quantile": 0.7961019490254873,
+  "dev_rows": 667,
+  "formula": "D'=b*D/D_b; t0=clip(sqrt(.15^2+((.35^2-.15^2)/b)*D'),.15,.35); fallback iff D>D_b",
+  "query": "i",
+  "score_mode": "distance",
+  "dev_D_quantiles_p05_p50_p95": [
+    1.3114238650372165e-07,
+    0.007624457848315601,
+    0.05262320989439843
+  ],
+  "reference_rule": "match T5 Dev v2 ehat>b fallback rate; KC2 top-10 action disagreement; T5 t0 formula"
+}

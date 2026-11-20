@@ -1,0 +1,14 @@
+{
+  "KCtopkGdec": {
+    "mode": "memory",
+    "query": "i",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc1-01/heads/bundle.pt",
+    "tpol": {
+      "confidence_mode": "disagreement",
+      "gripper_mode": "decoder",
+      "calibration": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc1-01/calibration.json",
+      "condition": "KCtopkGdec"
+    }
+  }
+}

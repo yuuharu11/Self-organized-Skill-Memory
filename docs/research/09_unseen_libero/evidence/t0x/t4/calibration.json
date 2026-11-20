@@ -1,0 +1,35 @@
+{
+  "b": 0.06849413737654686,
+  "p_b": 0.20389805097451275,
+  "m_b": 1.8436554211011713,
+  "m_quantile": 0.7961019490254873,
+  "dev_rows": 667,
+  "probe_t0": 0.3,
+  "definition": "p_b=mean(dev_ehat>b); m_b=quantile(dev_m,1-p_b); m_prime=b*(m/m_b)^2",
+  "query": "iii",
+  "expert_checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+  "expert_selection": {
+    "label": "K1:500",
+    "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "scale": 0.5,
+    "dev_arm6": 0.06329841304011141
+  },
+  "noise_seed_rule": "T2 first fixed draw: exp3._seed_noise(arange(n)+60000000)",
+  "ehat_gt_b_count": 136,
+  "m_quantiles_p05_p25_p50_p75_p95": [
+    0.7498799204826355,
+    1.104010820388794,
+    1.4315704107284546,
+    1.7614696621894836,
+    2.3607700586318967
+  ],
+  "ehat_quantiles_p05_p25_p50_p75_p95": [
+    0.014538814127445222,
+    0.025734515860676765,
+    0.03953684866428375,
+    0.06046070344746113,
+    0.11525906547904008
+  ],
+  "gpu_device": "cuda:0",
+  "batch": 1
+}
