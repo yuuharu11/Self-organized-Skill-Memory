@@ -1,0 +1,128 @@
+{
+  "status": "complete",
+  "condition": "KCtopkGdec",
+  "selected_query": "i",
+  "t0_calibration": {
+    "b": 0.06849413737654686,
+    "p_b": 0.20389805097451275,
+    "D_b": 0.025086080205051715,
+    "quantile": 0.7961019490254873,
+    "dev_rows": 667,
+    "formula": "D'=b*D/D_b; t0=clip(sqrt(.15^2+((.35^2-.15^2)/b)*D'),.15,.35); fallback iff D>D_b",
+    "selected_query": "i",
+    "dev_coeff_error_spearman": -0.1220201923637631,
+    "dev_D_quantiles_p05_p50_p95": [
+      2.767363768839511e-10,
+      0.006754295695794956,
+      0.05782330244763542
+    ],
+    "reference_rule": "T5 Dev v2 ehat>b fallback proportion; D_b uses inverted empirical CDF; T5 t0 radius formula"
+  },
+  "suites": {
+    "libero90": {
+      "kc1": {
+        "completed": 100,
+        "successes": 37
+      },
+      "references": {
+        "T5_AtopkGdec": {
+          "completed": 100,
+          "successes": 34
+        },
+        "T1_Aadd": {
+          "completed": 100,
+          "successes": 35
+        },
+        "pi05": {
+          "completed": 100,
+          "successes": 32
+        }
+      },
+      "paired": {
+        "T5_AtopkGdec": {
+          "pairs": 100,
+          "kc1_only": 4,
+          "reference_only": 7,
+          "mcnemar_p_exact": 0.548828125
+        },
+        "T1_Aadd": {
+          "pairs": 100,
+          "kc1_only": 5,
+          "reference_only": 7,
+          "mcnemar_p_exact": 0.7744140625
+        },
+        "pi05": {
+          "pairs": 100,
+          "kc1_only": 3,
+          "reference_only": 8,
+          "mcnemar_p_exact": 0.2265625
+        }
+      },
+      "tasks": {
+        "0": 2,
+        "10": 9,
+        "13": 1,
+        "31": 0,
+        "35": 0,
+        "43": 5,
+        "57": 10,
+        "61": 10,
+        "84": 0,
+        "88": 0
+      }
+    },
+    "libero10": {
+      "kc1": {
+        "completed": 100,
+        "successes": 73
+      },
+      "references": {
+        "T5_AtopkGdec": {
+          "completed": 100,
+          "successes": 81
+        },
+        "T1_Aadd": {
+          "completed": 100,
+          "successes": 75
+        },
+        "pi05": {
+          "completed": 100,
+          "successes": 95
+        }
+      },
+      "paired": {
+        "T5_AtopkGdec": {
+          "pairs": 100,
+          "kc1_only": 14,
+          "reference_only": 6,
+          "mcnemar_p_exact": 0.11531829833984375
+        },
+        "T1_Aadd": {
+          "pairs": 100,
+          "kc1_only": 12,
+          "reference_only": 10,
+          "mcnemar_p_exact": 0.8318119049072266
+        },
+        "pi05": {
+          "pairs": 100,
+          "kc1_only": 25,
+          "reference_only": 3,
+          "mcnemar_p_exact": 2.744048833847046e-05
+        }
+      },
+      "tasks": {
+        "0": 10,
+        "1": 10,
+        "2": 7,
+        "3": 9,
+        "4": 6,
+        "5": 8,
+        "6": 9,
+        "7": 9,
+        "8": 5,
+        "9": 0
+      }
+    }
+  },
+  "paired_protocol": "same suite/task/trial index, seed_base=7, wait=10, replan=5, max 520"
+}

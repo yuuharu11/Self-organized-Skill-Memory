@@ -491,6 +491,35 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=.20 nice -n 10 taskset -c 24-31 \
 
 完了ファイルは `$U/t0x-01/t4/DONE` と `$U/t0x-01/t5/DONE`。出力の元 JSON には実験機の絶対パスが残る場合があります。重みと大きな特徴キャッシュは Git evidence に含みません。
 
+## KC1 / KC2 / XF1 / XF3
+
+KQ2-CL の部品（クエリ、Expert K1:500、閉ループのプロトコル）と T5 の校正を使います。KC1 の保存係数は `bank__coefficients.npy` をそのまま読みます。閉ループは KQ2-CL と同じく、各タスク10試行、seed 7+i、wait 10、replan 5、最大520 step です。
+
+```bash
+cd /work && source env/activate.sh
+export SKILLNET_STATE_DIR="${SKILLNET_STATE_DIR:-$PWD/.skillnet-state}"
+export XLA_PYTHON_CLIENT_PREALLOCATE=false SKILLNET_SUBTASK_GENERATE=0
+P=skill_moe/skillnet/examples/memory_pilot/unseen_libero
+PY="$SKILLNET_STATE_DIR/envs/skillnet/bin/python"
+
+# KC1: オフライン（36設定、Dev v2 で選択）→ 閉ループ（LIBERO-90 と LIBERO-10）
+"$PY" "$P/kc1_run.py" offline
+"$PY" "$P/kc1_closed.py" all --workers 6 --fraction .20
+
+# KC2: 3 seed を学習 → Dev 選択と評価 → 閉ループ
+for s in 1 2 3; do "$PY" "$P/kc2_run.py" train-seed --seed $s; done
+"$PY" "$P/kc2_eval.py" evaluate
+"$PY" "$P/kc2_closed.py" all --workers 6 --fraction .20
+
+# XF1: 5分割の交差検索と信頼度の相関（CPU）
+CUDA_VISIBLE_DEVICES='' "$PY" "$P/xf1_run.py"
+
+# XF3: グリッパーデコーダ 12条件×3 seed（CPU）
+CUDA_VISIBLE_DEVICES='' "$PY" "$P/xf3_run.py" all
+```
+
+出力は `$SKILLNET_STATE_DIR/outputs/memory-pilot/unseen-libero/{kc1-01,kc2-01,xf1-01,xf3-01}/` に書かれ、完了すると `DONE` が置かれます。Git の evidence には、report・集計 JSON・全試行の `trials.csv` だけを入れています。
+
 ## テスト
 
 データや重みなしで、合成入力で確かめるテストです。

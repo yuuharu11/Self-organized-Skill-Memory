@@ -1,0 +1,148 @@
+{
+  "status": "complete",
+  "data_rows": {
+    "eh": 12766,
+    "dev2": 667
+  },
+  "features": "KC1 q-hidden + saved-coefficient retrieval scores/top-key + execution gripper state",
+  "candidates": {
+    "scalar": {
+      "thresholds": {
+        "0.5": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.7407407407407407,
+          "false_switch_rate": 0.027079303675048357,
+          "false_switch_rows": 14,
+          "missed_rows": 40,
+          "timing_error_mean_steps": 2.2142857142857144,
+          "within1_step_rate": 0.16666666666666666,
+          "sign_step_error_rate": 0.060595446584938706,
+          "errors": 54
+        },
+        "0.6": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.7592592592592593,
+          "false_switch_rate": 0.02321083172147002,
+          "false_switch_rows": 12,
+          "missed_rows": 41,
+          "timing_error_mean_steps": 2.1538461538461537,
+          "within1_step_rate": 0.1111111111111111,
+          "sign_step_error_rate": 0.05919439579684763,
+          "errors": 53
+        },
+        "0.7": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.8148148148148148,
+          "false_switch_rate": 0.02127659574468085,
+          "false_switch_rows": 11,
+          "missed_rows": 44,
+          "timing_error_mean_steps": 3.0,
+          "within1_step_rate": 0.018518518518518517,
+          "sign_step_error_rate": 0.0584938704028021,
+          "errors": 55
+        },
+        "0.8": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.8703703703703703,
+          "false_switch_rate": 0.02127659574468085,
+          "false_switch_rows": 11,
+          "missed_rows": 47,
+          "timing_error_mean_steps": 4.857142857142857,
+          "within1_step_rate": 0.0,
+          "sign_step_error_rate": 0.0574430823117338,
+          "errors": 58
+        },
+        "0.9": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.9629629629629629,
+          "false_switch_rate": 0.007736943907156673,
+          "false_switch_rows": 4,
+          "missed_rows": 52,
+          "timing_error_mean_steps": 8.0,
+          "within1_step_rate": 0.0,
+          "sign_step_error_rate": 0.05516637478108581,
+          "errors": 56
+        }
+      },
+      "selected_threshold": 0.6,
+      "model_state": null,
+      "dev_errors": 53
+    },
+    "full": {
+      "thresholds": {
+        "0.5": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.42592592592592593,
+          "false_switch_rate": 0.05222437137330754,
+          "false_switch_rows": 27,
+          "missed_rows": 23,
+          "timing_error_mean_steps": 3.3870967741935485,
+          "within1_step_rate": 0.12962962962962962,
+          "sign_step_error_rate": 0.06427320490367776,
+          "errors": 50
+        },
+        "0.6": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.5,
+          "false_switch_rate": 0.048355899419729204,
+          "false_switch_rows": 25,
+          "missed_rows": 27,
+          "timing_error_mean_steps": 3.888888888888889,
+          "within1_step_rate": 0.1111111111111111,
+          "sign_step_error_rate": 0.063922942206655,
+          "errors": 52
+        },
+        "0.7": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.6296296296296297,
+          "false_switch_rate": 0.0425531914893617,
+          "false_switch_rows": 22,
+          "missed_rows": 34,
+          "timing_error_mean_steps": 3.3,
+          "within1_step_rate": 0.09259259259259259,
+          "sign_step_error_rate": 0.06252189141856393,
+          "errors": 56
+        },
+        "0.8": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.6851851851851852,
+          "false_switch_rate": 0.03288201160541586,
+          "false_switch_rows": 17,
+          "missed_rows": 37,
+          "timing_error_mean_steps": 3.1176470588235294,
+          "within1_step_rate": 0.1111111111111111,
+          "sign_step_error_rate": 0.060070052539404555,
+          "errors": 54
+        },
+        "0.9": {
+          "rows_with_history": 571,
+          "gt_switch_rows": 54,
+          "missed_switch_rate": 0.7777777777777778,
+          "false_switch_rate": 0.02321083172147002,
+          "false_switch_rows": 12,
+          "missed_rows": 42,
+          "timing_error_mean_steps": 4.166666666666667,
+          "within1_step_rate": 0.0,
+          "sign_step_error_rate": 0.05796847635726795,
+          "errors": 54
+        }
+      },
+      "selected_threshold": 0.5,
+      "model_state": null,
+      "dev_errors": 50
+    }
+  },
+  "selected_kind": "full",
+  "selected_threshold": 0.5,
+  "checkpoint": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kc1-01/heads/full.pt",
+  "selection": "Dev v2 missed+false switch rows"
+}
