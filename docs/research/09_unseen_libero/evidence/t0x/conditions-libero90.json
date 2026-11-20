@@ -1,0 +1,49 @@
+{
+  "Aadd": {
+    "mode": "memory",
+    "query": "iii",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_iii.pt",
+    "tpol": {
+      "formula": "additive_radius",
+      "c": 1.4599789679845077,
+      "lo": 0.15,
+      "hi": 0.35,
+      "b": 0.06849413737654686
+    }
+  },
+  "Badd": {
+    "mode": "memory",
+    "query": "i",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_i.pt",
+    "tpol": {
+      "formula": "additive_radius",
+      "c": 1.4302894003339313,
+      "lo": 0.15,
+      "hi": 0.35,
+      "b": 0.06991592049598694
+    }
+  },
+  "AconstPG": {
+    "mode": "memory",
+    "query": "iii",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_iii.pt",
+    "tpol": {
+      "const": 0.15,
+      "b": 0.06849413737654686,
+      "gripper_mode": "pi05"
+    }
+  },
+  "AconstT25": {
+    "mode": "memory",
+    "query": "iii",
+    "expert": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/expert/train-K1/checkpoints/000500",
+    "bundle": "/work/.skillnet-state/outputs/memory-pilot/unseen-libero/kq2-cl-01/heads/bundle_iii.pt",
+    "tpol": {
+      "const": 0.25,
+      "b": 0.06849413737654686
+    }
+  }
+}
